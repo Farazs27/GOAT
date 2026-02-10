@@ -1,6 +1,6 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
-    "buildCommand": "pnpm db:generate && pnpm --filter @dentflow/shared-types build && cd apps/web && npx next build",
+    "buildCommand": "pnpm db:generate && turbo run build --filter=@dentflow/web",
     "outputDirectory": "apps/web/.next",
     "installCommand": "pnpm install",
     "framework": "nextjs"
