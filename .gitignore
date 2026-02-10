@@ -60,3 +60,4 @@ docker-compose.override.yml
 *.key
 *.cert
 *.p12
+.vercel
