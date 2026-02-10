@@ -52,7 +52,12 @@ export async function POST(request: NextRequest) {
         permissions,
       },
     });
-  } catch (error) {
-    return handleError(error);
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return Response.json({
+      message: 'Login fout',
+      debug: error?.message || String(error),
+      hasDbUrl: !!process.env.DATABASE_URL,
+    }, { status: 500 });
   }
 }
