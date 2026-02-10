@@ -34,6 +34,7 @@ import {
   ZoomIn,
   ChevronRight as NavRight,
 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 const Periodontogram = dynamic(() => import('@/components/Periodontogram'), { ssr: false });
 
@@ -239,9 +240,7 @@ export default function AgendaPage() {
   const fetchAppointments = async (date: Date) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/appointments?date=${formatDate(date)}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-      });
+      const res = await authFetch(`/api/appointments?date=${formatDate(date)}`);
       if (res.ok) setAppointments(await res.json());
     } catch {}
     setLoading(false);
@@ -250,10 +249,9 @@ export default function AgendaPage() {
   const fetchWeekAppointments = async (date: Date) => {
     setLoading(true);
     const days = getWeekDays(date);
-    const headers = { Authorization: `Bearer ${localStorage.getItem('access_token')}` };
     try {
       const results = await Promise.all(
-        days.map(d => fetch(`/api/appointments?date=${formatDate(d)}`, { headers }).then(r => r.ok ? r.json() : []))
+        days.map(d => authFetch(`/api/appointments?date=${formatDate(d)}`).then(r => r.ok ? r.json() : []))
       );
       const map: Record<string, Appointment[]> = {};
       days.forEach((d, i) => { map[formatDate(d)] = results[i]; });
@@ -265,9 +263,7 @@ export default function AgendaPage() {
   const searchPatients = async (query: string) => {
     if (query.length < 2) { setPatients([]); return; }
     try {
-      const res = await fetch(`/api/patients?search=${encodeURIComponent(query)}&limit=5`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-      });
+      const res = await authFetch(`/api/patients?search=${encodeURIComponent(query)}&limit=5`);
       if (res.ok) {
         const data = await res.json();
         setPatients(data.data || []);
@@ -279,9 +275,7 @@ export default function AgendaPage() {
   useEffect(() => {
     const loadNzaCodes = async () => {
       try {
-        const res = await fetch('/api/nza-codes?limit=500', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-        });
+        const res = await authFetch('/api/nza-codes?limit=500');
         if (res.ok) setAllNzaCodes(await res.json());
       } catch {}
     };
@@ -309,12 +303,8 @@ export default function AgendaPage() {
     const endDate = new Date(startDate.getTime() + formData.durationMinutes * 60000);
 
     try {
-      const res = await fetch('/api/appointments', {
+      const res = await authFetch('/api/appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
         body: JSON.stringify({
           patientId: formData.patientId,
           practitionerId: formData.practitionerId || '870c9965-8b5c-4501-a82b-7cce3bc5324e',
@@ -336,12 +326,8 @@ export default function AgendaPage() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await fetch(`/api/appointments/${id}`, {
+      const res = await authFetch(`/api/appointments/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
         body: JSON.stringify({ status }),
       });
       if (res.ok) {
@@ -379,12 +365,11 @@ export default function AgendaPage() {
     setDeclarationLines([]);
     setInvoiceCreated(null);
     setSplitView(false);
-    const headers = { Authorization: `Bearer ${localStorage.getItem('access_token')}` };
     try {
       const [appts, plans, imgs] = await Promise.all([
-        fetch(`/api/appointments?patientId=${a.patient.id}`, { headers }).then(r => r.ok ? r.json() : []),
-        fetch(`/api/treatment-plans?patientId=${a.patient.id}`, { headers }).then(r => r.ok ? r.json() : []),
-        fetch(`/api/patients/${a.patient.id}/images`, { headers }).then(r => r.ok ? r.json() : []),
+        authFetch(`/api/appointments?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
+        authFetch(`/api/treatment-plans?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
+        authFetch(`/api/patients/${a.patient.id}/images`).then(r => r.ok ? r.json() : []),
       ]);
       setPatientAppointments(appts);
       setTreatmentPlans(plans);
@@ -411,9 +396,8 @@ export default function AgendaPage() {
     if (!selectedAppointment) return;
     const data = sections || notesSections;
     try {
-      await fetch(`/api/appointments/${selectedAppointment.id}`, {
+      await authFetch(`/api/appointments/${selectedAppointment.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token')}` },
         body: JSON.stringify({ notes: JSON.stringify(data) }),
       });
       setNotesSaved(true);
@@ -473,9 +457,8 @@ export default function AgendaPage() {
     const validLines = declarationLines.filter(l => l.description && l.unitPrice);
     if (validLines.length === 0) return;
     try {
-      const res = await fetch('/api/invoices', {
+      const res = await authFetch('/api/invoices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token')}` },
         body: JSON.stringify({
           patientId: selectedAppointment.patient.id,
           notes: isDraft ? 'Offerte' : undefined,
@@ -494,9 +477,8 @@ export default function AgendaPage() {
         setInvoiceCreated(inv.invoiceNumber);
         if (!isDraft) {
           // Set to SENT
-          await fetch(`/api/invoices/${inv.id}`, {
+          await authFetch(`/api/invoices/${inv.id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token')}` },
             body: JSON.stringify({ status: 'SENT' }),
           });
         }
@@ -506,9 +488,7 @@ export default function AgendaPage() {
 
   const fetchPatientImages = async (patientId: string) => {
     try {
-      const res = await fetch(`/api/patients/${patientId}/images`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-      });
+      const res = await authFetch(`/api/patients/${patientId}/images`);
       if (res.ok) setPatientImages(await res.json());
     } catch {}
   };
@@ -520,9 +500,10 @@ export default function AgendaPage() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('imageType', imageType);
+      const token = localStorage.getItem('access_token');
       const res = await fetch(`/api/patients/${selectedAppointment.patient.id}/images`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       if (res.ok) fetchPatientImages(selectedAppointment.patient.id);
@@ -533,9 +514,8 @@ export default function AgendaPage() {
   const deleteImage = async (imageId: string) => {
     if (!selectedAppointment) return;
     try {
-      await fetch(`/api/patients/${selectedAppointment.patient.id}/images/${imageId}`, {
+      await authFetch(`/api/patients/${selectedAppointment.patient.id}/images/${imageId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       });
       fetchPatientImages(selectedAppointment.patient.id);
       setImageModal(null);

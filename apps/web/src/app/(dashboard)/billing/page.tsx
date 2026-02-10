@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, Plus, Euro, AlertTriangle, Search, ChevronDown, ChevronUp, X, CreditCard, Download, Loader2 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface InvoiceLine {
   id: string;
@@ -90,15 +91,11 @@ export default function BillingPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
   const fetchData = async () => {
     try {
       const [invRes, statsRes] = await Promise.all([
-        fetch(`/api/invoices${statusFilter ? `?status=${statusFilter}` : ''}`, { headers }),
-        fetch('/api/invoices/stats', { headers }),
+        authFetch(`/api/invoices${statusFilter ? `?status=${statusFilter}` : ''}`),
+        authFetch('/api/invoices/stats'),
       ]);
       const invData = await invRes.json();
       const statsData = await statsRes.json();
@@ -132,9 +129,8 @@ export default function BillingPage() {
   });
 
   const handleStatusChange = async (id: string, status: string) => {
-    await fetch(`/api/invoices/${id}`, {
+    await authFetch(`/api/invoices/${id}`, {
       method: 'PATCH',
-      headers,
       body: JSON.stringify({ status }),
     });
     fetchData();
@@ -142,9 +138,8 @@ export default function BillingPage() {
 
   const handlePayment = async (invoiceId: string) => {
     if (!paymentAmount) return;
-    await fetch('/api/invoices/payments', {
+    await authFetch('/api/invoices/payments', {
       method: 'POST',
-      headers,
       body: JSON.stringify({
         invoiceId,
         amount: parseFloat(paymentAmount),
@@ -159,7 +154,7 @@ export default function BillingPage() {
   const handleDownloadPdf = async (invoiceId: string, invoiceNumber: string) => {
     setDownloadingPdf(invoiceId);
     try {
-      const res = await fetch(`/api/invoices/${invoiceId}/pdf`, { headers });
+      const res = await authFetch(`/api/invoices/${invoiceId}/pdf`);
       if (!res.ok) throw new Error('PDF download failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -496,7 +491,7 @@ export default function BillingPage() {
 
       {/* New Invoice Modal (placeholder — will create quick invoice form) */}
       {showNewInvoice && (
-        <NewInvoiceModal onClose={() => setShowNewInvoice(false)} onCreated={fetchData} headers={headers} />
+        <NewInvoiceModal onClose={() => setShowNewInvoice(false)} onCreated={fetchData} />
       )}
     </div>
   );
@@ -505,11 +500,9 @@ export default function BillingPage() {
 function NewInvoiceModal({
   onClose,
   onCreated,
-  headers,
 }: {
   onClose: () => void;
   onCreated: () => void;
-  headers: Record<string, string>;
 }) {
   const [patients, setPatients] = useState<any[]>([]);
   const [patientId, setPatientId] = useState('');
@@ -523,7 +516,7 @@ function NewInvoiceModal({
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    fetch('/api/patients?limit=100', { headers })
+    authFetch('/api/patients?limit=100')
       .then((r) => r.json())
       .then((d) => setPatients(Array.isArray(d) ? d : d.data || []));
     return () => { document.body.style.overflow = ''; };
@@ -543,11 +536,7 @@ function NewInvoiceModal({
       return;
     }
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-      const searchHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) searchHeaders['Authorization'] = `Bearer ${token}`;
-
-      const res = await fetch(`/api/nza-codes?search=${encodeURIComponent(query)}`, { headers: searchHeaders });
+      const res = await authFetch(`/api/nza-codes?search=${encodeURIComponent(query)}`);
       const data = await res.json();
       setNzaResults(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -577,9 +566,8 @@ function NewInvoiceModal({
   const handleSubmit = async () => {
     if (!patientId || lines.length === 0) return;
     setSubmitting(true);
-    await fetch('/api/invoices', {
+    await authFetch('/api/invoices', {
       method: 'POST',
-      headers,
       body: JSON.stringify({
         patientId,
         insuranceAmount: parseFloat(insuranceAmount) || 0,

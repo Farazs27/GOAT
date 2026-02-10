@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function NewPatientPage() {
   const router = useRouter();
@@ -20,9 +21,8 @@ export default function NewPatientPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/patients', {
+      const res = await authFetch('/api/patients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` },
         body: JSON.stringify({
           ...formData,
           dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : undefined,

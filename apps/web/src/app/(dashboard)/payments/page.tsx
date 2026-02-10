@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Payment {
   id: string;
@@ -114,21 +115,15 @@ export default function PaymentsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        const headers = {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        };
-
         // Fetch stats
-        const statsResponse = await fetch('/api/invoices/stats', { headers });
+        const statsResponse = await authFetch('/api/invoices/stats');
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setStats(statsData);
         }
 
         // Fetch invoices (API returns { data: [...], meta: {...} })
-        const invoicesResponse = await fetch('/api/invoices?limit=100', { headers });
+        const invoicesResponse = await authFetch('/api/invoices?limit=100');
         if (invoicesResponse.ok) {
           const invoicesData = await invoicesResponse.json();
           setInvoices(invoicesData.data || (Array.isArray(invoicesData) ? invoicesData : []));

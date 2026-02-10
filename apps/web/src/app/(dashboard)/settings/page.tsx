@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 
 type Tab = 'profile' | 'practice' | 'schedule';
 
@@ -77,21 +78,11 @@ export default function SettingsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('access_token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-  };
-
   // Fetch user profile
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users/me', {
-        headers: getAuthHeaders(),
-      });
+      const response = await authFetch('/api/users/me');
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
@@ -117,9 +108,8 @@ export default function SettingsPage() {
     e.preventDefault();
     try {
       setSaving(true);
-      const response = await fetch('/api/users/me', {
+      const response = await authFetch('/api/users/me', {
         method: 'PATCH',
-        headers: getAuthHeaders(),
         body: JSON.stringify(profileForm),
       });
 
@@ -141,9 +131,7 @@ export default function SettingsPage() {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/schedules', {
-        headers: getAuthHeaders(),
-      });
+      const response = await authFetch('/api/schedules');
       if (response.ok) {
         const data = await response.json();
         setSchedules(data);
@@ -160,9 +148,7 @@ export default function SettingsPage() {
   // Fetch schedule exceptions
   const fetchExceptions = async () => {
     try {
-      const response = await fetch('/api/schedules/exceptions', {
-        headers: getAuthHeaders(),
-      });
+      const response = await authFetch('/api/schedules/exceptions');
       if (response.ok) {
         const data = await response.json();
         setExceptions(data);

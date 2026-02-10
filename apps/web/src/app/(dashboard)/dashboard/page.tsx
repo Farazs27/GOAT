@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Users, Euro, AlertCircle, Clock, TrendingUp, Activity } from 'lucide-react';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Appointment {
   id: string;
@@ -59,11 +60,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const headers = { Authorization: `Bearer ${localStorage.getItem('access_token')}` };
 
     Promise.all([
-      fetch(`/api/appointments?date=${today}`, { headers }).then(r => r.ok ? r.json() : []),
-      fetch('/api/patients?limit=6&page=1', { headers }).then(r => r.ok ? r.json() : { data: [], meta: { total: 0 } }),
+      authFetch(`/api/appointments?date=${today}`).then(r => r.ok ? r.json() : []),
+      authFetch('/api/patients?limit=6&page=1').then(r => r.ok ? r.json() : { data: [], meta: { total: 0 } }),
     ]).then(([appts, patientsData]) => {
       setAppointments(appts);
       setPatients(patientsData.data || []);

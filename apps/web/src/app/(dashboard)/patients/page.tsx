@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Users, Search, Plus, Phone, Calendar } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Patient {
   id: string;
@@ -28,10 +29,7 @@ export default function PatientsPage() {
 
   const fetchPatients = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/patients', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await authFetch('/api/patients');
       if (!response.ok) throw new Error('Failed to fetch patients');
       const data = await response.json();
       setPatients(data.data || []);

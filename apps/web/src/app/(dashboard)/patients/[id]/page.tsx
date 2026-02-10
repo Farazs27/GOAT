@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 import Odontogram from '@/components/odontogram/odontogram';
 import SoapNoteForm from '@/components/clinical/soap-note-form';
 import TreatmentPlanBuilder from '@/components/treatments/treatment-plan-builder';
@@ -89,17 +90,13 @@ export default function PatientDetailPage() {
   const [imageUploading, setImageUploading] = useState(false);
   const [imageModal, setImageModal] = useState<{ index: number } | null>(null);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-
   useEffect(() => {
     fetchPatient();
   }, [patientId]);
 
   const fetchPatient = async () => {
     try {
-      const response = await fetch(`/api/patients/${patientId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await authFetch(`/api/patients/${patientId}`);
       if (!response.ok) throw new Error('Failed to fetch patient');
       setPatient(await response.json());
     } catch (err) {
@@ -112,25 +109,21 @@ export default function PatientDetailPage() {
 
   const fetchNotes = useCallback(async () => {
     try {
-      const response = await fetch(`/api/clinical-notes?patientId=${patientId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await authFetch(`/api/clinical-notes?patientId=${patientId}`);
       if (response.ok) setNotes(await response.json());
     } catch (err) {
       console.error(err);
     }
-  }, [patientId, token]);
+  }, [patientId]);
 
   const fetchPatientImages = useCallback(async () => {
     try {
-      const response = await fetch(`/api/patients/${patientId}/images`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await authFetch(`/api/patients/${patientId}/images`);
       if (response.ok) setPatientImages(await response.json());
     } catch (err) {
       console.error(err);
     }
-  }, [patientId, token]);
+  }, [patientId]);
 
   const uploadPatientImage = async (file: File, imageType: string = 'XRAY') => {
     setImageUploading(true);
@@ -138,6 +131,7 @@ export default function PatientDetailPage() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('imageType', imageType);
+      const token = localStorage.getItem('access_token');
       const res = await fetch(`/api/patients/${patientId}/images`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -152,9 +146,8 @@ export default function PatientDetailPage() {
 
   const deletePatientImage = async (imageId: string) => {
     try {
-      await fetch(`/api/patients/${patientId}/images/${imageId}`, {
+      await authFetch(`/api/patients/${patientId}/images/${imageId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
       fetchPatientImages();
       setImageModal(null);
@@ -174,9 +167,8 @@ export default function PatientDetailPage() {
   const requestBsn = async () => {
     if (bsnReason.length < 5) return;
     try {
-      const response = await fetch(`/api/patients/${patientId}/bsn`, {
+      const response = await authFetch(`/api/patients/${patientId}/bsn`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: bsnReason }),
       });
       if (!response.ok) throw new Error('Failed to get BSN');

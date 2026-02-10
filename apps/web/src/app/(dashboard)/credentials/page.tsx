@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   Key, Plus, Trash2, Edit2, Check, X, RefreshCw, Shield
 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Credential {
   id: string;
@@ -37,7 +38,7 @@ export default function CredentialsPage() {
 
   const fetchCredentials = async () => {
     try {
-      const res = await fetch('/api/credentials', { headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+      const res = await authFetch('/api/credentials');
       if (res.ok) setCredentials(await res.json());
     } catch { setError('Fout bij het laden'); }
     finally { setLoading(false); }
@@ -49,9 +50,8 @@ export default function CredentialsPage() {
     e.preventDefault();
     const url = editingId ? `/api/credentials/${editingId}` : '/api/credentials';
     try {
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method: editingId ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access_token')}` },
         body: JSON.stringify(formData),
       });
       if (res.ok) { fetchCredentials(); setShowForm(false); resetForm(); }
@@ -60,13 +60,13 @@ export default function CredentialsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Weet u zeker dat u deze sleutel wilt verwijderen?')) return;
-    await fetch(`/api/credentials/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+    await authFetch(`/api/credentials/${id}`, { method: 'DELETE' });
     fetchCredentials();
   };
 
   const handleTest = async (id: string) => {
     try {
-      const res = await fetch(`/api/credentials/${id}/test`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } });
+      const res = await authFetch(`/api/credentials/${id}/test`, { method: 'POST' });
       const result = await res.json();
       setTestResult({ id, success: result.success });
       setTimeout(() => setTestResult(null), 3000);

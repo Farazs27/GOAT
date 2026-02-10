@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Calendar, AlertCircle, Euro } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Stats {
   totalRevenue: number;
@@ -38,34 +39,23 @@ export default function ReportsPage() {
   }, []);
 
   const fetchReportsData = async () => {
-    const token = localStorage.getItem('access_token');
-
-    if (!token) {
-      console.error('No access token found');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const authHeaders = { 'Authorization': `Bearer ${token}` };
-
       // Fetch invoice stats
-      const invoiceStatsRes = await fetch('/api/invoices/stats', { headers: authHeaders });
+      const invoiceStatsRes = await authFetch('/api/invoices/stats');
 
       // Fetch patients count
-      const patientsRes = await fetch('/api/patients?limit=1', { headers: authHeaders });
+      const patientsRes = await authFetch('/api/patients?limit=1');
 
       // Fetch appointments for current month
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const appointmentsRes = await fetch(
+      const appointmentsRes = await authFetch(
         `/api/appointments?date=${firstDay.toISOString().split('T')[0]}`,
-        { headers: authHeaders },
       );
 
       // Fetch NZa codes for top treatments
-      const nzaCodesRes = await fetch('/api/nza-codes?search=', { headers: authHeaders });
+      const nzaCodesRes = await authFetch('/api/nza-codes?search=');
 
       let currentMonthRevenue = 0;
       let outstanding = 0;

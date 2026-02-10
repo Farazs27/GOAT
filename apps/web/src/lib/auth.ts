@@ -21,7 +21,7 @@ export interface AuthUser {
   patientId?: string;
 }
 
-export function signAccessToken(payload: Omit<JwtPayload, 'permissions'>, expiresIn = '5m'): string {
+export function signAccessToken(payload: Omit<JwtPayload, 'permissions'>, expiresIn = '1h'): string {
   const permissions = RolePermissions[payload.role] || [];
   return jwt.sign({ ...payload, permissions }, JWT_SECRET, { expiresIn } as jwt.SignOptions);
 }
