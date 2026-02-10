@@ -5,10 +5,11 @@ import Link from 'next/link';
 
 interface Payment {
   id: string;
-  amount: number;
-  paymentDate: string;
-  paymentMethod: string;
-  notes?: string;
+  amount: string;
+  method: string;
+  status: string;
+  paidAt?: string;
+  createdAt: string;
 }
 
 interface Invoice {
@@ -20,25 +21,25 @@ interface Invoice {
     firstName: string;
     lastName: string;
   };
-  totalAmount: number;
-  paidAmount: number;
+  total: string;
+  paidAmount: string;
   status: string;
-  issueDate: string;
+  invoiceDate: string;
   dueDate: string;
   payments: Payment[];
 }
 
 interface InvoiceStats {
-  totalPaidThisMonth: number;
-  totalOutstanding: number;
-  totalOverdue: number;
+  monthTotal: number;
+  outstandingAmount: number;
+  overdueCount: number;
 }
 
 export default function PaymentsPage() {
   const [stats, setStats] = useState<InvoiceStats>({
-    totalPaidThisMonth: 0,
-    totalOutstanding: 0,
-    totalOverdue: 0,
+    monthTotal: 0,
+    outstandingAmount: 0,
+    overdueCount: 0,
   });
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,11 +127,11 @@ export default function PaymentsPage() {
           setStats(statsData);
         }
 
-        // Fetch invoices
-        const invoicesResponse = await fetch('/api/invoices', { headers });
+        // Fetch invoices (API returns { data: [...], meta: {...} })
+        const invoicesResponse = await fetch('/api/invoices?limit=100', { headers });
         if (invoicesResponse.ok) {
           const invoicesData = await invoicesResponse.json();
-          setInvoices(invoicesData);
+          setInvoices(invoicesData.data || (Array.isArray(invoicesData) ? invoicesData : []));
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -145,14 +146,14 @@ export default function PaymentsPage() {
   // Extract and sort all payments chronologically
   const allPayments = invoices
     .flatMap((invoice) =>
-      invoice.payments.map((payment) => ({
+      (invoice.payments || []).map((payment) => ({
         ...payment,
         invoice,
       }))
     )
     .sort(
       (a, b) =>
-        new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+        new Date(b.paidAt || b.createdAt).getTime() - new Date(a.paidAt || a.createdAt).getTime()
     );
 
   // Filter outstanding invoices
@@ -185,7 +186,7 @@ export default function PaymentsPage() {
             Totaal betaald deze maand
           </div>
           <div className="text-3xl font-bold text-green-400">
-            {formatCurrency(stats.totalPaidThisMonth)}
+            {formatCurrency(stats.monthTotal)}
           </div>
         </div>
 
@@ -194,7 +195,7 @@ export default function PaymentsPage() {
             Openstaand
           </div>
           <div className="text-3xl font-bold text-yellow-400">
-            {formatCurrency(stats.totalOutstanding)}
+            {formatCurrency(stats.outstandingAmount)}
           </div>
         </div>
 
@@ -203,7 +204,7 @@ export default function PaymentsPage() {
             Achterstallig
           </div>
           <div className="text-3xl font-bold text-red-400">
-            {formatCurrency(stats.totalOverdue)}
+            {stats.overdueCount}
           </div>
         </div>
       </div>
@@ -220,7 +221,11 @@ export default function PaymentsPage() {
         ) : (
           <div className="space-y-3">
             {allPayments.map((payment) => {
-              const color = getPaymentMethodColor(payment.paymentMethod);
+              const methodLabels: Record<string, string> = {
+                IDEAL: 'iDEAL', SEPA_DIRECT_DEBIT: 'Incasso', BANK_TRANSFER: 'Overboeking',
+                CASH: 'Contant', PIN: 'PIN', CREDIT_CARD: 'Creditcard',
+              };
+              const color = getPaymentMethodColor(payment.method);
               return (
                 <div
                   key={payment.id}
@@ -229,7 +234,7 @@ export default function PaymentsPage() {
                   <div className="flex items-center gap-4 flex-1">
                     <div className="min-w-[100px]">
                       <div className="text-sm text-white/90">
-                        {formatDate(payment.paymentDate)}
+                        {formatDate(payment.paidAt || payment.createdAt)}
                       </div>
                     </div>
                     <div className="flex-1">
@@ -243,14 +248,14 @@ export default function PaymentsPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-semibold text-green-400">
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency(Number(payment.amount))}
                       </div>
                     </div>
                     <div>
                       <span
                         className={`px-2.5 py-0.5 rounded-lg bg-${color}-500/20 text-${color}-300 border border-${color}-500/20 text-xs font-medium`}
                       >
-                        {payment.paymentMethod}
+                        {methodLabels[payment.method] || payment.method}
                       </span>
                     </div>
                   </div>
@@ -273,7 +278,7 @@ export default function PaymentsPage() {
         ) : (
           <div className="space-y-3">
             {outstandingInvoices.map((invoice) => {
-              const remaining = invoice.totalAmount - invoice.paidAmount;
+              const remaining = Number(invoice.total) - Number(invoice.paidAmount);
               const isOverdue = invoice.status === 'OVERDUE';
               const statusColor = getStatusBadgeColor(invoice.status);
               return (
@@ -287,7 +292,7 @@ export default function PaymentsPage() {
                         #{invoice.invoiceNumber}
                       </div>
                       <div className="text-xs text-white/50">
-                        {formatDate(invoice.issueDate)}
+                        {formatDate(invoice.invoiceDate)}
                       </div>
                     </div>
                     <div className="flex-1">
@@ -301,13 +306,13 @@ export default function PaymentsPage() {
                     <div className="text-right min-w-[100px]">
                       <div className="text-xs text-white/40">Totaal</div>
                       <div className="text-sm text-white/90">
-                        {formatCurrency(invoice.totalAmount)}
+                        {formatCurrency(Number(invoice.total))}
                       </div>
                     </div>
                     <div className="text-right min-w-[100px]">
                       <div className="text-xs text-white/40">Betaald</div>
                       <div className="text-sm text-white/90">
-                        {formatCurrency(invoice.paidAmount)}
+                        {formatCurrency(Number(invoice.paidAmount))}
                       </div>
                     </div>
                     <div className="text-right min-w-[100px]">

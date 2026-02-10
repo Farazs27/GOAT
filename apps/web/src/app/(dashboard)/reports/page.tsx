@@ -47,54 +47,39 @@ export default function ReportsPage() {
     }
 
     try {
+      const authHeaders = { 'Authorization': `Bearer ${token}` };
+
       // Fetch invoice stats
-      const invoiceStatsRes = await fetch('http://localhost:8000/api/invoices/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const invoiceStatsRes = await fetch('/api/invoices/stats', { headers: authHeaders });
 
       // Fetch patients count
-      const patientsRes = await fetch('http://localhost:8000/api/patients?limit=1', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const patientsRes = await fetch('/api/patients?limit=1', { headers: authHeaders });
 
       // Fetch appointments for current month
       const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
       const appointmentsRes = await fetch(
-        `http://localhost:8000/api/appointments?date=${firstDay.toISOString().split('T')[0]}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
+        `/api/appointments?date=${firstDay.toISOString().split('T')[0]}`,
+        { headers: authHeaders },
       );
 
       // Fetch NZa codes for top treatments
-      const nzaCodesRes = await fetch('http://localhost:8000/api/nza-codes?search=', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const nzaCodesRes = await fetch('/api/nza-codes?search=', { headers: authHeaders });
 
       let currentMonthRevenue = 0;
       let outstanding = 0;
 
       if (invoiceStatsRes.ok) {
         const invoiceStats = await invoiceStatsRes.json();
-        currentMonthRevenue = invoiceStats.total_revenue || 0;
-        outstanding = invoiceStats.outstanding || 0;
+        currentMonthRevenue = invoiceStats.monthTotal || 0;
+        outstanding = invoiceStats.outstandingAmount || 0;
       }
 
       let patientsCount = 0;
       if (patientsRes.ok) {
         const patientsData = await patientsRes.json();
-        patientsCount = patientsData.total || 0;
+        patientsCount = patientsData.meta?.total || 0;
       }
 
       let appointmentsCount = 0;
@@ -106,8 +91,12 @@ export default function ReportsPage() {
         appointmentsCount = appointments.length;
 
         // Count by type
+        const typeLabels: Record<string, string> = {
+          CHECKUP: 'Controle', TREATMENT: 'Behandeling', EMERGENCY: 'Spoedgeval',
+          CONSULTATION: 'Consult', HYGIENE: 'Reiniging',
+        };
         appointments.forEach((apt: any) => {
-          const type = apt.type || 'Onbekend';
+          const type = typeLabels[apt.appointmentType] || apt.appointmentType || 'Onbekend';
           appointmentTypesMap[type] = (appointmentTypesMap[type] || 0) + 1;
         });
       }
@@ -115,7 +104,12 @@ export default function ReportsPage() {
       let treatments: NzaCode[] = [];
       if (nzaCodesRes.ok) {
         const nzaData = await nzaCodesRes.json();
-        treatments = Array.isArray(nzaData) ? nzaData.slice(0, 10) : [];
+        const rawCodes = Array.isArray(nzaData) ? nzaData : [];
+        treatments = rawCodes.slice(0, 10).map((c: any) => ({
+          code: c.code,
+          description: c.descriptionNl || c.description || '',
+          price: Number(c.maxTariff || c.price || 0),
+        }));
       }
 
       // Generate revenue data for last 6 months (dummy data + current month)

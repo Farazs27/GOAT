@@ -102,8 +102,14 @@ export default function BillingPage() {
       ]);
       const invData = await invRes.json();
       const statsData = await statsRes.json();
-      setInvoices(Array.isArray(invData) ? invData : []);
-      setStats(statsData);
+      const invoicesList = invData.data || (Array.isArray(invData) ? invData : []);
+      setInvoices(invoicesList);
+      setStats({
+        outstanding: statsData.outstandingAmount || 0,
+        monthTotal: statsData.monthTotal || 0,
+        monthCount: invoicesList.length,
+        overdueCount: statsData.overdueCount || 0,
+      });
     } catch (e) {
       console.error('Failed to fetch invoices', e);
     } finally {
