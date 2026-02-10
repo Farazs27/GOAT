@@ -65,6 +65,8 @@ export default function DashboardPage() {
       authFetch(`/api/appointments?date=${today}`).then(r => r.ok ? r.json() : []),
       authFetch('/api/patients?limit=6&page=1').then(r => r.ok ? r.json() : { data: [], meta: { total: 0 } }),
     ]).then(([appts, patientsData]) => {
+      console.log('DEBUG appointments:', JSON.stringify(appts).slice(0,200));
+      console.log('DEBUG patients:', JSON.stringify(patientsData).slice(0,200));
       setAppointments(Array.isArray(appts) ? appts : []);
       setPatients(patientsData.data || []);
       setTotalPatients(patientsData.meta?.total || 0);

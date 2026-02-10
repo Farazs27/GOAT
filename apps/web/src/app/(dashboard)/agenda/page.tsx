@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { detectNzaFromNotes, DetectedLine } from '@/lib/nza-detection';
 import {
   Calendar,
   ChevronLeft,
@@ -214,6 +215,13 @@ export default function AgendaPage() {
   const [patientImages, setPatientImages] = useState<PatientImage[]>([]);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageModal, setImageModal] = useState<{ index: number } | null>(null);
+  const [notesDeclSplitView, setNotesDeclSplitView] = useState(false);
+  const [autoDetectedLines, setAutoDetectedLines] = useState<DetectedLine[]>([]);
+  const [manualLines, setManualLines] = useState<DeclarationLine[]>([]);
+  const [removedAutoKeys, setRemovedAutoKeys] = useState<Set<string>>(new Set());
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiEnabled, setAiEnabled] = useState(true);
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
@@ -275,7 +283,7 @@ export default function AgendaPage() {
   useEffect(() => {
     const loadNzaCodes = async () => {
       try {
-        const res = await authFetch('/api/nza-codes?limit=500');
+        const res = await authFetch('/api/nza-codes?all=true');
         if (res.ok) setAllNzaCodes(await res.json());
       } catch {}
     };
@@ -365,6 +373,10 @@ export default function AgendaPage() {
     setDeclarationLines([]);
     setInvoiceCreated(null);
     setSplitView(false);
+    setNotesDeclSplitView(false);
+    setAutoDetectedLines([]);
+    setManualLines([]);
+    setRemovedAutoKeys(new Set());
     try {
       const [appts, plans, imgs] = await Promise.all([
         authFetch(`/api/appointments?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
@@ -388,6 +400,10 @@ export default function AgendaPage() {
     setNotesSaved(false);
     setSplitView(false);
     setNotesExpanded(false);
+    setNotesDeclSplitView(false);
+    setAutoDetectedLines([]);
+    setManualLines([]);
+    setRemovedAutoKeys(new Set());
     setPatientImages([]);
     setImageModal(null);
   };
@@ -413,6 +429,123 @@ export default function AgendaPage() {
       (nza.descriptionNl || '').toLowerCase().includes(q)
     ));
   };
+
+  // --- Notes + Declaratie auto-sync ---
+
+  // AI analysis function
+  const analyzeNotesWithAI = useCallback(async (sections: typeof notesSections) => {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await authFetch('/api/ai/analyze-notes', {
+        method: 'POST',
+        body: JSON.stringify(sections),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.detectedLines && data.detectedLines.length > 0) {
+          const filtered = data.detectedLines.filter(
+            (d: DetectedLine) => !removedAutoKeys.has(d.dedupeKey)
+          );
+          setAutoDetectedLines(filtered);
+          setAiLoading(false);
+          return;
+        }
+      }
+      // Fallback to keyword detection if AI returns empty or fails
+      const keywordDetected = detectNzaFromNotes(sections, allNzaCodes);
+      const filtered = keywordDetected.filter(d => !removedAutoKeys.has(d.dedupeKey));
+      setAutoDetectedLines(filtered);
+    } catch {
+      setAiError('AI niet beschikbaar');
+      const keywordDetected = detectNzaFromNotes(sections, allNzaCodes);
+      const filtered = keywordDetected.filter(d => !removedAutoKeys.has(d.dedupeKey));
+      setAutoDetectedLines(filtered);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [removedAutoKeys, allNzaCodes]);
+
+  // Debounced detection: AI or keyword-based
+  useEffect(() => {
+    if (!notesDeclSplitView || allNzaCodes.length === 0) return;
+
+    if (aiEnabled) {
+      // Immediate keyword detection for responsiveness
+      const quickTimer = setTimeout(() => {
+        const detected = detectNzaFromNotes(notesSections, allNzaCodes);
+        const filtered = detected.filter(d => !removedAutoKeys.has(d.dedupeKey));
+        setAutoDetectedLines(filtered);
+      }, 400);
+      // Delayed AI detection (longer debounce to reduce API calls)
+      const aiTimer = setTimeout(() => {
+        analyzeNotesWithAI(notesSections);
+      }, 1500);
+      return () => { clearTimeout(quickTimer); clearTimeout(aiTimer); };
+    } else {
+      const timer = setTimeout(() => {
+        const detected = detectNzaFromNotes(notesSections, allNzaCodes);
+        const filtered = detected.filter(d => !removedAutoKeys.has(d.dedupeKey));
+        setAutoDetectedLines(filtered);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [notesSections, notesDeclSplitView, allNzaCodes, removedAutoKeys, aiEnabled, analyzeNotesWithAI]);
+
+  // Combine auto-detected + manual lines into declarationLines for invoicing
+  useEffect(() => {
+    if (!notesDeclSplitView) return;
+    const combined: DeclarationLine[] = [
+      ...autoDetectedLines.map(d => ({
+        nzaCodeId: d.nzaCodeId,
+        code: d.code,
+        description: d.description,
+        toothNumber: d.toothNumber,
+        unitPrice: d.unitPrice,
+        quantity: d.quantity,
+      })),
+      ...manualLines,
+    ];
+    setDeclarationLines(combined);
+  }, [autoDetectedLines, manualLines, notesDeclSplitView]);
+
+  const removeAutoDetectedLine = useCallback((dedupeKey: string) => {
+    setRemovedAutoKeys(prev => new Set([...prev, dedupeKey]));
+    setAutoDetectedLines(prev => prev.filter(d => d.dedupeKey !== dedupeKey));
+  }, []);
+
+  const addManualLine = useCallback(() => {
+    setManualLines(prev => [...prev, { code: '', description: '', toothNumber: '', unitPrice: '', quantity: '1' }]);
+  }, []);
+
+  const updateManualLine = useCallback((i: number, field: string, value: string) => {
+    setManualLines(prev => {
+      const updated = [...prev];
+      (updated[i] as any)[field] = value;
+      return updated;
+    });
+  }, []);
+
+  const removeManualLine = useCallback((i: number) => {
+    setManualLines(prev => prev.filter((_, idx) => idx !== i));
+  }, []);
+
+  const selectNzaForManualLine = useCallback((lineIndex: number, nza: any) => {
+    setManualLines(prev => {
+      const updated = [...prev];
+      updated[lineIndex] = { ...updated[lineIndex], nzaCodeId: nza.id, code: nza.code, description: nza.descriptionNl, unitPrice: String(nza.maxTariff) };
+      return updated;
+    });
+    setActiveNzaLine(null);
+    setNzaSearchResults([]);
+  }, []);
+
+  // Combined total for the split view
+  const splitViewTotal = useMemo(() => {
+    const autoTotal = autoDetectedLines.reduce((sum, l) => sum + (parseFloat(l.unitPrice) || 0) * (parseInt(l.quantity) || 1), 0);
+    const manualTotal = manualLines.reduce((sum, l) => sum + (parseFloat(l.unitPrice) || 0) * (parseInt(l.quantity) || 1), 0);
+    return autoTotal + manualTotal;
+  }, [autoDetectedLines, manualLines]);
 
   const selectNzaForLine = (lineIndex: number, nza: any) => {
     const updated = [...declarationLines];
@@ -1020,19 +1153,287 @@ export default function AgendaPage() {
                 <ImageIcon className="h-4 w-4" />
                 Röntgen
               </button>
-              <button onClick={() => { setNotesExpanded(true); }}
+              <button onClick={() => { setNotesDeclSplitView(true); }}
                 className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-                  notesExpanded
+                  notesDeclSplitView
                     ? 'text-blue-300 border-b-2 border-blue-400'
                     : 'text-white/40 hover:text-white/60'
                 }`}>
                 <FileText className="h-4 w-4" />
                 Notities
+                <Euro className="h-3.5 w-3.5 opacity-50" />
               </button>
             </div>
 
-            {/* Notes expanded full-screen overlay */}
-            {notesExpanded && (
+            {/* Notes + Declaratie split-view overlay */}
+            {notesDeclSplitView && (
+              <div className="fixed inset-0 z-[60] flex flex-col" style={{ background: 'linear-gradient(135deg, #1a1d2e, #16213e, #1a1a2e, #2d1b3d)' }}>
+                {/* Header */}
+                <div className="p-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold text-white">Notities & Declaratie</h3>
+                    <span className="text-xs text-white/30">
+                      {selectedAppointment?.patient.firstName} {selectedAppointment?.patient.lastName}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {notesSaved && <span className="text-xs text-emerald-400">Opgeslagen</span>}
+                    <button
+                      onClick={() => { setNotesExpanded(true); setNotesDeclSplitView(false); }}
+                      className="p-1.5 glass rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                      title="Alleen notities (volledig scherm)">
+                      <Maximize2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => setNotesDeclSplitView(false)}
+                      className="p-1.5 glass rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Split content */}
+                <div className="flex-1 flex min-h-0">
+                  {/* LEFT: Notes panel */}
+                  <div className="flex-1 flex flex-col border-r border-white/10 min-h-0">
+                    {/* Note section tabs */}
+                    <div className="flex border-b border-white/5 px-4 flex-shrink-0">
+                      {([
+                        ['bevindingen', 'Bevindingen'],
+                        ['behandelplan', 'Behandelplan'],
+                        ['uitlegAfspraken', 'Uitleg & Afspraken'],
+                        ['algemeen', 'Algemeen'],
+                      ] as const).map(([key, label]) => (
+                        <button key={key} onClick={() => setActiveNoteTab(key)}
+                          className={`px-4 py-3 text-sm font-medium transition-colors relative ${
+                            activeNoteTab === key
+                              ? 'text-blue-300'
+                              : 'text-white/40 hover:text-white/60'
+                          }`}>
+                          {label}
+                          {notesSections[key] && (
+                            <span className="absolute top-2.5 right-1.5 w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                          )}
+                          {activeNoteTab === key && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400 rounded-full" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Textarea */}
+                    <textarea
+                      value={notesSections[activeNoteTab]}
+                      onChange={(e) => setNotesSections({ ...notesSections, [activeNoteTab]: e.target.value })}
+                      onBlur={() => saveNotes()}
+                      placeholder={
+                        activeNoteTab === 'bevindingen' ? 'Klinische bevindingen... (bv. "Periodiek onderzoek. Element 36 MO composiet vulling. Verdoving gegeven.")' :
+                        activeNoteTab === 'behandelplan' ? 'Behandelplan en vervolgstappen...' :
+                        activeNoteTab === 'uitlegAfspraken' ? 'Uitleg aan patiënt en gemaakte afspraken...' :
+                        'Algemene notities...'
+                      }
+                      className="flex-1 w-full bg-transparent p-6 text-sm text-white/80 outline-none resize-none placeholder:text-white/20 leading-relaxed"
+                    />
+                  </div>
+
+                  {/* RIGHT: Declaratie panel */}
+                  <div className="w-[420px] flex-shrink-0 overflow-y-auto p-4 space-y-4">
+                    {/* Auto-detected lines */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-white/40 uppercase tracking-wider font-medium">Auto-gedetecteerd</p>
+                          {autoDetectedLines.length > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-medium">
+                              {autoDetectedLines.length}
+                            </span>
+                          )}
+                          {aiLoading && (
+                            <div className="animate-spin rounded-full h-3 w-3 border border-purple-400 border-t-transparent" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {aiError && (
+                            <span className="text-[10px] text-amber-400">{aiError}</span>
+                          )}
+                          <button
+                            onClick={() => setAiEnabled(!aiEnabled)}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                              aiEnabled
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/20'
+                                : 'bg-white/5 text-white/30 border border-white/10'
+                            }`}
+                            title={aiEnabled ? 'AI-detectie aan (Gemini)' : 'AI-detectie uit (keywords)'}
+                          >
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+                            </svg>
+                            AI
+                          </button>
+                        </div>
+                      </div>
+
+                      {autoDetectedLines.length === 0 && !aiLoading ? (
+                        <div className="glass-light rounded-xl p-4 text-center">
+                          <Receipt className="h-6 w-6 mx-auto mb-2 text-white/15" />
+                          <p className="text-xs text-white/30">
+                            {aiEnabled
+                              ? 'Begin met typen in de notities — AI analyseert automatisch de verrichtingen'
+                              : 'Begin met typen in de notities — verrichtingen worden automatisch herkend'}
+                          </p>
+                        </div>
+                      ) : autoDetectedLines.length === 0 && aiLoading ? (
+                        <div className="glass-light rounded-xl p-4 text-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border border-purple-400 border-t-transparent mx-auto mb-2" />
+                          <p className="text-xs text-white/30">AI analyseert notities...</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {autoDetectedLines.map((line) => (
+                            <div key={line.dedupeKey} className={`glass-light rounded-xl p-3 border ${
+                              line.aiDetected ? 'border-purple-500/20' : 'border-blue-500/10'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-medium flex-shrink-0 ${
+                                  line.aiDetected ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'
+                                }`}>
+                                  {line.code}
+                                </span>
+                                {line.aiDetected && (
+                                  <span className="px-1 py-0.5 rounded bg-purple-500/10 text-purple-300 text-[9px]" title={line.reasoning || ''}>
+                                    AI
+                                  </span>
+                                )}
+                                <span className="text-xs text-white/70 truncate flex-1">{line.description}</span>
+                                <button onClick={() => removeAutoDetectedLine(line.dedupeKey)}
+                                  className="p-1 text-white/20 hover:text-red-400 transition-colors flex-shrink-0">
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-3 mt-1.5 text-[11px]">
+                                {line.toothNumber && (
+                                  <span className="text-white/40">Elem. {line.toothNumber}</span>
+                                )}
+                                <span className="text-white/40">Qty: {line.quantity}</span>
+                                <span className="text-white/60 ml-auto font-medium">
+                                  €{((parseFloat(line.unitPrice) || 0) * (parseInt(line.quantity) || 1)).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Separator */}
+                    <div className="border-t border-white/5" />
+
+                    {/* Manual lines */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs text-white/40 uppercase tracking-wider font-medium">Handmatig</p>
+                        <button onClick={addManualLine}
+                          className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                          + Regel toevoegen
+                        </button>
+                      </div>
+
+                      {manualLines.length > 0 && (
+                        <div className="space-y-2">
+                          {manualLines.map((line, i) => (
+                            <div key={i} className="glass-light rounded-xl p-3 space-y-2">
+                              <div className="flex items-start gap-2">
+                                <div className="relative w-20 flex-shrink-0">
+                                  <input placeholder="Code" value={line.code}
+                                    onChange={(e) => { updateManualLine(i, 'code', e.target.value); setActiveNzaLine(1000 + i); searchNzaCodes(e.target.value); }}
+                                    onFocus={() => { setActiveNzaLine(1000 + i); searchNzaCodes(line.code); }}
+                                    onBlur={() => setTimeout(() => setActiveNzaLine(null), 200)}
+                                    className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-xs font-mono text-blue-300 outline-none border border-white/10 focus:border-blue-500/30" />
+                                  {activeNzaLine === 1000 + i && nzaSearchResults.length > 0 && (
+                                    <div className="absolute z-50 mt-1 left-0 w-80 rounded-xl border border-white/10 max-h-48 overflow-y-auto shadow-2xl" style={{ background: '#1e2235' }}>
+                                      {nzaSearchResults.map((nza: any) => (
+                                        <button key={nza.id} onMouseDown={(e) => e.preventDefault()} onClick={() => selectNzaForManualLine(i, nza)}
+                                          className="w-full text-left px-3 py-1.5 hover:bg-blue-500/20 transition-colors flex items-center justify-between gap-2 border-b border-white/5 last:border-0">
+                                          <span className="font-mono text-[11px] text-blue-300 font-medium w-10 flex-shrink-0">{nza.code}</span>
+                                          <span className="text-[11px] text-white/60 truncate flex-1">{nza.descriptionNl}</span>
+                                          <span className="text-[10px] text-white/30 flex-shrink-0">€{Number(nza.maxTariff).toFixed(2)}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <input placeholder="Omschrijving" value={line.description}
+                                  onChange={(e) => updateManualLine(i, 'description', e.target.value)}
+                                  className="flex-1 bg-white/5 rounded-lg px-2 py-1.5 text-xs text-white/70 outline-none border border-white/10 focus:border-blue-500/30" />
+                                <button onClick={() => removeManualLine(i)}
+                                  className="p-1.5 text-white/20 hover:text-red-400 transition-colors flex-shrink-0">
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input placeholder="Elem." value={line.toothNumber}
+                                  onChange={(e) => updateManualLine(i, 'toothNumber', e.target.value)}
+                                  className="w-14 bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10" />
+                                <input placeholder="Qty" value={line.quantity}
+                                  onChange={(e) => updateManualLine(i, 'quantity', e.target.value)}
+                                  className="w-10 bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10 text-center" />
+                                <input placeholder="Prijs" value={line.unitPrice}
+                                  onChange={(e) => updateManualLine(i, 'unitPrice', e.target.value)}
+                                  className="w-16 bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10 text-right" />
+                                <span className="text-xs text-white/40 flex-1 text-right">
+                                  €{((parseFloat(line.unitPrice) || 0) * (parseInt(line.quantity) || 1)).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Total */}
+                    {(autoDetectedLines.length > 0 || manualLines.length > 0) && (
+                      <>
+                        <div className="glass-light rounded-xl p-3 flex items-center justify-between">
+                          <span className="text-xs text-white/40 uppercase tracking-wider">Totaal</span>
+                          <span className="text-lg font-bold text-white/90">€{splitViewTotal.toFixed(2)}</span>
+                        </div>
+
+                        {/* Invoice actions */}
+                        <div className="space-y-2">
+                          <button onClick={() => createInvoice(false)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all">
+                            <Receipt className="h-4 w-4" />
+                            Factuur aanmaken
+                          </button>
+                          <div className="flex gap-2">
+                            <button onClick={() => createInvoice(true)}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 glass rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all">
+                              <FileText className="h-3.5 w-3.5" />
+                              Offerte maken
+                            </button>
+                            <button disabled title="Binnenkort beschikbaar"
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 glass rounded-xl text-xs text-white/20 cursor-not-allowed">
+                              <Mail className="h-3.5 w-3.5" />
+                              E-mail
+                            </button>
+                          </div>
+                        </div>
+
+                        {invoiceCreated && (
+                          <div className="glass-light rounded-xl p-4 text-center">
+                            <Check className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-white/90">Factuur {invoiceCreated}</p>
+                            <button onClick={() => setInvoiceCreated(null)}
+                              className="mt-2 text-xs text-blue-400 hover:text-blue-300">Nieuwe declaratie</button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Notes-only full-screen overlay (legacy, accessible via maximize button) */}
+            {notesExpanded && !notesDeclSplitView && (
               <div className="fixed inset-0 z-[60] flex flex-col" style={{ background: 'linear-gradient(135deg, #1a1d2e, #16213e, #1a1a2e, #2d1b3d)' }}>
                 <div className="p-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
                   <h3 className="text-lg font-semibold text-white">Klinische notities</h3>

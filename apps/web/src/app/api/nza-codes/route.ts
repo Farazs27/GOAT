@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
     await withAuth(request);
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || undefined;
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const all = url.searchParams.get('all') === 'true';
 
     const where: any = { isActive: true };
     if (search) {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const codes = await prisma.nzaCode.findMany({
       where,
-      take: limit,
+      ...(all ? {} : { take: limit }),
       orderBy: { code: 'asc' },
     });
 
