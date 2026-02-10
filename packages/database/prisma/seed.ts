@@ -80,6 +80,32 @@ const nzaCodes2026 = [
 ];
 
 async function main() {
+  console.log('Cleaning existing data...\n');
+
+  // Delete in FK-safe order
+  await prisma.auditLog.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.credential.deleteMany();
+  await prisma.anamnesis.deleteMany();
+  await prisma.consentForm.deleteMany();
+  await prisma.insuranceClaim.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.invoiceLine.deleteMany();
+  await prisma.invoice.deleteMany();
+  await prisma.treatment.deleteMany();
+  await prisma.treatmentPlan.deleteMany();
+  await prisma.clinicalNote.deleteMany();
+  await prisma.appointment.deleteMany();
+  await prisma.toothSurface.deleteMany();
+  await prisma.tooth.deleteMany();
+  await prisma.patient.deleteMany();
+  await prisma.scheduleException.deleteMany();
+  await prisma.practitionerSchedule.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.nzaCode.deleteMany();
+  await prisma.practice.deleteMany();
+
+  console.log('Database cleaned.\n');
   console.log('Seeding database...\n');
 
   // ─── NZa Codes ───────────────────────────────────────────
@@ -341,6 +367,19 @@ async function main() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // TODAY's appointments (for dashboard visibility)
+  const todayAppointments = [
+    { patientIdx: 0, type: 'CHECKUP' as const, status: 'COMPLETED' as const, hour: 8, min: 30, dur: 30, pract: dentist.id, room: 'Kamer 1', notes: 'Halfjaarlijkse controle' },
+    { patientIdx: 1, type: 'TREATMENT' as const, status: 'COMPLETED' as const, hour: 9, min: 0, dur: 45, pract: dentist.id, room: 'Kamer 1', notes: 'Vulling element 14' },
+    { patientIdx: 3, type: 'HYGIENE' as const, status: 'COMPLETED' as const, hour: 9, min: 30, dur: 30, pract: hygienist.id, room: 'Kamer 2' },
+    { patientIdx: 2, type: 'TREATMENT' as const, status: 'IN_PROGRESS' as const, hour: 10, min: 30, dur: 60, pract: dentist.id, room: 'Kamer 1', notes: 'Kroon element 37' },
+    { patientIdx: 5, type: 'CHECKUP' as const, status: 'CHECKED_IN' as const, hour: 11, min: 30, dur: 30, pract: dentist.id, room: 'Kamer 1' },
+    { patientIdx: 7, type: 'HYGIENE' as const, status: 'CONFIRMED' as const, hour: 13, min: 0, dur: 30, pract: hygienist.id, room: 'Kamer 2' },
+    { patientIdx: 4, type: 'CONSULTATION' as const, status: 'CONFIRMED' as const, hour: 14, min: 0, dur: 30, pract: dentist.id, room: 'Kamer 1', notes: 'Bespreking implantaatkroon' },
+    { patientIdx: 8, type: 'CHECKUP' as const, status: 'SCHEDULED' as const, hour: 15, min: 0, dur: 30, pract: dentist.id, room: 'Kamer 1' },
+    { patientIdx: 6, type: 'EMERGENCY' as const, status: 'SCHEDULED' as const, hour: 16, min: 0, dur: 30, pract: dentist.id, room: 'Kamer 1', notes: 'Spoedgeval: pijnklachten' },
+  ];
+
   // Past appointments (completed)
   const pastAppointments = [
     { patientIdx: 0, type: 'CHECKUP' as const, status: 'COMPLETED' as const, daysAgo: 60, hour: 9, min: 0, dur: 30, pract: dentist.id, room: 'Kamer 1' },
@@ -370,6 +409,28 @@ async function main() {
   ];
 
   const appointmentRecords: Array<{ id: string; patientIdx: number; isPast: boolean }> = [];
+
+  // Create today's appointments
+  for (const a of todayAppointments) {
+    const start = atTime(today, a.hour, a.min);
+    const end = new Date(start.getTime() + a.dur * 60_000);
+    const rec = await prisma.appointment.create({
+      data: {
+        practiceId: practice.id,
+        patientId: patients[a.patientIdx].id,
+        practitionerId: a.pract,
+        startTime: start,
+        endTime: end,
+        durationMinutes: a.dur,
+        appointmentType: a.type,
+        status: a.status,
+        room: a.room,
+        notes: a.notes,
+      },
+    });
+    appointmentRecords.push({ id: rec.id, patientIdx: a.patientIdx, isPast: false });
+  }
+  console.log(`  ${todayAppointments.length} today's appointments seeded`);
 
   for (const a of pastAppointments) {
     const baseDate = daysAgo(a.daysAgo);
@@ -503,7 +564,7 @@ async function main() {
       practiceId: practice.id,
       patientId: patients[0].id,
       treatmentPlanId: plan1.id,
-      appointmentId: appointmentRecords[7].id, // past appointment #8
+      appointmentId: appointmentRecords[16].id, // past: Peter TREATMENT daysAgo(20)
       performedBy: dentist.id,
       toothId: tooth36_p0?.id,
       nzaCodeId: nzaMap['V21'],
@@ -522,7 +583,7 @@ async function main() {
       practiceId: practice.id,
       patientId: patients[2].id,
       treatmentPlanId: plan2.id,
-      appointmentId: appointmentRecords[2].id,
+      appointmentId: appointmentRecords[11].id, // past: Jan TREATMENT daysAgo(45)
       performedBy: dentist.id,
       toothId: tooth37_p2?.id,
       nzaCodeId: nzaMap['E03'],
@@ -557,7 +618,7 @@ async function main() {
       practiceId: practice.id,
       patientId: patients[1].id,
       treatmentPlanId: plan4.id,
-      appointmentId: appointmentRecords[12].id, // future appointment for Maria
+      appointmentId: appointmentRecords[21].id, // future: Maria TREATMENT daysAhead(1)
       performedBy: dentist.id,
       toothId: tooth14_p1?.id,
       nzaCodeId: nzaMap['V21'],
@@ -574,7 +635,7 @@ async function main() {
       practiceId: practice.id,
       patientId: patients[2].id,
       treatmentPlanId: plan2.id,
-      appointmentId: appointmentRecords[2].id,
+      appointmentId: appointmentRecords[11].id, // past: Jan TREATMENT daysAgo(45)
       performedBy: dentist.id,
       nzaCodeId: nzaMap['A01'],
       description: 'Lokale verdoving',
@@ -590,15 +651,21 @@ async function main() {
 
   // ─── Clinical Notes ──────────────────────────────────────
   console.log('Seeding clinical notes...');
+  // Appointment index mapping (today 0-8, past 9-20, future 21-28):
+  // 0:Peter today CHECKUP, 9:Peter past CHECKUP(60d), 10:Maria past CHECKUP(55d),
+  // 11:Jan past TREATMENT(45d), 12:Anna past HYGIENE(40d), 13:Hendrik past CONSULT(35d),
+  // 14:Emma past CHECKUP(30d), 15:Willem past EMERGENCY(25d), 16:Peter past TREATMENT(20d),
+  // 17:Sara past HYGIENE(15d), 18:Thomas past CHECKUP(10d), 19:Jan past TREATMENT(7d),
+  // 20:Fleur past NO_SHOW(5d), 21:Maria future TREATMENT(+1d)
   const clinicalNotes = [
-    { patientIdx: 0, apptIdx: 0, type: 'SOAP' as const, content: 'S: Patient klaagt over gevoeligheid element 36 bij koud\nO: Caries occlusaal element 36, vitaal, percussie -\nA: Caries D2 element 36\nP: Composiet vulling plannen' },
-    { patientIdx: 0, apptIdx: 7, type: 'PROGRESS' as const, content: 'Composiet vulling element 36 occlusaal geplaatst. Rubberdam gebruikt. Occlusie gecontroleerd en aangepast. Patient verdraagt het goed.' },
-    { patientIdx: 1, apptIdx: 1, type: 'SOAP' as const, content: 'S: Geen klachten, routine controle\nO: Caries distaal element 14, verder gebit in goede conditie\nA: Caries D1-D2 element 14\nP: Vulling plannen, mondhygiene instructie gegeven' },
-    { patientIdx: 2, apptIdx: 2, type: 'PROGRESS' as const, content: 'Wortelkanaalbehandeling element 37 uitgevoerd. 2 kanalen gevonden en behandeld. Calciumhydroxide als tussentijdse medicatie. Vervolgafspraak over 2 weken.' },
-    { patientIdx: 2, apptIdx: 10, type: 'PROGRESS' as const, content: 'Wortelkanaalvulling element 37 geplaatst. Goede afsluiting op rontgenfoto. Kroon besproken met patient, akkoord.' },
-    { patientIdx: 4, apptIdx: 4, type: 'SOAP' as const, content: 'S: Wil graag kroon op implantaat positie 47\nO: Implantaat 47 goed geintegreerd, voldoende botaanbod\nA: Geschikt voor implantaatkroon\nP: Behandelplan opgesteld, offerte meegegeven' },
-    { patientIdx: 6, apptIdx: 6, type: 'PROGRESS' as const, content: 'Spoedbezoek: patient is gevallen, fractuur mesiale rand element 36. Scherpe rand afgeslepen, composiet opbouw uitgevoerd. Verdere behandeling nodig.' },
-    { patientIdx: 8, apptIdx: 9, type: 'SOAP' as const, content: 'S: Geen klachten\nO: Gebit in goede staat, lichte tandsteenopbouw buccaal ondertanden\nA: Goede mondhygiene, minimale tandsteen\nP: Volgende controle over 6 maanden, verwijzing mondhygienist' },
+    { patientIdx: 0, apptIdx: 9, type: 'SOAP' as const, content: 'S: Patient klaagt over gevoeligheid element 36 bij koud\nO: Caries occlusaal element 36, vitaal, percussie -\nA: Caries D2 element 36\nP: Composiet vulling plannen' },
+    { patientIdx: 0, apptIdx: 16, type: 'PROGRESS' as const, content: 'Composiet vulling element 36 occlusaal geplaatst. Rubberdam gebruikt. Occlusie gecontroleerd en aangepast. Patient verdraagt het goed.' },
+    { patientIdx: 1, apptIdx: 10, type: 'SOAP' as const, content: 'S: Geen klachten, routine controle\nO: Caries distaal element 14, verder gebit in goede conditie\nA: Caries D1-D2 element 14\nP: Vulling plannen, mondhygiene instructie gegeven' },
+    { patientIdx: 2, apptIdx: 11, type: 'PROGRESS' as const, content: 'Wortelkanaalbehandeling element 37 uitgevoerd. 2 kanalen gevonden en behandeld. Calciumhydroxide als tussentijdse medicatie. Vervolgafspraak over 2 weken.' },
+    { patientIdx: 2, apptIdx: 19, type: 'PROGRESS' as const, content: 'Wortelkanaalvulling element 37 geplaatst. Goede afsluiting op rontgenfoto. Kroon besproken met patient, akkoord.' },
+    { patientIdx: 4, apptIdx: 13, type: 'SOAP' as const, content: 'S: Wil graag kroon op implantaat positie 47\nO: Implantaat 47 goed geintegreerd, voldoende botaanbod\nA: Geschikt voor implantaatkroon\nP: Behandelplan opgesteld, offerte meegegeven' },
+    { patientIdx: 6, apptIdx: 15, type: 'PROGRESS' as const, content: 'Spoedbezoek: patient is gevallen, fractuur mesiale rand element 36. Scherpe rand afgeslepen, composiet opbouw uitgevoerd. Verdere behandeling nodig.' },
+    { patientIdx: 8, apptIdx: 18, type: 'SOAP' as const, content: 'S: Geen klachten\nO: Gebit in goede staat, lichte tandsteenopbouw buccaal ondertanden\nA: Goede mondhygiene, minimale tandsteen\nP: Volgende controle over 6 maanden, verwijzing mondhygienist' },
   ];
 
   for (const note of clinicalNotes) {
@@ -692,7 +759,61 @@ async function main() {
     },
   });
 
-  console.log('  4 invoices seeded');
+  // Invoice 5: Hendrik's consultation (overdue)
+  const invoice5 = await prisma.invoice.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[4].id,
+      invoiceNumber: 'INV-2026-0005',
+      invoiceDate: daysAgo(50),
+      dueDate: daysAgo(20),
+      subtotal: 51.44,
+      taxAmount: 0,
+      total: 51.44,
+      insuranceAmount: 25.72,
+      patientAmount: 25.72,
+      paidAmount: 0,
+      status: 'OVERDUE',
+    },
+  });
+
+  // Invoice 6: Willem's emergency (sent)
+  const invoice6 = await prisma.invoice.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[6].id,
+      invoiceNumber: 'INV-2026-0006',
+      invoiceDate: daysAgo(25),
+      dueDate: daysFromNow(5),
+      subtotal: 110.60,
+      taxAmount: 0,
+      total: 110.60,
+      insuranceAmount: 88.48,
+      patientAmount: 22.12,
+      paidAmount: 0,
+      status: 'SENT',
+    },
+  });
+
+  // Invoice 7: Thomas's checkup (paid)
+  const invoice7 = await prisma.invoice.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[8].id,
+      invoiceNumber: 'INV-2026-0007',
+      invoiceDate: daysAgo(10),
+      dueDate: daysFromNow(20),
+      subtotal: 46.30,
+      taxAmount: 0,
+      total: 46.30,
+      insuranceAmount: 37.04,
+      patientAmount: 9.26,
+      paidAmount: 46.30,
+      status: 'PAID',
+    },
+  });
+
+  console.log('  7 invoices seeded');
 
   // ─── Invoice Lines ───────────────────────────────────────
   console.log('Seeding invoice lines...');
@@ -704,9 +825,16 @@ async function main() {
       { practiceId: practice.id, invoiceId: invoice3.id, nzaCodeId: nzaMap['C02'], description: 'Periodiek mondonderzoek', nzaCode: 'C02', quantity: 1, unitPrice: 25.72, lineTotal: 25.72, sortOrder: 1 },
       { practiceId: practice.id, invoiceId: invoice4.id, nzaCodeId: nzaMap['M02'], description: 'Mondhygienistbehandeling', nzaCode: 'M02', quantity: 2, unitPrice: 15.43, lineTotal: 30.86, sortOrder: 1 },
       { practiceId: practice.id, invoiceId: invoice4.id, nzaCodeId: nzaMap['M05'], description: 'Fluoride applicatie', nzaCode: 'M05', quantity: 1, unitPrice: 10.00, lineTotal: 10.00, sortOrder: 2 },
+      // Invoice 5: Hendrik consultation (overdue)
+      { practiceId: practice.id, invoiceId: invoice5.id, nzaCodeId: nzaMap['C03'], description: 'Consult met uitgebreid onderzoek', nzaCode: 'C03', quantity: 1, unitPrice: 51.44, lineTotal: 51.44, sortOrder: 1 },
+      // Invoice 6: Willem emergency (sent)
+      { practiceId: practice.id, invoiceId: invoice6.id, nzaCodeId: nzaMap['V23'], description: 'Composiet vulling 3 vlakken', nzaCode: 'V23', toothNumber: 36, surface: 'MOD', quantity: 1, unitPrice: 110.60, lineTotal: 110.60, sortOrder: 1 },
+      // Invoice 7: Thomas checkup (paid)
+      { practiceId: practice.id, invoiceId: invoice7.id, nzaCodeId: nzaMap['C02'], description: 'Periodiek mondonderzoek', nzaCode: 'C02', quantity: 1, unitPrice: 25.72, lineTotal: 25.72, sortOrder: 1 },
+      { practiceId: practice.id, invoiceId: invoice7.id, nzaCodeId: nzaMap['X01'], description: 'Bitewing opname (1-2)', nzaCode: 'X01', quantity: 1, unitPrice: 20.58, lineTotal: 20.58, sortOrder: 2 },
     ],
   });
-  console.log('  6 invoice lines seeded');
+  console.log('  11 invoice lines seeded');
 
   // ─── Payments ────────────────────────────────────────────
   console.log('Seeding payments...');
@@ -715,9 +843,12 @@ async function main() {
       { practiceId: practice.id, invoiceId: invoice1.id, amount: 51.44, method: 'BANK_TRANSFER', status: 'COMPLETED', paidAt: daysAgo(15) },
       { practiceId: practice.id, invoiceId: invoice1.id, amount: 12.86, method: 'IDEAL', status: 'COMPLETED', paidAt: daysAgo(12) },
       { practiceId: practice.id, invoiceId: invoice2.id, amount: 166.66, method: 'BANK_TRANSFER', status: 'COMPLETED', paidAt: daysAgo(3) },
+      // Invoice 7 (Thomas, PAID): insurance + patient portions
+      { practiceId: practice.id, invoiceId: invoice7.id, amount: 37.04, method: 'BANK_TRANSFER', status: 'COMPLETED', paidAt: daysAgo(5) },
+      { practiceId: practice.id, invoiceId: invoice7.id, amount: 9.26, method: 'PIN', status: 'COMPLETED', paidAt: daysAgo(4) },
     ],
   });
-  console.log('  3 payments seeded');
+  console.log('  5 payments seeded');
 
   // ─── Insurance Claims ────────────────────────────────────
   console.log('Seeding insurance claims...');
@@ -837,7 +968,7 @@ async function main() {
       { practiceId: practice.id, userId: dentist.id, action: 'UPDATE', resourceType: 'Treatment', resourceId: treatment1.id, oldValues: { status: 'PLANNED' }, newValues: { status: 'COMPLETED' }, ipAddress: '192.168.1.10' },
       { practiceId: practice.id, userId: admin.id, action: 'CREATE', resourceType: 'Invoice', resourceId: invoice1.id, newValues: { invoiceNumber: 'INV-2026-0001' }, ipAddress: '192.168.1.1' },
       { practiceId: practice.id, userId: dentist.id, action: 'VIEW_BSN', resourceType: 'Patient', resourceId: patients[2].id, bsnAccessed: true, bsnAccessReason: 'Verzekeringsclaim verwerking', ipAddress: '192.168.1.10' },
-      { practiceId: practice.id, userId: receptionist.id, action: 'CREATE', resourceType: 'Appointment', resourceId: appointmentRecords[12].id, newValues: { type: 'TREATMENT', patientIdx: 1 }, ipAddress: '192.168.1.20' },
+      { practiceId: practice.id, userId: receptionist.id, action: 'CREATE', resourceType: 'Appointment', resourceId: appointmentRecords[21].id, newValues: { type: 'TREATMENT', patientIdx: 1 }, ipAddress: '192.168.1.20' },
     ],
   });
   console.log('  8 audit logs seeded');
