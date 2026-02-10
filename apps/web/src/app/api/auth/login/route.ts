@@ -6,10 +6,16 @@ import { UserRole, RolePermissions } from '@dentflow/shared-types';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) {
       return Response.json({ message: 'E-mail en wachtwoord zijn verplicht' }, { status: 400 });
+    }
+
+    if (!process.env.DATABASE_URL) {
+      console.error('LOGIN ERROR: DATABASE_URL is not configured');
+      return Response.json({ message: 'Server configuratiefout' }, { status: 500 });
     }
 
     const user = await prisma.user.findUnique({
@@ -53,6 +59,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.error('Login error:', error instanceof Error ? error.message : error);
     return handleError(error);
   }
 }
