@@ -61,7 +61,7 @@ const portals = [
     id: 'patient',
     title: 'Patiënt Portaal',
     description: 'Afspraken, documenten en berichten',
-    href: '/portal',
+    href: '/patient-login',
     icon: Heart,
     gradient: 'from-teal-400 to-cyan-600',
     shadow: 'shadow-teal-500/25',

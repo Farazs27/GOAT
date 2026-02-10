@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 
 const statusLabels: Record<string, string> = {
@@ -31,9 +32,11 @@ export default function DocumentsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'invoices' | 'documents'>('invoices');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('patient_token');
+    if (!token) return;
     fetch(`/api/patient-portal/documents`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -96,7 +99,7 @@ export default function DocumentsPage() {
                       </span>
                     </div>
                     <p className="text-sm text-white/40">
-                      {new Date(inv.invoiceDate).toLocaleDateString('nl-NL', {
+                      {new Date(inv.invoiceDate || inv.createdAt).toLocaleDateString('nl-NL', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
@@ -109,15 +112,42 @@ export default function DocumentsPage() {
                       <p className="text-xs text-white/40">Totaal</p>
                       <p className="text-xl font-bold text-white/90">{formatCurrency(inv.total)}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-white/40">Eigen bijdrage</p>
-                      <p className="text-base font-semibold text-teal-300">{formatCurrency(inv.patientAmount)}</p>
-                    </div>
-                    <button className="px-4 py-2.5 rounded-2xl border border-white/10 text-sm text-white/60 hover:bg-white/5 hover:text-white/80 transition-all">
-                      Bekijken
+                    {inv.patientAmount != null && (
+                      <div className="text-right">
+                        <p className="text-xs text-white/40">Eigen bijdrage</p>
+                        <p className="text-base font-semibold text-teal-300">{formatCurrency(inv.patientAmount)}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}
+                      className="px-4 py-2.5 rounded-2xl border border-white/10 text-sm text-white/60 hover:bg-white/5 hover:text-white/80 transition-all"
+                    >
+                      {expandedId === inv.id ? 'Sluiten' : 'Bekijken'}
                     </button>
                   </div>
                 </div>
+                {expandedId === inv.id && (
+                  <div className="mt-4 pt-4 border-t border-white/8 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/40">Factuurnummer</span>
+                      <span className="text-white/70">{inv.invoiceNumber}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/40">Status</span>
+                      <span className="text-white/70">{statusLabels[inv.status] || inv.status}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-white/40">Totaalbedrag</span>
+                      <span className="text-white/70">{formatCurrency(inv.total)}</span>
+                    </div>
+                    {inv.patientAmount != null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-white/40">Eigen bijdrage</span>
+                        <span className="text-teal-300 font-medium">{formatCurrency(inv.patientAmount)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           ) : (
@@ -148,9 +178,12 @@ export default function DocumentsPage() {
                       </p>
                     </div>
                   </div>
-                  <button className="px-4 py-2.5 rounded-2xl border border-white/10 text-sm text-white/60 hover:bg-white/5 transition-all">
-                    Downloaden
-                  </button>
+                  <Link
+                    href="/portal/consent"
+                    className="px-4 py-2.5 rounded-2xl border border-white/10 text-sm text-white/60 hover:bg-white/5 transition-all"
+                  >
+                    Bekijken
+                  </Link>
                 </div>
               </div>
             ))

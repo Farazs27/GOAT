@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
 
     const where: any = { practiceId: user.practiceId };
     if (date) {
-      const start = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(date);
-      end.setHours(23, 59, 59, 999);
+      // Parse date parts explicitly to avoid UTC vs local timezone mismatch
+      const [year, month, day] = date.split('-').map(Number);
+      const start = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const end = new Date(year, month - 1, day, 23, 59, 59, 999);
       where.startTime = { gte: start, lte: end };
     }
     if (practitionerId) where.practitionerId = practitionerId;

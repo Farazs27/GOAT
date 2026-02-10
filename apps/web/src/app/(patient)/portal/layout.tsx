@@ -77,17 +77,22 @@ export default function PatientPortalLayout({ children }: { children: ReactNode 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('patient_token');
+    if (!token) {
+      router.push('/patient-login');
+      return;
+    }
     const data = localStorage.getItem('patient_data');
     if (data) {
       setPatientData(JSON.parse(data));
     }
-  }, []);
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('patient_token');
     localStorage.removeItem('patient_refresh_token');
     localStorage.removeItem('patient_data');
-    router.push('/login');
+    router.push('/patient-login');
   };
 
   const initials = patientData

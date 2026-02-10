@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     };
 
     return Response.json({
-      access_token: signAccessToken(tokenPayload, '5m'),
+      access_token: signAccessToken(tokenPayload, '1h'),
       refresh_token: signRefreshToken(tokenPayload, '8h'),
       user: {
         id: user.id,

@@ -65,9 +65,11 @@ export default function DashboardPage() {
       authFetch(`/api/appointments?date=${today}`).then(r => r.ok ? r.json() : []),
       authFetch('/api/patients?limit=6&page=1').then(r => r.ok ? r.json() : { data: [], meta: { total: 0 } }),
     ]).then(([appts, patientsData]) => {
-      setAppointments(appts);
+      setAppointments(Array.isArray(appts) ? appts : []);
       setPatients(patientsData.data || []);
       setTotalPatients(patientsData.meta?.total || 0);
+    }).catch((err) => {
+      console.error('Dashboard fetch error:', err);
     }).finally(() => setLoading(false));
   }, []);
 
