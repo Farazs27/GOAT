@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Plus, Euro, AlertTriangle, Search, ChevronDown, ChevronUp, X, CreditCard } from 'lucide-react';
+import { FileText, Plus, Euro, AlertTriangle, Search, ChevronDown, ChevronUp, X, CreditCard, Download, Loader2 } from 'lucide-react';
 
 interface InvoiceLine {
   id: string;
@@ -88,6 +88,7 @@ export default function BillingPage() {
   const [showPayment, setShowPayment] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('PIN');
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -147,6 +148,27 @@ export default function BillingPage() {
     setShowPayment(null);
     setPaymentAmount('');
     fetchData();
+  };
+
+  const handleDownloadPdf = async (invoiceId: string, invoiceNumber: string) => {
+    setDownloadingPdf(invoiceId);
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}/pdf`, { headers });
+      if (!res.ok) throw new Error('PDF download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factuur-${invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('PDF download failed', e);
+    } finally {
+      setDownloadingPdf(null);
+    }
   };
 
   const formatCurrency = (val: string | number) => {
@@ -389,6 +411,20 @@ export default function BillingPage() {
                         className="px-3 py-1.5 bg-emerald-500/80 hover:bg-emerald-500 rounded-xl text-xs font-medium text-white shadow-lg shadow-emerald-500/20 transition-all"
                       >
                         Betaling registreren
+                      </button>
+                    )}
+                    {inv.status !== 'DRAFT' && (
+                      <button
+                        onClick={() => handleDownloadPdf(inv.id, inv.invoiceNumber)}
+                        disabled={downloadingPdf === inv.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 glass rounded-xl text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 border border-white/10 transition-all disabled:opacity-50"
+                      >
+                        {downloadingPdf === inv.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5" />
+                        )}
+                        PDF downloaden
                       </button>
                     )}
                     {inv.status === 'DRAFT' && (
