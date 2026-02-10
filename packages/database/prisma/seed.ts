@@ -87,6 +87,9 @@ async function main() {
   await prisma.notification.deleteMany();
   await prisma.credential.deleteMany();
   await prisma.anamnesis.deleteMany();
+  await prisma.patientImage.deleteMany();
+  await prisma.periodontalChart.deleteMany();
+  await prisma.document.deleteMany();
   await prisma.consentForm.deleteMany();
   await prisma.insuranceClaim.deleteMany();
   await prisma.payment.deleteMany();

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase().trim() },
       include: { practice: { select: { id: true, name: true, slug: true } } },
     });
 
@@ -52,12 +52,7 @@ export async function POST(request: NextRequest) {
         permissions,
       },
     });
-  } catch (error: any) {
-    console.error('Login error:', error);
-    return Response.json({
-      message: 'Login fout',
-      debug: error?.message || String(error),
-      hasDbUrl: !!process.env.DATABASE_URL,
-    }, { status: 500 });
+  } catch (error) {
+    return handleError(error);
   }
 }

@@ -60,38 +60,38 @@ export default function PaymentsPage() {
     });
   };
 
-  const getPaymentMethodColor = (method: string) => {
+  const getPaymentMethodClasses = (method: string) => {
     const methodUpper = method.toUpperCase();
     switch (methodUpper) {
       case 'PIN':
-        return 'blue';
+        return 'bg-blue-500/20 text-blue-300 border-blue-500/20';
       case 'CONTANT':
       case 'CASH':
-        return 'green';
+        return 'bg-green-500/20 text-green-300 border-green-500/20';
       case 'IDEAL':
-        return 'purple';
+        return 'bg-purple-500/20 text-purple-300 border-purple-500/20';
       case 'OVERBOEKING':
       case 'BANK_TRANSFER':
-        return 'yellow';
+        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/20';
       default:
-        return 'gray';
+        return 'bg-gray-500/20 text-gray-300 border-gray-500/20';
     }
   };
 
-  const getStatusBadgeColor = (status: string) => {
+  const getStatusBadgeClasses = (status: string) => {
     switch (status) {
       case 'PAID':
-        return 'green';
+        return 'bg-green-500/20 text-green-300 border-green-500/20';
       case 'SENT':
-        return 'blue';
+        return 'bg-blue-500/20 text-blue-300 border-blue-500/20';
       case 'PARTIALLY_PAID':
-        return 'yellow';
+        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/20';
       case 'OVERDUE':
-        return 'red';
+        return 'bg-red-500/20 text-red-300 border-red-500/20';
       case 'DRAFT':
-        return 'gray';
+        return 'bg-gray-500/20 text-gray-300 border-gray-500/20';
       default:
-        return 'gray';
+        return 'bg-gray-500/20 text-gray-300 border-gray-500/20';
     }
   };
 
@@ -220,7 +220,6 @@ export default function PaymentsPage() {
                 IDEAL: 'iDEAL', SEPA_DIRECT_DEBIT: 'Incasso', BANK_TRANSFER: 'Overboeking',
                 CASH: 'Contant', PIN: 'PIN', CREDIT_CARD: 'Creditcard',
               };
-              const color = getPaymentMethodColor(payment.method);
               return (
                 <div
                   key={payment.id}
@@ -248,7 +247,7 @@ export default function PaymentsPage() {
                     </div>
                     <div>
                       <span
-                        className={`px-2.5 py-0.5 rounded-lg bg-${color}-500/20 text-${color}-300 border border-${color}-500/20 text-xs font-medium`}
+                        className={`px-2.5 py-0.5 rounded-lg border text-xs font-medium ${getPaymentMethodClasses(payment.method)}`}
                       >
                         {methodLabels[payment.method] || payment.method}
                       </span>
@@ -275,7 +274,6 @@ export default function PaymentsPage() {
             {outstandingInvoices.map((invoice) => {
               const remaining = Number(invoice.total) - Number(invoice.paidAmount);
               const isOverdue = invoice.status === 'OVERDUE';
-              const statusColor = getStatusBadgeColor(invoice.status);
               return (
                 <div
                   key={invoice.id}
@@ -322,7 +320,7 @@ export default function PaymentsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span
-                        className={`px-2.5 py-0.5 rounded-lg bg-${statusColor}-500/20 text-${statusColor}-300 border border-${statusColor}-500/20 text-xs font-medium`}
+                        className={`px-2.5 py-0.5 rounded-lg border text-xs font-medium ${getStatusBadgeClasses(invoice.status)}`}
                       >
                         {getStatusLabel(invoice.status)}
                       </span>

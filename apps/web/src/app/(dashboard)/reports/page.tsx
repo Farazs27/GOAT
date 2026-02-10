@@ -148,15 +148,28 @@ export default function ReportsPage() {
     }).format(amount);
   };
 
-  const getAppointmentTypeColor = (type: string) => {
-    const colors: { [key: string]: string } = {
-      'Controle': 'emerald',
-      'Behandeling': 'blue',
-      'Spoedgeval': 'red',
-      'Reiniging': 'purple',
-      'Onbekend': 'gray',
+  const getAppointmentTypeBadgeClasses = (type: string) => {
+    const classes: { [key: string]: string } = {
+      'Controle': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/20',
+      'Behandeling': 'bg-blue-500/20 text-blue-300 border-blue-500/20',
+      'Spoedgeval': 'bg-red-500/20 text-red-300 border-red-500/20',
+      'Consult': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/20',
+      'Reiniging': 'bg-purple-500/20 text-purple-300 border-purple-500/20',
+      'Onbekend': 'bg-gray-500/20 text-gray-300 border-gray-500/20',
     };
-    return colors[type] || 'gray';
+    return classes[type] || 'bg-gray-500/20 text-gray-300 border-gray-500/20';
+  };
+
+  const getAppointmentTypeBarClasses = (type: string) => {
+    const classes: { [key: string]: string } = {
+      'Controle': 'from-emerald-500/40 to-emerald-400/60',
+      'Behandeling': 'from-blue-500/40 to-blue-400/60',
+      'Spoedgeval': 'from-red-500/40 to-red-400/60',
+      'Consult': 'from-cyan-500/40 to-cyan-400/60',
+      'Reiniging': 'from-purple-500/40 to-purple-400/60',
+      'Onbekend': 'from-gray-500/40 to-gray-400/60',
+    };
+    return classes[type] || 'from-gray-500/40 to-gray-400/60';
   };
 
   if (loading) {
@@ -347,7 +360,6 @@ export default function ReportsPage() {
           {appointmentTypes.length > 0 ? (
             <div className="space-y-3">
               {appointmentTypes.map((apt) => {
-                const color = getAppointmentTypeColor(apt.type);
                 const percentage = stats.appointmentsCount > 0
                   ? Math.round((apt.count / stats.appointmentsCount) * 100)
                   : 0;
@@ -357,7 +369,7 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2.5 py-0.5 rounded-lg bg-${color}-500/20 text-${color}-300 border border-${color}-500/20 text-xs font-medium`}
+                          className={`px-2.5 py-0.5 rounded-lg border text-xs font-medium ${getAppointmentTypeBadgeClasses(apt.type)}`}
                         >
                           {apt.type}
                         </span>
@@ -371,7 +383,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className={`h-full bg-gradient-to-r from-${color}-500/40 to-${color}-400/60 rounded-full transition-all duration-500`}
+                        className={`h-full bg-gradient-to-r rounded-full transition-all duration-500 ${getAppointmentTypeBarClasses(apt.type)}`}
                         style={{ width: `${percentage}%` }}
                       />
                     </div>

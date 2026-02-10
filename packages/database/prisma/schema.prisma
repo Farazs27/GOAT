@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -91,6 +92,8 @@ model User {
   documentsUploaded Document[] @relation("UploadedBy")
   auditLogs       AuditLog[]
   notifications   Notification[]
+  periodontalChartsAuthored PeriodontalChart[] @relation("PeriodontalChartAuthor")
+  patientImagesUploaded     PatientImage[]     @relation("PatientImageUploader")
 
   @@map("users")
 }
@@ -813,6 +816,7 @@ model PeriodontalChart {
 
   practice      Practice @relation(fields: [practiceId], references: [id])
   patient       Patient  @relation(fields: [patientId], references: [id])
+  author        User     @relation("PeriodontalChartAuthor", fields: [authorId], references: [id])
 
   @@map("periodontal_charts")
 }
@@ -836,6 +840,7 @@ model PatientImage {
 
   practice    Practice @relation(fields: [practiceId], references: [id])
   patient     Patient  @relation(fields: [patientId], references: [id])
+  uploader    User     @relation("PatientImageUploader", fields: [uploadedBy], references: [id])
 
   @@map("patient_images")
 }
