@@ -1,0 +1,37 @@
+/* React Odontogram Styles - ported from react-odontogram-master */
+.odontogram-container {
+  text-align: center;
+  padding: 5px;
+  height: 240px;
+}
+
+svg.tooth {
+  cursor: pointer;
+  fill: white;
+}
+
+svg.tooth .to-do {
+  fill: red;
+}
+
+svg.tooth .done {
+  fill: blue;
+}
+
+svg.tooth .active {
+  fill: gray;
+}
+
+svg.tooth polygon {
+  stroke: black;
+  stroke-width: 0.5;
+}
+
+svg.tooth polygon:hover {
+  fill: lightgray;
+}
+
+.tooth-number {
+  font-size: 6pt;
+  font-weight: normal;
+}
