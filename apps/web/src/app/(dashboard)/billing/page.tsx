@@ -62,11 +62,11 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-gray-500/20 text-gray-300 border-gray-500/20',
   SENT: 'bg-blue-500/20 text-blue-300 border-blue-500/20',
-  PARTIALLY_PAID: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/20',
+  PARTIALLY_PAID: 'bg-amber-500/20 text-amber-300 border-amber-500/20',
   PAID: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/20',
   OVERDUE: 'bg-red-500/20 text-red-300 border-red-500/20',
-  CANCELLED: 'bg-gray-500/20 text-gray-400 border-gray-500/20',
-  CREDITED: 'bg-purple-500/20 text-purple-300 border-purple-500/20',
+  CANCELLED: 'bg-gray-500/10 text-gray-400 border-gray-500/10',
+  CREDITED: 'bg-violet-500/20 text-violet-300 border-violet-500/20',
 };
 
 const methodLabels: Record<string, string> = {
@@ -213,8 +213,8 @@ export default function BillingPage() {
 
           <div className="glass-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                <Euro className="h-5 w-5 text-yellow-400" />
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <Euro className="h-5 w-5 text-amber-400" />
               </div>
               <span className="text-xs text-white/40 uppercase tracking-wider">Openstaand</span>
             </div>
@@ -308,7 +308,7 @@ export default function BillingPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-semibold text-white/90">{formatCurrency(inv.total)}</p>
-                  <p className="text-xs text-white/40">{formatDate(inv.invoiceDate)}</p>
+                  <p className="text-xs text-white/40">{formatDate(inv.invoiceDate)} — vervalt {formatDate(inv.dueDate)}</p>
                 </div>
                 <div className="shrink-0 text-white/30">
                   {expandedId === inv.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -339,38 +339,54 @@ export default function BillingPage() {
                   </div>
 
                   {/* Lines */}
-                  <div>
-                    <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Regels</p>
-                    <div className="space-y-1">
-                      {inv.lines.map((line) => (
-                        <div key={line.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/5">
-                          <div className="flex items-center gap-3">
-                            {line.nzaCode && (
-                              <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-mono">
-                                {line.nzaCode}
-                              </span>
-                            )}
-                            <span className="text-sm text-white/70">{line.description}</span>
-                            {line.toothNumber && (
-                              <span className="text-xs text-white/40">element {line.toothNumber}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-xs text-white/40">{line.quantity}x</span>
-                            <span className="text-sm text-white/70 w-20 text-right">{formatCurrency(line.unitPrice)}</span>
-                            <span className="text-sm font-medium text-white/90 w-20 text-right">{formatCurrency(line.lineTotal)}</span>
-                          </div>
-                        </div>
-                      ))}
+                  {(inv.lines || []).length > 0 && (
+                    <div>
+                      <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Regels</p>
+                      <div className="rounded-xl overflow-hidden border border-white/5">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-white/5 text-white/40 text-xs uppercase tracking-wider">
+                              <th className="text-left px-3 py-2 font-medium">Code</th>
+                              <th className="text-left px-3 py-2 font-medium">Omschrijving</th>
+                              <th className="text-center px-3 py-2 font-medium">Element</th>
+                              <th className="text-center px-3 py-2 font-medium">Aantal</th>
+                              <th className="text-right px-3 py-2 font-medium">Prijs</th>
+                              <th className="text-right px-3 py-2 font-medium">Totaal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(inv.lines || []).map((line) => (
+                              <tr key={line.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="px-3 py-2">
+                                  {line.nzaCode ? (
+                                    <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-mono">
+                                      {line.nzaCode}
+                                    </span>
+                                  ) : (
+                                    <span className="text-white/20">-</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 text-white/70">{line.description}</td>
+                                <td className="px-3 py-2 text-center text-white/50">
+                                  {line.toothNumber || '-'}
+                                </td>
+                                <td className="px-3 py-2 text-center text-white/50">{line.quantity}</td>
+                                <td className="px-3 py-2 text-right text-white/60">{formatCurrency(line.unitPrice)}</td>
+                                <td className="px-3 py-2 text-right font-medium text-white/90">{formatCurrency(line.lineTotal)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Payments */}
-                  {inv.payments.length > 0 && (
+                  {(inv.payments || []).length > 0 && (
                     <div>
                       <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Betalingen</p>
                       <div className="space-y-1">
-                        {inv.payments.map((p) => (
+                        {(inv.payments || []).map((p) => (
                           <div key={p.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/5">
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-white/70">{methodLabels[p.method] || p.method}</span>

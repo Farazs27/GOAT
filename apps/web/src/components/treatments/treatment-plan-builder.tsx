@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, FileDown, Loader2 } from 'lucide-react';
+import TreatmentHistoryDropdown from './treatment-history-dropdown';
 
 interface NzaCode {
   id: string;
@@ -62,6 +63,7 @@ export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilder
   const [nzaResults, setNzaResults] = useState<NzaCode[]>([]);
   const [selectedNza, setSelectedNza] = useState<NzaCode | null>(null);
   const [treatmentDescription, setTreatmentDescription] = useState('');
+  const [downloadingQuote, setDownloadingQuote] = useState<string | null>(null);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
@@ -123,6 +125,29 @@ export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilder
       });
       fetchPlans();
     } catch (err) { console.error(err); }
+  };
+
+  const handleDownloadQuote = async (planId: string) => {
+    setDownloadingQuote(planId);
+    try {
+      const res = await fetch(`/api/treatment-plans/${planId}/quote-pdf`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Quote PDF download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `offerte-${planId.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Quote PDF download failed', e);
+    } finally {
+      setDownloadingQuote(null);
+    }
   };
 
   const getNextStatus = (current: string): { status: string; label: string } | null => {
@@ -222,7 +247,18 @@ export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilder
                   <tbody>
                     {plan.treatments.map((t) => (
                       <tr key={t.id} className="border-t border-white/5">
-                        <td className="p-3 text-white/70">{t.description}</td>
+                        <td className="p-3 text-white/70">
+                          <div>{t.description}</div>
+                          {(t.tooth || t.nzaCode) && (
+                            <TreatmentHistoryDropdown
+                              patientId={patientId}
+                              toothNumber={t.tooth?.toothNumber}
+                              nzaCode={t.nzaCode?.code}
+                              currentTreatmentId={t.id}
+                              token={token}
+                            />
+                          )}
+                        </td>
                         <td className="p-3"><span className="font-mono text-blue-300">{t.nzaCode?.code || '-'}</span></td>
                         <td className="p-3 text-white/50">{t.tooth?.toothNumber || '-'}</td>
                         <td className="p-3 text-right text-emerald-300">
@@ -298,12 +334,26 @@ export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilder
               <span className="text-xs text-white/30">
                 {plan.creator.firstName} {plan.creator.lastName} &middot; {new Date(plan.createdAt).toLocaleDateString('nl-NL')}
               </span>
-              {next && (
-                <button className="px-3 py-1.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-xs font-medium text-white transition-colors"
-                  onClick={() => updatePlanStatus(plan.id, next.status)}>
-                  {next.label}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDownloadQuote(plan.id)}
+                  disabled={downloadingQuote === plan.id}
+                  className="flex items-center gap-1.5 px-3 py-1.5 glass rounded-xl text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 border border-white/10 transition-all disabled:opacity-50"
+                >
+                  {downloadingQuote === plan.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <FileDown className="h-3.5 w-3.5" />
+                  )}
+                  Offerte
                 </button>
-              )}
+                {next && (
+                  <button className="px-3 py-1.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-xs font-medium text-white transition-colors"
+                    onClick={() => updatePlanStatus(plan.id, next.status)}>
+                    {next.label}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         );

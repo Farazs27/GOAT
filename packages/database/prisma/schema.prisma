@@ -22,6 +22,7 @@ model Practice {
   slug            String   @unique
   agbCode         String?  @map("agb_code") // AGB-code for VECOZO
   kvkNumber       String?  @map("kvk_number") // KvK registration
+  avgCode         String?  @map("avg_code") // AVG (privacy) registration code
   addressStreet   String?  @map("address_street")
   addressCity     String?  @map("address_city")
   addressPostal   String?  @map("address_postal")
@@ -57,6 +58,7 @@ model Practice {
   periodontalCharts PeriodontalChart[]
   patientImages     PatientImage[]
   anamneses         Anamnesis[]
+  prescriptions     Prescription[]
 
   @@map("practices")
 }
@@ -94,6 +96,7 @@ model User {
   notifications   Notification[]
   periodontalChartsAuthored PeriodontalChart[] @relation("PeriodontalChartAuthor")
   patientImagesUploaded     PatientImage[]     @relation("PatientImageUploader")
+  prescriptionsWritten      Prescription[]     @relation("Prescriber")
 
   @@map("users")
 }
@@ -168,6 +171,7 @@ model Patient {
   periodontalCharts   PeriodontalChart[]
   patientImages       PatientImage[]
   anamneses           Anamnesis[]
+  prescriptions       Prescription[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -381,6 +385,7 @@ model Appointment {
   clinicalNotes       ClinicalNote[]
   parent              Appointment?      @relation("RecurringAppointments", fields: [parentId], references: [id])
   children            Appointment[]     @relation("RecurringAppointments")
+  prescriptions       Prescription[]
 
   @@map("appointments")
 }
@@ -799,6 +804,48 @@ enum CredentialType {
   MAILGUN
   RESEND
   CUSTOM
+}
+
+// ============================================================
+// PRESCRIPTIONS
+// ============================================================
+
+model Prescription {
+  id              String             @id @default(uuid())
+  practiceId      String             @map("practice_id")
+  patientId       String             @map("patient_id")
+  appointmentId   String?            @map("appointment_id")
+  prescribedBy    String             @map("prescribed_by")
+
+  medicationName  String             @map("medication_name")
+  genericName     String?            @map("generic_name")
+  dosage          String             // e.g., "500mg"
+  frequency       String             // e.g., "3x per dag"
+  duration        String?            // e.g., "7 dagen"
+  quantity        Int?               // e.g., 21 tablets
+  route           String             @default("oraal") // oraal, topicaal, spoeling
+  instructions    String?            // e.g., "Innemen na de maaltijd"
+
+  status          PrescriptionStatus @default(ACTIVE)
+  prescribedAt    DateTime           @default(now()) @map("prescribed_at")
+  discontinuedAt  DateTime?          @map("discontinued_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  practice        Practice           @relation(fields: [practiceId], references: [id])
+  patient         Patient            @relation(fields: [patientId], references: [id])
+  appointment     Appointment?       @relation(fields: [appointmentId], references: [id])
+  prescriber      User               @relation("Prescriber", fields: [prescribedBy], references: [id])
+
+  @@map("prescriptions")
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  DISCONTINUED
+  CANCELLED
 }
 
 // ============================================================

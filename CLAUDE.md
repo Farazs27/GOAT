@@ -71,6 +71,18 @@ Major domains: auth, users, practices, patients (with nested clinical data: odon
 - Staff: `admin@dentflow.nl` / `Welcome123` (PRACTICE_ADMIN)
 - Patient: use patient email + last 4 digits of BSN
 
+## Portal Sync Rules
+
+When developing the patient portal, these rules are mandatory:
+
+1. **DO NOT modify dentist portal pages** — no changes to files in `app/(dashboard)/`
+2. **DO NOT modify existing API routes** — patient portal uses separate endpoints under `app/api/portal/`
+3. **DO NOT alter Prisma schema** without verifying all existing relations still work
+4. **Shared components** in `src/components/` can be USED but not MODIFIED — create patient-portal wrappers if needed
+5. **Auth separation**: Dentist portal uses `access_token` via `authFetch`, Patient portal uses `patient_token` — never mix these
+
+See `apps/web/PORTAL-SYNC.md` for full documentation.
+
 ## Environment Variables
 - `DATABASE_URL` — Neon Postgres pooler URL
 - `DIRECT_URL` — Neon Postgres direct URL

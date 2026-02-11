@@ -34,10 +34,16 @@ import {
   Upload,
   ZoomIn,
   ChevronRight as NavRight,
+  FileDown,
+  Loader2,
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 const Periodontogram = dynamic(() => import('@/components/Periodontogram'), { ssr: false });
+const PrescriptionForm = dynamic(() => import('@/components/prescriptions/prescription-form'), { ssr: false });
+const PrescriptionList = dynamic(() => import('@/components/prescriptions/prescription-list'), { ssr: false });
+const MedicalHistoryPanel = dynamic(() => import('@/components/patient-history/medical-history-panel'), { ssr: false });
+const TreatmentHistoryDropdown = dynamic(() => import('@/components/treatments/treatment-history-dropdown'), { ssr: false });
 
 interface PatientImage {
   id: string;
@@ -197,7 +203,8 @@ export default function AgendaPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientSearch, setPatientSearch] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [panelTab, setPanelTab] = useState<'afspraken' | 'behandelingen' | 'declaratie' | 'paro' | 'rontgen'>('afspraken');
+  const [panelTab, setPanelTab] = useState<'afspraken' | 'behandelingen' | 'declaratie' | 'paro' | 'rontgen' | 'recepten'>('afspraken');
+  const [prescriptionRefreshKey, setPrescriptionRefreshKey] = useState(0);
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
   const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
@@ -206,9 +213,11 @@ export default function AgendaPage() {
   const [activeNoteTab, setActiveNoteTab] = useState<'bevindingen' | 'behandelplan' | 'uitlegAfspraken' | 'algemeen'>('bevindingen');
   const [notesSaved, setNotesSaved] = useState(false);
   const [splitView, setSplitView] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [declarationLines, setDeclarationLines] = useState<DeclarationLine[]>([]);
   const [allNzaCodes, setAllNzaCodes] = useState<any[]>([]);
   const [nzaSearchResults, setNzaSearchResults] = useState<any[]>([]);
+  const [downloadingQuote, setDownloadingQuote] = useState<string | null>(null);
   const [activeNzaLine, setActiveNzaLine] = useState<number | null>(null);
   const [invoiceCreated, setInvoiceCreated] = useState<string | null>(null);
   const [notesExpanded, setNotesExpanded] = useState(false);
@@ -566,6 +575,27 @@ export default function AgendaPage() {
   };
 
   const removeDeclarationLine = (i: number) => setDeclarationLines(declarationLines.filter((_, idx) => idx !== i));
+
+  const handleDownloadQuote = async (planId: string) => {
+    setDownloadingQuote(planId);
+    try {
+      const res = await authFetch(`/api/treatment-plans/${planId}/quote-pdf`);
+      if (!res.ok) throw new Error('Quote PDF download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `offerte-${planId.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Quote PDF download failed', e);
+    } finally {
+      setDownloadingQuote(null);
+    }
+  };
 
   const syncPlanToDeclaration = (plan: TreatmentPlan) => {
     const lines: DeclarationLine[] = plan.treatments
@@ -1012,6 +1042,14 @@ export default function AgendaPage() {
                     title="Patiënt openen">
                     <ExternalLink className="h-3.5 w-3.5" />
                   </Link>
+                  <button
+                    onClick={() => setShowHistory(true)}
+                    className="p-1.5 glass rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
+                    title="Medisch dossier"
+                  >
+                    <History className="h-3.5 w-3.5" />
+                    <span className="text-[10px]">Dossier</span>
+                  </button>
                 </div>
 
                 {/* Divider */}
@@ -1152,6 +1190,15 @@ export default function AgendaPage() {
                 }`}>
                 <ImageIcon className="h-4 w-4" />
                 Röntgen
+              </button>
+              <button onClick={() => { setPanelTab('recepten'); setSplitView(false); }}
+                className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  panelTab === 'recepten'
+                    ? 'text-blue-300 border-b-2 border-blue-400'
+                    : 'text-white/40 hover:text-white/60'
+                }`}>
+                <Pill className="h-4 w-4" />
+                Recepten
               </button>
               <button onClick={() => { setNotesDeclSplitView(true); }}
                 className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
@@ -1585,32 +1632,43 @@ export default function AgendaPage() {
                             <div className="border-t border-white/5 px-3 pb-3">
                               <div className="space-y-1.5 mt-2">
                                 {plan.treatments.map(t => (
-                                  <div key={t.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.03]">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        {t.nzaCode && (
-                                          <span className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] font-mono text-white/40 flex-shrink-0">
-                                            {t.nzaCode.code}
+                                  <div key={t.id} className="p-2 rounded-lg bg-white/[0.03]">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          {t.nzaCode && (
+                                            <span className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] font-mono text-white/40 flex-shrink-0">
+                                              {t.nzaCode.code}
+                                            </span>
+                                          )}
+                                          <span className="text-xs text-white/70 truncate">
+                                            {t.description || t.nzaCode?.description || '—'}
+                                          </span>
+                                        </div>
+                                        {t.tooth && (
+                                          <p className="text-[10px] text-white/30 mt-0.5">Element {t.tooth.toothNumber}</p>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 flex-shrink-0">
+                                        <span className={`px-1.5 py-0.5 rounded text-[9px] border ${treatmentStatusColors[t.status]}`}>
+                                          {t.status === 'PLANNED' ? 'Gepland' : t.status === 'COMPLETED' ? 'Klaar' : t.status === 'IN_PROGRESS' ? 'Bezig' : 'Geann.'}
+                                        </span>
+                                        {t.totalPrice && (
+                                          <span className="text-[11px] text-white/40 w-16 text-right">
+                                            €{Number(t.totalPrice).toFixed(2)}
                                           </span>
                                         )}
-                                        <span className="text-xs text-white/70 truncate">
-                                          {t.description || t.nzaCode?.description || '—'}
-                                        </span>
                                       </div>
-                                      {t.tooth && (
-                                        <p className="text-[10px] text-white/30 mt-0.5">Element {t.tooth.toothNumber}</p>
-                                      )}
                                     </div>
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                      <span className={`px-1.5 py-0.5 rounded text-[9px] border ${treatmentStatusColors[t.status]}`}>
-                                        {t.status === 'PLANNED' ? 'Gepland' : t.status === 'COMPLETED' ? 'Klaar' : t.status === 'IN_PROGRESS' ? 'Bezig' : 'Geann.'}
-                                      </span>
-                                      {t.totalPrice && (
-                                        <span className="text-[11px] text-white/40 w-16 text-right">
-                                          €{Number(t.totalPrice).toFixed(2)}
-                                        </span>
-                                      )}
-                                    </div>
+                                    {selectedAppointment && (t.tooth || t.nzaCode) && (
+                                      <TreatmentHistoryDropdown
+                                        patientId={selectedAppointment.patient.id}
+                                        toothNumber={t.tooth?.toothNumber}
+                                        nzaCode={t.nzaCode?.code}
+                                        currentTreatmentId={t.id}
+                                        token={null}
+                                      />
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -1633,12 +1691,26 @@ export default function AgendaPage() {
                                   </span>
                                 </div>
                               </div>
-                              {/* Declare button */}
-                              <button onClick={() => syncPlanToDeclaration(plan)}
-                                className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl text-xs font-medium transition-colors">
-                                <ArrowRight className="h-3.5 w-3.5" />
-                                Declareren / Offerte
-                              </button>
+                              {/* Action buttons */}
+                              <div className="mt-3 flex gap-2">
+                                <button onClick={() => syncPlanToDeclaration(plan)}
+                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl text-xs font-medium transition-colors">
+                                  <ArrowRight className="h-3.5 w-3.5" />
+                                  Declareren
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadQuote(plan.id)}
+                                  disabled={downloadingQuote === plan.id}
+                                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 rounded-xl text-xs font-medium transition-colors disabled:opacity-50"
+                                >
+                                  {downloadingQuote === plan.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <FileDown className="h-3.5 w-3.5" />
+                                  )}
+                                  Offerte
+                                </button>
+                              </div>
                             </div>
                           )}
 
@@ -1942,6 +2014,26 @@ export default function AgendaPage() {
                     </div>
                   )}
                 </div>
+              ) : panelTab === 'recepten' ? (
+                /* Recepten tab */
+                <div className="space-y-4">
+                  {selectedAppointment && (
+                    <>
+                      <PrescriptionForm
+                        patientId={selectedAppointment.patient.id}
+                        appointmentId={selectedAppointment.id}
+                        onPrescriptionCreated={() => setPrescriptionRefreshKey((k) => k + 1)}
+                      />
+                      <div className="border-t border-white/10 pt-4">
+                        <p className="text-xs text-white/40 uppercase tracking-wider font-medium mb-3">Recepten</p>
+                        <PrescriptionList
+                          patientId={selectedAppointment.patient.id}
+                          refreshKey={prescriptionRefreshKey}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : null}
               </div>
 
@@ -2059,6 +2151,14 @@ export default function AgendaPage() {
             </div>
           </div>
         </>
+      )}
+      {/* Medical History Panel */}
+      {selectedAppointment && (
+        <MedicalHistoryPanel
+          patientId={selectedAppointment.patient.id}
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+        />
       )}
     </div>
   );

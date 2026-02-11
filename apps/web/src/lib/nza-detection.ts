@@ -39,133 +39,165 @@ interface KeywordRule {
   priority: number; // higher wins when multiple rules match the same region
 }
 
-// --- Keyword Rules ---
+// --- Keyword Rules (expanded with shorthand, abbreviations, synonyms) ---
 
 const KEYWORD_RULES: KeywordRule[] = [
   // CONSULTATIE
-  { keywords: ['eerste consult', 'nieuw consult', 'intake'], code: 'C01', priority: 2 },
-  { keywords: ['periodiek onderzoek', 'periodieke controle', 'halfjaarlijks onderzoek', 'controle'], code: 'C02', priority: 1 },
-  { keywords: ['uitgebreid onderzoek', 'uitgebreid consult', 'volledig onderzoek'], code: 'C03', priority: 3 },
-  { keywords: ['spoedconsult', 'spoed consult', 'buiten werktijd'], code: 'C11', priority: 4 },
-  { keywords: ['behandelplan opgesteld', 'behandelplan besproken'], code: 'C22', priority: 2 },
-  { keywords: ['probleemgericht consult'], code: 'C29', priority: 2 },
+  { keywords: ['eerste consult', 'nieuw consult', 'intake', 'nieuw patient', 'nieuw patiënt', 'eerste bezoek', 'new patient'], code: 'C01', priority: 2 },
+  { keywords: ['periodiek onderzoek', 'periodieke controle', 'halfjaarlijks onderzoek', 'halfjaarlijkse controle', 'controle', 'jaarlijkse controle', 'recall', 'nacontrole'], code: 'C02', priority: 1 },
+  { keywords: ['uitgebreid onderzoek', 'uitgebreid consult', 'volledig onderzoek', 'uitgebr onderzoek', 'uitgebr consult'], code: 'C03', priority: 3 },
+  { keywords: ['spoedconsult', 'spoed consult', 'buiten werktijd', 'avondconsult', 'weekendconsult', 'noodconsult'], code: 'C11', priority: 4 },
+  { keywords: ['verwijzing', 'schriftelijke verwijzing', 'verwezen naar', 'doorverwezen'], code: 'C13', priority: 2 },
+  { keywords: ['behandelplan opgesteld', 'behandelplan besproken', 'behandelplan gemaakt', 'beh plan', 'bhp'], code: 'C22', priority: 2 },
+  { keywords: ['poetsinstructie', 'instructie mondzorg', 'instructie mondverzorging', 'poetsinstr', 'mondzorginstructie'], code: 'C28', priority: 2 },
+  { keywords: ['probleemgericht consult', 'probleemgericht', 'klachtconsult'], code: 'C29', priority: 2 },
+  { keywords: ['telefonisch consult', 'tel consult', 'telefoon consult'], code: 'C80', priority: 2 },
+  { keywords: ['teleconsult', 'teleconsultatie', 'telezorg', 'videoconsult'], code: 'C84', priority: 2 },
+  { keywords: ['intercollegiaal consult', 'overleg collega'], code: 'C85', priority: 2 },
 
   // RONTGEN
-  { keywords: ['bitewing', 'bitewings', 'bw'], code: 'X01', priority: 1 },
-  { keywords: ['panoramisch', 'panoramische opname', 'opt', 'opg', 'panoramafoto'], code: 'X10', priority: 2 },
-  { keywords: ['periapicale opname', 'periapicaal', 'solitary'], code: 'X03', priority: 2 },
-  { keywords: ['cbct', 'conebeam', 'cone beam', 'dvt'], code: 'X21', priority: 3 },
-  { keywords: ['cephalometrisch', 'cephalogram'], code: 'X05', priority: 2 },
+  { keywords: ['bitewing', 'bitewings', 'bw', 'bite wing', 'bws'], code: 'X01', priority: 1 },
+  { keywords: ['bitewing 3', 'bitewing 4', '3 bitewings', '4 bitewings', '3 bws', '4 bws'], code: 'X02', priority: 2 },
+  { keywords: ['periapicale opname', 'periapicaal', 'solitary', 'pa foto', 'peri-apicaal', 'periapicale foto', 'kleine foto'], code: 'X03', priority: 2 },
+  { keywords: ['kleine serie', 'serie röntgen', 'meerdere foto'], code: 'X04', priority: 2 },
+  { keywords: ['panoramisch', 'panoramische opname', 'opt', 'opg', 'panoramafoto', 'pano', 'orthopantomogram'], code: 'X10', priority: 2 },
+  { keywords: ['cbct', 'conebeam', 'cone beam', 'dvt', 'cone-beam', '3d scan'], code: 'X21', priority: 3 },
+  { keywords: ['cephalometrisch', 'cephalogram', 'cefalo', 'laterale schedelopname'], code: 'X05', priority: 2 },
+  { keywords: ['intra-orale foto', 'intraorale foto', 'klinische foto'], code: 'X25', priority: 1 },
+  { keywords: ['rontgen', 'röntgen', 'foto gemaakt', 'ro gemaakt', 'rö gemaakt'], code: 'X03', priority: 0 },
 
-  // VULLING - composiet
-  { keywords: ['composiet vulling', 'composiet restauratie', 'composiet'], code: 'V21', surfaceCodeMap: { 1: 'V21', 2: 'V22', 3: 'V23', 4: 'V24' }, priority: 3 },
+  // VULLING - composiet (with shorthand)
+  { keywords: ['composiet vulling', 'composiet restauratie', 'composiet', 'comp vulling', 'comp rest', 'comp'], code: 'V21', surfaceCodeMap: { 1: 'V21', 2: 'V22', 3: 'V23', 4: 'V24' }, priority: 3 },
   // VULLING - amalgaam
-  { keywords: ['amalgaam vulling', 'amalgaam'], code: 'V01', surfaceCodeMap: { 1: 'V01', 2: 'V02', 3: 'V03' }, priority: 2 },
+  { keywords: ['amalgaam vulling', 'amalgaam', 'amal', 'amalg'], code: 'V01', surfaceCodeMap: { 1: 'V01', 2: 'V02', 3: 'V03' }, priority: 2 },
   // VULLING - glasionomeer
-  { keywords: ['glasionomeer', 'gic', 'gi cement'], code: 'V30', priority: 2 },
+  { keywords: ['glasionomeer', 'gic', 'gi cement', 'glass ionomer', 'glasionomeervulling'], code: 'V30', priority: 2 },
   // VULLING - compomeer
   { keywords: ['compomeer'], code: 'V35', priority: 2 },
   // VULLING - provisorisch
-  { keywords: ['tijdelijke vulling', 'provisorische vulling', 'cavit'], code: 'V10', priority: 2 },
-  // VULLING - stift
-  { keywords: ['parapulpaire stift', 'parastift'], code: 'V40', priority: 2 },
-  { keywords: ['wortelstift', 'gegoten stift'], code: 'V45', priority: 2 },
-  // VULLING - opbouw
-  { keywords: ['opbouw plastisch', 'kern opbouw', 'core opbouw'], code: 'V50', priority: 2 },
-  // VULLING - hoekopbouw
-  { keywords: ['hoekopbouw', 'hoek opbouw', 'hoek restauratie'], code: 'V70', priority: 3 },
-  // VULLING - facet
-  { keywords: ['direct veneer', 'composiet facet', 'direct facing'], code: 'V60', priority: 3 },
-  // VULLING - cusp replacement
-  { keywords: ['cusp vervanging', 'cusp replacement', 'knobbel opbouw'], code: 'V80', priority: 3 },
-  // VULLING - splinting
-  { keywords: ['splinting', 'tandsplinting', 'draadsplint'], code: 'V85', priority: 2 },
+  { keywords: ['tijdelijke vulling', 'provisorische vulling', 'cavit', 'temp vulling', 'noodvulling', 'temp rest'], code: 'V10', priority: 2 },
   // VULLING - caries excavatie
-  { keywords: ['stepwise excavatie', 'caries excavatie', 'stepwise'], code: 'V12', priority: 2 },
+  { keywords: ['stepwise excavatie', 'caries excavatie', 'stepwise', 'indirecte overkapping'], code: 'V12', priority: 2 },
+  // VULLING - stift
+  { keywords: ['parapulpaire stift', 'parastift', 'parapulpair'], code: 'V40', priority: 2 },
+  { keywords: ['wortelstift', 'gegoten stift', 'wortelkanaalstift', 'fiber stift', 'glasvezelstift'], code: 'V45', priority: 2 },
+  // VULLING - opbouw
+  { keywords: ['opbouw plastisch', 'kern opbouw', 'core opbouw', 'opbouw', 'core buildup', 'build-up'], code: 'V50', priority: 2 },
+  // VULLING - hoekopbouw
+  { keywords: ['hoekopbouw', 'hoek opbouw', 'hoek restauratie', 'incisale hoek'], code: 'V70', priority: 3 },
+  // VULLING - facet
+  { keywords: ['direct veneer', 'composiet facet', 'direct facing', 'directe facing'], code: 'V60', priority: 3 },
+  // VULLING - cusp replacement
+  { keywords: ['cusp vervanging', 'cusp replacement', 'knobbel opbouw', 'knobbel vervanging'], code: 'V80', priority: 3 },
+  // VULLING - splinting
+  { keywords: ['splinting', 'tandsplinting', 'draadsplint', 'retentiedraad', 'retainer'], code: 'V85', priority: 2 },
   // VULLING - kroonvervangende
-  { keywords: ['kroonvervangende restauratie', 'kroonvervangend composiet'], code: 'V75', priority: 3 },
-  // VULLING - generic (lower priority, matches "vulling" alone)
-  { keywords: ['vulling', 'restauratie'], code: 'V21', surfaceCodeMap: { 1: 'V21', 2: 'V22', 3: 'V23', 4: 'V24' }, priority: 1 },
+  { keywords: ['kroonvervangende restauratie', 'kroonvervangend composiet', 'kroonvervangende comp'], code: 'V75', priority: 3 },
+  // VULLING - generic (lower priority)
+  { keywords: ['vulling', 'restauratie', 'vulln', 'rest aangebracht'], code: 'V21', surfaceCodeMap: { 1: 'V21', 2: 'V22', 3: 'V23', 4: 'V24' }, priority: 1 },
 
-  // ENDO
-  { keywords: ['pulpa-extirpatie', 'pulpaextirpatie', 'pulpa extirpatie', 'pulpotomie'], code: 'E01', priority: 3 },
-  { keywords: ['wortelkanaalbehandeling', 'wortelkanaal', 'endo', 'wkb'], code: 'E02', channelCodeMap: { 1: 'E02', 2: 'E03', 3: 'E04' }, priority: 2 },
-  { keywords: ['directe overkapping', 'directe pulpa overkapping'], code: 'E13', priority: 3 },
-  { keywords: ['herbehandeling wortelkanaal', 'herbehandeling endo', 'revisie endo'], code: 'E31', channelCodeMap: { 1: 'E31', 2: 'E32', 3: 'E33' }, priority: 3 },
-  { keywords: ['interne bleaching', 'walking bleach'], code: 'E34', priority: 2 },
-  { keywords: ['apicoectomie', 'wortelresectie', 'wortelpuntresectie'], code: 'E57', priority: 4 },
-  { keywords: ['mta afsluiting', 'mta plug'], code: 'E85', priority: 3 },
+  // ENDO (with abbreviations)
+  { keywords: ['pulpa-extirpatie', 'pulpaextirpatie', 'pulpa extirpatie', 'pulpotomie', 'pulpacapping'], code: 'E01', priority: 3 },
+  { keywords: ['wortelkanaalbehandeling', 'wortelkanaal', 'endo', 'wkb', 'endodontische behandeling', 'zenuwbehandeling'], code: 'E02', channelCodeMap: { 1: 'E02', 2: 'E03', 3: 'E04' }, priority: 2 },
+  { keywords: ['directe overkapping', 'directe pulpa overkapping', 'directe pulpacapping', 'direct capping'], code: 'E13', priority: 3 },
+  { keywords: ['noodbehandeling endo', 'endo nood', 'open cavum', 'trepanatie', 'ontsluiting'], code: 'E16', priority: 3 },
+  { keywords: ['herbehandeling wortelkanaal', 'herbehandeling endo', 'revisie endo', 'revisie wkb', 'her-endo', 'herendo'], code: 'E31', channelCodeMap: { 1: 'E31', 2: 'E32', 3: 'E33' }, priority: 3 },
+  { keywords: ['interne bleaching', 'walking bleach', 'inwendig bleken'], code: 'E34', priority: 2 },
+  { keywords: ['opbouw wortelstift na endo', 'stift na endo'], code: 'E40', priority: 2 },
+  { keywords: ['opbouw tbv kroon na wkb', 'opbouw na endo'], code: 'E50', priority: 2 },
+  { keywords: ['hemisectie'], code: 'E55', priority: 3 },
+  { keywords: ['premolarisatie'], code: 'E56', priority: 3 },
+  { keywords: ['apicoectomie', 'wortelresectie', 'wortelpuntresectie', 'apico'], code: 'E57', priority: 4 },
+  { keywords: ['kanaallengtebepaling', 'elektronische lengtebepaling', 'apex locator'], code: 'E60', priority: 2 },
+  { keywords: ['mta afsluiting', 'mta plug', 'mta'], code: 'E85', priority: 3 },
+  { keywords: ['revascularisatie'], code: 'E86', priority: 3 },
 
-  // PREVENTIE
-  { keywords: ['tandsteen verwijderen', 'tandsteen', 'scaling', 'depuratie'], code: 'M01', priority: 1 },
-  { keywords: ['mondhygiene', 'mondhygiëne'], code: 'M02', priority: 1 },
-  { keywords: ['poetsinstructie', 'mondzorgadvies'], code: 'M03', priority: 2 },
-  { keywords: ['voedingsadvies', 'witboekje'], code: 'M04', priority: 2 },
-  { keywords: ['fluoride applicatie', 'fluoride', 'fluor applicatie'], code: 'M05', priority: 1 },
-  { keywords: ['sealing', 'sealant', 'fissuursealant', 'fissuur sealant'], code: 'M10', priority: 2 },
-  { keywords: ['dieptereiniging', 'diepe reiniging', 'rootplaning', 'root planing', 'subgingivaal'], code: 'M30', priority: 2 },
+  // PREVENTIE (with abbreviations)
+  { keywords: ['tandsteen verwijderen', 'tandsteen', 'scaling', 'depuratie', 'ts verwijderd', 'supragingivaal reiniging'], code: 'M01', priority: 1 },
+  { keywords: ['uitgebreide gebitsreiniging', 'uitgebreide reiniging', 'mondhygiene behandeling', 'mondhygiëne behandeling'], code: 'M02', priority: 2 },
+  { keywords: ['mondzorgadvies', 'voorlichting mondzorg'], code: 'M03', priority: 2 },
+  { keywords: ['voedingsadvies', 'witboekje', 'dieetadvies'], code: 'M04', priority: 2 },
+  { keywords: ['fluoride applicatie', 'fluoride', 'fluor applicatie', 'fluoridegel', 'fluor lak', 'fluor'], code: 'M05', priority: 1 },
+  { keywords: ['sealing', 'sealant', 'fissuursealant', 'fissuur sealant', 'seal'], code: 'M10', priority: 2 },
+  { keywords: ['dieptereiniging', 'diepe reiniging', 'rootplaning', 'root planing', 'subgingivaal', 'subgingivale reiniging', 'deep scaling'], code: 'M30', priority: 2 },
   { keywords: ['paro nazorg', 'nazorg parodontaal', 'parodontale nazorg'], code: 'M32', priority: 2 },
-  { keywords: ['dpsi', 'parodontale screening'], code: 'M35', priority: 2 },
-  { keywords: ['pa-status', 'parodontaal onderzoek', 'paro status', 'initieel parodontaal'], code: 'M40', priority: 3 },
-  { keywords: ['parodontale evaluatie', 'paro evaluatie'], code: 'M41', priority: 2 },
+  { keywords: ['dpsi', 'parodontale screening', 'dpsi score'], code: 'M35', priority: 2 },
+  { keywords: ['pa-status', 'parodontaal onderzoek', 'paro status', 'initieel parodontaal', 'parodontale status', 'paro onderzoek'], code: 'M40', priority: 3 },
+  { keywords: ['parodontale evaluatie', 'paro evaluatie', 'paro eval'], code: 'M41', priority: 2 },
 
-  // VERDOVING
-  { keywords: ['verdoving', 'anesthesie', 'lokale verdoving', 'verdoofd'], code: 'A01', priority: 1 },
-  { keywords: ['geleidingsverdoving', 'mandibulaire verdoving'], code: 'A15', priority: 2 },
-  { keywords: ['sedatie', 'lachgas', 'inhalatiesedatie'], code: 'A20', priority: 3 },
+  // VERDOVING (with abbreviations)
+  { keywords: ['verdoving', 'anesthesie', 'lokale verdoving', 'verdoofd', 'loco', 'infiltratie', 'verd', 'lokaal verdoofd', 'verdoving gegeven'], code: 'A01', priority: 1 },
+  { keywords: ['additionele verdoving', 'extra verdoving', 'bijprikken', 'naverdoving'], code: 'A02', priority: 2 },
+  { keywords: ['oppervlakte-anesthesie', 'oppervlakte anesthesie', 'topicale anesthesie', 'spray verdoving'], code: 'A10', priority: 2 },
+  { keywords: ['geleidingsverdoving', 'mandibulaire verdoving', 'blok anesthesie', 'mandibulairblok'], code: 'A15', priority: 2 },
+  { keywords: ['sedatie', 'lachgas', 'inhalatiesedatie', 'n2o'], code: 'A20', priority: 3 },
 
-  // EXTRACTIE
-  { keywords: ['chirurgische extractie', 'operatieve extractie'], code: 'X32', priority: 4 },
-  { keywords: ['moeilijke extractie', 'gecompliceerde extractie'], code: 'X31', priority: 3 },
-  { keywords: ['extractie', 'trekken', 'tand trekken', 'kies trekken'], code: 'X30', priority: 1 },
-  { keywords: ['melkelement extractie', 'melktand trekken', 'wisseltand'], code: 'X33', priority: 2 },
+  // EXTRACTIE (with abbreviations)
+  { keywords: ['chirurgische extractie', 'operatieve extractie', 'chir extractie', 'chir ext'], code: 'X32', priority: 4 },
+  { keywords: ['moeilijke extractie', 'gecompliceerde extractie', 'moeil ext'], code: 'X31', priority: 3 },
+  { keywords: ['extractie', 'trekken', 'tand trekken', 'kies trekken', 'ext', 'geëxtraheerd', 'verwijderd'], code: 'X30', priority: 1 },
+  { keywords: ['melkelement extractie', 'melktand trekken', 'wisseltand', 'melkelement verwijderd', 'melk ext'], code: 'X33', priority: 2 },
+  { keywords: ['hemisectie bij extractie'], code: 'X34', priority: 3 },
 
-  // KROON / BRUG / INLAY
-  { keywords: ['metalen kroon', 'kroon metaal'], code: 'R01', priority: 3 },
-  { keywords: ['mk kroon', 'metaal-keramiek kroon'], code: 'R02', priority: 3 },
-  { keywords: ['volkeramische kroon', 'zirconia kroon', 'e.max kroon', 'emax'], code: 'R03', priority: 4 },
-  { keywords: ['veneer', 'facet porselein', 'porseleinen facing'], code: 'R08', priority: 3 },
-  { keywords: ['kroon', 'porselein kroon', 'keramische kroon'], code: 'R02', priority: 2 },
-  { keywords: ['brug', 'bridge'], code: 'R10', priority: 2 },
-  { keywords: ['maryland brug', 'adhesieve brug'], code: 'R80', priority: 3 },
+  // KROON / BRUG / INLAY (with abbreviations)
+  { keywords: ['metalen kroon', 'kroon metaal', 'gouden kroon', 'gold kroon'], code: 'R01', priority: 3 },
+  { keywords: ['mk kroon', 'metaal-keramiek kroon', 'metaalkeramiek', 'metaal keramiek', 'porcelain fused'], code: 'R02', priority: 3 },
+  { keywords: ['volkeramische kroon', 'zirconia kroon', 'e.max kroon', 'emax', 'zirkonia', 'zirkonium', 'volledig keramisch'], code: 'R03', priority: 4 },
+  { keywords: ['veneer', 'facet porselein', 'porseleinen facing', 'keramisch facet', 'porselein veneer'], code: 'R08', priority: 3 },
+  { keywords: ['kroon', 'porselein kroon', 'keramische kroon', 'krn', 'kroon prep', 'kroonpreparatie'], code: 'R02', priority: 2 },
+  { keywords: ['brug', 'bridge', 'brugwerk'], code: 'R10', priority: 2 },
+  { keywords: ['maryland brug', 'adhesieve brug', 'plakbrug'], code: 'R80', priority: 3 },
   { keywords: ['inlay'], code: 'R20', surfaceCodeMap: { 1: 'R20', 2: 'R21', 3: 'R22' }, priority: 2 },
   { keywords: ['onlay'], code: 'R24', priority: 2 },
-  { keywords: ['overlay'], code: 'R25', priority: 2 },
-  { keywords: ['tijdelijke kroon', 'provisorische kroon'], code: 'R60', priority: 2 },
-  { keywords: ['recementation', 'recementation kroon', 'kroon vastgezet', 'teruggeplaatst'], code: 'R40', priority: 2 },
-  { keywords: ['kleurbepaling', 'kleur bepaald'], code: 'R75', priority: 1 },
+  { keywords: ['overlay', 'tafelkroon'], code: 'R25', priority: 2 },
+  { keywords: ['tijdelijke kroon', 'provisorische kroon', 'temp kroon', 'noodkroon', 'noodvoorziening'], code: 'R60', priority: 2 },
+  { keywords: ['recementation', 'recementation kroon', 'kroon vastgezet', 'teruggeplaatst', 'opnieuw gecementeerd'], code: 'R40', priority: 2 },
+  { keywords: ['kleurbepaling', 'kleur bepaald', 'shade'], code: 'R75', priority: 1 },
+  { keywords: ['afdruk', 'impressie', 'alginaat', 'siliconen afdruk'], code: 'R75', priority: 1 },
+  { keywords: ['noodkroon', 'noodvoorziening'], code: 'R90', priority: 2 },
 
-  // IMPLANTAAT
-  { keywords: ['implantaat plaatsen', 'implantaat chirurgisch'], code: 'I01', priority: 3 },
-  { keywords: ['implantaat kroon', 'kroon op implantaat'], code: 'I10', priority: 3 },
-  { keywords: ['healing abutment', 'healing cap'], code: 'J01', priority: 2 },
-  { keywords: ['abutment', 'mesostructuur'], code: 'J02', priority: 2 },
-  { keywords: ['peri-implantitis', 'periimplantitis'], code: 'G50', priority: 3 },
-  { keywords: ['sinuslift', 'sinus lift', 'sinusbodemelevatie'], code: 'G30', priority: 3 },
-  { keywords: ['botaugmentatie', 'bot augmentatie', 'botopbouw'], code: 'G25', priority: 2 },
+  // IMPLANTAAT (with abbreviations)
+  { keywords: ['implantaat plaatsen', 'implantaat chirurgisch', 'implantaat geplaatst', 'impl plaatsen'], code: 'I01', priority: 3 },
+  { keywords: ['implantaat kroon', 'kroon op implantaat', 'impl kroon'], code: 'I10', priority: 3 },
+  { keywords: ['healing abutment', 'healing cap', 'genezingskap'], code: 'J01', priority: 2 },
+  { keywords: ['abutment', 'mesostructuur', 'opbouw implantaat'], code: 'J02', priority: 2 },
+  { keywords: ['peri-implantitis', 'periimplantitis', 'peri implantitis'], code: 'G50', priority: 3 },
+  { keywords: ['sinuslift', 'sinus lift', 'sinusbodemelevatie', 'sinus elevatie', 'sinus bodemelevatie'], code: 'G30', priority: 3 },
+  { keywords: ['botaugmentatie', 'bot augmentatie', 'botopbouw', 'bot opbouw', 'bone graft'], code: 'G25', priority: 2 },
 
-  // GNATHOLOGIE
-  { keywords: ['opbeetplaat', 'bitesplint', 'occlusale splint', 'knarsplaat', 'relaxplaat'], code: 'F21', priority: 3 },
-  { keywords: ['gnathologisch consult', 'kaakgewricht consult'], code: 'F01', priority: 2 },
+  // GNATHOLOGIE (with abbreviations)
+  { keywords: ['opbeetplaat', 'bitesplint', 'occlusale splint', 'knarsplaat', 'relaxplaat', 'knarsbitje', 'bruxisme splint'], code: 'F21', priority: 3 },
+  { keywords: ['gnathologisch consult', 'kaakgewricht consult', 'tmj consult', 'kaakgewricht'], code: 'F01', priority: 2 },
+  { keywords: ['registratie kaakgewricht', 'kaakregistratie'], code: 'F15', priority: 2 },
+  { keywords: ['controle splint', 'aanpassing splint', 'splint controle'], code: 'F22', priority: 2 },
 
-  // PROTHETIEK
-  { keywords: ['volledige prothese', 'volledig kunstgebit', 'kunstgebit'], code: 'P01', priority: 2 },
-  { keywords: ['partieel kunstgebit', 'partiele prothese', 'partiële prothese'], code: 'P10', priority: 2 },
-  { keywords: ['frameprothese', 'frame prothese'], code: 'P15', priority: 3 },
-  { keywords: ['rebasen', 'rebasing', 'opvullen prothese'], code: 'P30', priority: 2 },
-  { keywords: ['reparatie prothese', 'prothese reparatie', 'gebroken prothese'], code: 'P35', priority: 2 },
-  { keywords: ['prothese element toevoegen', 'tand toevoegen prothese'], code: 'P37', priority: 2 },
-  { keywords: ['immediaatprothese', 'immediaat prothese'], code: 'P06', priority: 3 },
+  // PROTHETIEK (with abbreviations)
+  { keywords: ['volledige prothese', 'volledig kunstgebit', 'kunstgebit', 'volledige gebitsprothese'], code: 'P01', priority: 2 },
+  { keywords: ['partieel kunstgebit', 'partiele prothese', 'partiële prothese', 'partieel'], code: 'P10', priority: 2 },
+  { keywords: ['frameprothese', 'frame prothese', 'model gietprothese'], code: 'P15', priority: 3 },
+  { keywords: ['immediaatprothese', 'immediaat prothese', 'directe prothese'], code: 'P06', priority: 3 },
+  { keywords: ['rebasen', 'rebasing', 'opvullen prothese', 'rebase'], code: 'P30', priority: 2 },
+  { keywords: ['reparatie prothese', 'prothese reparatie', 'gebroken prothese', 'prothese rep'], code: 'P35', priority: 2 },
+  { keywords: ['prothese element toevoegen', 'tand toevoegen prothese', 'element toevoegen'], code: 'P37', priority: 2 },
 
-  // KAAKCHIRURGIE
-  { keywords: ['biopsie'], code: 'T30', priority: 3 },
-  { keywords: ['frenulectomie', 'tongriemcorrectie', 'tongriem', 'frenulum'], code: 'T40', priority: 3 },
-  { keywords: ['drainage abces', 'abces drainage', 'incisie abces'], code: 'T60', priority: 3 },
-  { keywords: ['hechting', 'hechtingen', 'wondhechting'], code: 'T70', priority: 1 },
-  { keywords: ['hechtingen verwijderen', 'hechtingen eruit'], code: 'T71', priority: 2 },
-  { keywords: ['torus', 'torus verwijderen', 'torus mandibularis'], code: 'T50', priority: 3 },
-  { keywords: ['cystectomie', 'cyste verwijdering'], code: 'T20', priority: 3 },
-  { keywords: ['geretineerd element', 'retinentie', 'verstandskies operatief'], code: 'T02', priority: 3 },
+  // KAAKCHIRURGIE (with abbreviations)
+  { keywords: ['operatieve extractie met lap', 'mucoperiostlap', 'flap extractie'], code: 'T01', priority: 3 },
+  { keywords: ['geretineerd element', 'retinentie', 'verstandskies operatief', 'retinentie verwijderen'], code: 'T02', priority: 3 },
+  { keywords: ['retinentie complex', 'complexe retinentie'], code: 'T03', priority: 4 },
+  { keywords: ['alveolotomie'], code: 'T10', priority: 3 },
+  { keywords: ['cystectomie klein', 'kleine cyste'], code: 'T20', priority: 3 },
+  { keywords: ['cystectomie groot', 'grote cyste', 'cystectomie', 'cyste verwijdering'], code: 'T21', priority: 3 },
+  { keywords: ['biopsie weke delen', 'biopsie mucosa'], code: 'T30', priority: 3 },
+  { keywords: ['biopsie bot', 'biopsie hard', 'biopsie'], code: 'T31', priority: 2 },
+  { keywords: ['frenulectomie', 'tongriemcorrectie', 'tongriem', 'frenulum', 'lippenbandcorrectie'], code: 'T40', priority: 3 },
+  { keywords: ['frenulectomie lip', 'lipbandje'], code: 'T41', priority: 3 },
+  { keywords: ['torus verwijderen', 'torus mandibularis', 'torus palatinus', 'torus'], code: 'T50', priority: 3 },
+  { keywords: ['exostose', 'exostose verwijderen'], code: 'T55', priority: 3 },
+  { keywords: ['alveoloplastiek', 'kaakwal correctie'], code: 'T57', priority: 3 },
+  { keywords: ['drainage abces', 'abces drainage', 'incisie abces', 'abces geopend'], code: 'T60', priority: 3 },
+  { keywords: ['hechting', 'hechtingen', 'wondhechting', 'gehecht', 'sutuur'], code: 'T70', priority: 1 },
+  { keywords: ['hechtingen verwijderen', 'hechtingen eruit', 'suturen verwijderd'], code: 'T71', priority: 2 },
+  { keywords: ['wondzorg', 'nacontrole wond'], code: 'T91', priority: 1 },
 ];
 
 // --- Helpers ---

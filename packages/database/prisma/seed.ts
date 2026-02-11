@@ -294,6 +294,7 @@ async function main() {
   await prisma.payment.deleteMany();
   await prisma.invoiceLine.deleteMany();
   await prisma.invoice.deleteMany();
+  await prisma.prescription.deleteMany();
   await prisma.treatment.deleteMany();
   await prisma.treatmentPlan.deleteMany();
   await prisma.clinicalNote.deleteMany();
@@ -1188,6 +1189,86 @@ async function main() {
     ],
   });
   console.log('  6 notifications seeded');
+
+  // ─── Prescriptions ──────────────────────────────────────
+  console.log('Seeding prescriptions...');
+  await prisma.prescription.createMany({
+    data: [
+      {
+        practiceId: practice.id,
+        patientId: patients[0].id,
+        prescribedBy: dentist.id,
+        medicationName: 'Amoxicilline',
+        dosage: '500mg',
+        frequency: '3x per dag',
+        duration: '7 dagen',
+        quantity: 21,
+        route: 'oraal',
+        instructions: 'Innemen na de maaltijd',
+        status: 'COMPLETED',
+        prescribedAt: daysAgo(20),
+      },
+      {
+        practiceId: practice.id,
+        patientId: patients[1].id,
+        prescribedBy: dentist.id,
+        medicationName: 'Ibuprofen',
+        dosage: '600mg',
+        frequency: '3x per dag',
+        duration: '5 dagen',
+        quantity: 15,
+        route: 'oraal',
+        instructions: 'Innemen met voedsel, niet op lege maag',
+        status: 'COMPLETED',
+        prescribedAt: daysAgo(15),
+      },
+      {
+        practiceId: practice.id,
+        patientId: patients[2].id,
+        appointmentId: appointmentRecords[3].id, // today: patient 2 TREATMENT
+        prescribedBy: dentist.id,
+        medicationName: 'Metronidazol',
+        dosage: '500mg',
+        frequency: '3x per dag',
+        duration: '7 dagen',
+        quantity: 21,
+        route: 'oraal',
+        instructions: 'Geen alcohol gebruiken tijdens de kuur',
+        status: 'ACTIVE',
+        prescribedAt: new Date(),
+      },
+      {
+        practiceId: practice.id,
+        patientId: patients[4].id,
+        prescribedBy: dentist.id,
+        medicationName: 'Chloorhexidine 0.12%',
+        dosage: '15ml',
+        frequency: '2x per dag spoelen',
+        duration: '14 dagen',
+        quantity: 1,
+        route: 'spoeling',
+        instructions: '30 seconden spoelen, daarna uitspugen. Niet eten of drinken gedurende 30 minuten na gebruik.',
+        status: 'ACTIVE',
+        prescribedAt: daysAgo(5),
+      },
+      {
+        practiceId: practice.id,
+        patientId: patients[6].id,
+        appointmentId: appointmentRecords[8].id, // today: patient 6 EMERGENCY
+        prescribedBy: dentist.id,
+        medicationName: 'Clindamycine',
+        dosage: '300mg',
+        frequency: '4x per dag',
+        duration: '7 dagen',
+        quantity: 28,
+        route: 'oraal',
+        instructions: 'Innemen met een groot glas water, bij aanhoudende diarree contact opnemen',
+        status: 'ACTIVE',
+        prescribedAt: new Date(),
+      },
+    ],
+  });
+  console.log('  5 prescriptions seeded');
 
   // ─── Credentials ─────────────────────────────────────────
   console.log('Seeding credentials...');

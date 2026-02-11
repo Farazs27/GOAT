@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
             addressPostal: true,
             kvkNumber: true,
             agbCode: true,
+            avgCode: true,
           },
         },
       },

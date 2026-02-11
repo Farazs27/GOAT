@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         include: {
           patient: { select: { id: true, firstName: true, lastName: true, patientNumber: true } },
+          lines: true,
           payments: true,
         },
       }),

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
+import { buildFewShotPrompt, buildCompanionRulesPrompt, buildShorthandPrompt } from '@/lib/knmt-codebook';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
@@ -17,7 +18,11 @@ function buildDentalPrompt(
   notes: { bevindingen: string; behandelplan: string; uitlegAfspraken: string; algemeen: string },
   codesReference: string
 ): string {
-  return `Je bent een Nederlands tandheelkundig declaratiesysteem. Analyseer de klinische notities van een tandarts en detecteer welke NZa-codes (prestatiecode mondzorg) van toepassing zijn.
+  const fewShot = buildFewShotPrompt();
+  const companionRules = buildCompanionRulesPrompt();
+  const shorthand = buildShorthandPrompt();
+
+  return `Je bent een expert Nederlands tandheelkundig declaratiesysteem gespecialiseerd in NZa prestatiecode mondzorg. Je begrijpt alle KNMT-richtlijnen, afkortingen, en tandheelkundige terminologie. Analyseer de klinische notities en detecteer de juiste NZa-codes.
 
 KLINISCHE NOTITIES:
 ---
@@ -30,18 +35,36 @@ Algemeen: ${notes.algemeen || '(leeg)'}
 BESCHIKBARE NZA-CODES:
 ${codesReference}
 
+AFKORTINGEN EN SHORTHAND:
+Tandartsen gebruiken vaak afkortingen. Herken deze:
+${shorthand}
+
+BEGELEIDENDE CODES (companion rules):
+${companionRules}
+
+BESLISBOMEN:
+- Vullingen: tel vlakken in de notatie (bijv. MOD = 3 vlakken → V23, OB = 2 vlakken → V22)
+  1 vlak → V21, 2 vlakken → V22, 3 vlakken → V23, 4+ vlakken → V24
+- Wortelkanaalbehandeling: tel kanalen
+  1 kanaal → E02, 2 kanalen → E03, 3+ kanalen → E04
+- Vlaknotatie: M=mesiaal, O=occlusaal, D=distaal, B=buccaal, V=vestibulair, L=linguaal, P=palataal
+- Tandnummers: FDI-notatie (11-48 permanent, 51-85 melkgebit)
+- Kwadrant: 1=rechtsboven, 2=linksboven, 3=linksonder, 4=rechtsonder
+
+VOORBEELDEN:
+${fewShot}
+
 INSTRUCTIES:
-1. Analyseer de notities zorgvuldig op uitgevoerde of geplande verrichtingen
-2. Identificeer tandnummers in FDI-notatie (11-48 voor permanent gebit, 51-85 voor melkgebit)
-3. Identificeer vlakken (M=mesiaal, O=occlusaal, D=distaal, B=buccaal, V=vestibulair, L=linguaal, P=palataal)
-4. Voor vullingen: tel het aantal vlakken en kies de juiste code (bijv. 1 vlak=V21, 2 vlakken=V22, 3 vlakken=V23, 4+ vlakken=V24)
-5. Voor wortelkanaalbehandelingen: tel het aantal kanalen en kies E02 (1 kanaal), E03 (2 kanalen), E04 (3+ kanalen)
-6. Detecteer ALLEEN verrichtingen die daadwerkelijk in de notities beschreven staan
-7. Voeg verdoving (A01/A15) toe als dit expliciet vermeld wordt
-8. Voeg röntgenfoto's (X-codes) toe als deze vermeld worden
-9. Voeg consulten (C-codes) toe als beschreven
-10. Let op preventieve handelingen: tandsteen (M01), fluoride (M05), sealing (M10), paro (M30/M35/M40)
-11. Geef per lijn het correcte tandnummer als dat van toepassing is
+1. Analyseer alle vier notitienvelden zorgvuldig op uitgevoerde of geplande verrichtingen
+2. Herken afkortingen en shorthand (bijv. "comp" = composiet, "ext" = extractie, "wkb" = wortelkanaalbehandeling)
+3. Tel vlakken nauwkeurig bij vullingen (MOD=3, MO=2, O=1, etc.)
+4. Tel kanalen bij endodontische behandelingen
+5. Detecteer ALLEEN verrichtingen die daadwerkelijk beschreven staan
+6. Voeg verdoving (A01) toe wanneer expliciet vermeld OF wanneer een invasieve behandeling wordt beschreven (vulling, extractie, endo)
+7. Voeg röntgenfoto's (X-codes) toe als vermeld (bw=bitewing, pano=panoramisch)
+8. Let op preventieve codes: tandsteen (M01), fluoride (M05), sealing (M10), instructie (M02)
+9. Bij parodontale behandelingen: DPSI score bepaalt de code (0-2=M30 screening, 3+=M30 intake)
+10. Geef per verrichting het correcte FDI-tandnummer als van toepassing
 
 Retourneer een JSON array met objecten:
 [

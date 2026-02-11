@@ -25,6 +25,7 @@ interface UserProfile {
     addressPostal: string;
     kvkNumber: string;
     agbCode: string;
+    avgCode: string;
   };
 }
 
@@ -42,7 +43,8 @@ interface Schedule {
 
 interface ScheduleException {
   id: string;
-  date: string;
+  date?: string;
+  exceptionDate?: string;
   reason: string;
   practitionerId: string;
   practitioner?: {
@@ -69,6 +71,21 @@ export default function SettingsPage() {
     agbCode: '',
   });
 
+  // Practice edit state
+  const [practiceEditing, setPracticeEditing] = useState(false);
+  const [savingPractice, setSavingPractice] = useState(false);
+  const [practiceForm, setPracticeForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    addressStreet: '',
+    addressCity: '',
+    addressPostal: '',
+    kvkNumber: '',
+    agbCode: '',
+    avgCode: '',
+  });
+
   // Schedule state
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [exceptions, setExceptions] = useState<ScheduleException[]>([]);
@@ -77,6 +94,8 @@ export default function SettingsPage() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const canEditPractice = profile?.role === 'PRACTICE_ADMIN' || profile?.role === 'DENTIST';
 
   // Fetch user profile
   const fetchProfile = async () => {
@@ -93,6 +112,19 @@ export default function SettingsPage() {
           bigNumber: data.bigNumber || '',
           agbCode: data.agbCode || '',
         });
+        if (data.practice) {
+          setPracticeForm({
+            name: data.practice.name || '',
+            phone: data.practice.phone || '',
+            email: data.practice.email || '',
+            addressStreet: data.practice.addressStreet || '',
+            addressCity: data.practice.addressCity || '',
+            addressPostal: data.practice.addressPostal || '',
+            kvkNumber: data.practice.kvkNumber || '',
+            agbCode: data.practice.agbCode || '',
+            avgCode: data.practice.avgCode || '',
+          });
+        }
       } else {
         showToast('Fout bij laden van profiel', 'error');
       }
@@ -124,6 +156,34 @@ export default function SettingsPage() {
       showToast('Fout bij opslaan van profiel', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Save practice
+  const handleSavePractice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSavingPractice(true);
+      const response = await authFetch('/api/practice', {
+        method: 'PATCH',
+        body: JSON.stringify(practiceForm),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfile((prev) =>
+          prev ? { ...prev, practice: { ...prev.practice, ...data } } : prev
+        );
+        setPracticeEditing(false);
+        showToast('Praktijkgegevens succesvol opgeslagen', 'success');
+      } else {
+        const err = await response.json().catch(() => null);
+        showToast(err?.error || 'Fout bij opslaan van praktijkgegevens', 'error');
+      }
+    } catch {
+      showToast('Fout bij opslaan van praktijkgegevens', 'error');
+    } finally {
+      setSavingPractice(false);
     }
   };
 
@@ -280,9 +340,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-1">
                       BIG Nummer
                     </label>
+                    <p className="text-xs text-white/30 mb-2">BIG-registratienummer</p>
                     <input
                       type="text"
                       value={profileForm.bigNumber}
@@ -295,9 +356,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-1">
                       AGB Code
                     </label>
+                    <p className="text-xs text-white/30 mb-2">AGB-code (persoonlijk)</p>
                     <input
                       type="text"
                       value={profileForm.agbCode}
@@ -324,106 +386,194 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Practice Tab (read-only) */}
+        {/* Practice Tab */}
         {activeTab === 'practice' && (
           <div className="glass-light rounded-2xl p-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white/90">Praktijkgegevens</h2>
-              <span className="text-xs text-white/40 uppercase tracking-wider px-3 py-1 rounded-lg border border-white/10">
-                Alleen lezen
-              </span>
+              {canEditPractice && !practiceEditing && (
+                <button
+                  onClick={() => setPracticeEditing(true)}
+                  className="glass rounded-xl px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                  Bewerken
+                </button>
+              )}
+              {!canEditPractice && (
+                <span className="text-xs text-white/40 uppercase tracking-wider px-3 py-1 rounded-lg border border-white/10">
+                  Alleen lezen
+                </span>
+              )}
             </div>
             {loading ? (
               <p className="text-white/50">Laden...</p>
             ) : profile?.practice ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
-                    Praktijknaam
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.practice.name || ''}
-                    readOnly
-                    className={readOnlyInputClassName}
-                  />
+              <form onSubmit={handleSavePractice}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      Praktijknaam
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.name : (profile.practice.name || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, name: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      Telefoon
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.phone : (profile.practice.phone || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, phone: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      E-mail
+                    </label>
+                    <input
+                      type="email"
+                      value={practiceEditing ? practiceForm.email : (profile.practice.email || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, email: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      Adres
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.addressStreet : (profile.practice.addressStreet || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, addressStreet: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                      placeholder="Straatnaam en huisnummer"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      Postcode
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.addressPostal : (profile.practice.addressPostal || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, addressPostal: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                      placeholder="1234 AB"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      Stad
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.addressCity : (profile.practice.addressCity || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, addressCity: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      KvK Nummer
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.kvkNumber : (profile.practice.kvkNumber || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, kvkNumber: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
+                      AGB Code (praktijk)
+                    </label>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.agbCode : (profile.practice.agbCode || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, agbCode: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/40 uppercase tracking-wider mb-1">
+                      AVG Code
+                    </label>
+                    <p className="text-xs text-white/30 mb-2">AVG-registratiecode (privacy)</p>
+                    <input
+                      type="text"
+                      value={practiceEditing ? practiceForm.avgCode : (profile.practice.avgCode || '')}
+                      onChange={(e) => setPracticeForm({ ...practiceForm, avgCode: e.target.value })}
+                      readOnly={!practiceEditing}
+                      className={practiceEditing ? inputClassName : readOnlyInputClassName}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
-                    Telefoon
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.practice.phone || ''}
-                    readOnly
-                    className={readOnlyInputClassName}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
-                    E-mail
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.practice.email || ''}
-                    readOnly
-                    className={readOnlyInputClassName}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
-                    Adres
-                  </label>
-                  <input
-                    type="text"
-                    value={
-                      [
-                        profile.practice.addressStreet,
-                        profile.practice.addressPostal,
-                        profile.practice.addressCity,
-                      ]
-                        .filter(Boolean)
-                        .join(', ') || ''
-                    }
-                    readOnly
-                    className={readOnlyInputClassName}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
-                    KvK Nummer
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.practice.kvkNumber || ''}
-                    readOnly
-                    className={readOnlyInputClassName}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs text-white/40 uppercase tracking-wider mb-2">
-                    AGB Code
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.practice.agbCode || ''}
-                    readOnly
-                    className={readOnlyInputClassName}
-                  />
-                </div>
-              </div>
+                {practiceEditing && (
+                  <div className="flex justify-end gap-3 pt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPracticeEditing(false);
+                        if (profile?.practice) {
+                          setPracticeForm({
+                            name: profile.practice.name || '',
+                            phone: profile.practice.phone || '',
+                            email: profile.practice.email || '',
+                            addressStreet: profile.practice.addressStreet || '',
+                            addressCity: profile.practice.addressCity || '',
+                            addressPostal: profile.practice.addressPostal || '',
+                            kvkNumber: profile.practice.kvkNumber || '',
+                            agbCode: profile.practice.agbCode || '',
+                            avgCode: profile.practice.avgCode || '',
+                          });
+                        }
+                      }}
+                      className="glass rounded-xl text-sm font-medium text-white/60 px-6 py-3 hover:text-white hover:bg-white/10 transition-all"
+                    >
+                      Annuleren
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingPractice}
+                      className="bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white px-6 py-3 shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                      {savingPractice ? 'Opslaan...' : 'Opslaan'}
+                    </button>
+                  </div>
+                )}
+              </form>
             ) : (
               <p className="text-white/50">Geen praktijkgegevens beschikbaar</p>
             )}
           </div>
         )}
 
-        {/* Schedule Tab (kept as-is) */}
+        {/* Schedule Tab */}
         {activeTab === 'schedule' && (
           <div className="space-y-6">
             {/* Weekly Schedule */}
@@ -484,7 +634,7 @@ export default function SettingsPage() {
                       <div>
                         <p className="text-white/90 font-medium">{exception.reason}</p>
                         <p className="text-sm text-white/50 mt-1">
-                          {new Date(exception.date).toLocaleDateString('nl-NL')}
+                          {new Date((exception.exceptionDate || exception.date) as string).toLocaleDateString('nl-NL')}
                           {exception.practitioner && (
                             <span className="ml-2">
                               - {exception.practitioner.firstName}{' '}

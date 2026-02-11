@@ -1,9 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Calendar, Users, Euro, AlertCircle, Clock, TrendingUp, Activity } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Calendar, Users, Euro, AlertCircle, Clock, TrendingUp, Activity, X, ExternalLink, FileText, Pill } from 'lucide-react';
 import Link from 'next/link';
 import { authFetch } from '@/lib/auth-fetch';
+
+interface TreatmentPlan {
+  id: string;
+  treatmentType: string;
+  status: string;
+  description?: string;
+}
+
+interface ClinicalNote {
+  id: string;
+  content: string;
+  noteText?: string;
+  createdAt: string;
+}
+
+interface AppointmentDetail {
+  treatmentPlans: TreatmentPlan[];
+  notes: ClinicalNote[];
+  prescriptionCount: number;
+  loading: boolean;
+}
 
 interface Appointment {
   id: string;
@@ -56,6 +77,41 @@ export default function DashboardPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [totalPatients, setTotalPatients] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [detail, setDetail] = useState<AppointmentDetail>({ treatmentPlans: [], notes: [], prescriptionCount: 0, loading: false });
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const openAppointmentDetail = useCallback((appt: Appointment) => {
+    setSelectedAppointment(appt);
+    setDetail({ treatmentPlans: [], notes: [], prescriptionCount: 0, loading: true });
+
+    Promise.all([
+      authFetch(`/api/treatment-plans?patientId=${appt.patient.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      authFetch(`/api/clinical-notes?appointmentId=${appt.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      authFetch(`/api/prescriptions?patientId=${appt.patient.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([plans, notes, prescriptions]) => {
+      setDetail({
+        treatmentPlans: Array.isArray(plans) ? plans : plans?.data || [],
+        notes: Array.isArray(notes) ? notes : notes?.data || [],
+        prescriptionCount: Array.isArray(prescriptions) ? prescriptions.length : prescriptions?.data?.length || 0,
+        loading: false,
+      });
+    }).catch(() => {
+      setDetail(prev => ({ ...prev, loading: false }));
+    });
+  }, []);
+
+  const closeModal = useCallback(() => setSelectedAppointment(null), []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    if (selectedAppointment) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [selectedAppointment, closeModal]);
 
   useEffect(() => {
     const now = new Date();
@@ -65,8 +121,6 @@ export default function DashboardPage() {
       authFetch(`/api/appointments?date=${today}`).then(r => r.ok ? r.json() : []),
       authFetch('/api/patients?limit=6&page=1').then(r => r.ok ? r.json() : { data: [], meta: { total: 0 } }),
     ]).then(([appts, patientsData]) => {
-      console.log('DEBUG appointments:', JSON.stringify(appts).slice(0,200));
-      console.log('DEBUG patients:', JSON.stringify(patientsData).slice(0,200));
       setAppointments(Array.isArray(appts) ? appts : []);
       setPatients(patientsData.data || []);
       setTotalPatients(patientsData.meta?.total || 0);
@@ -190,7 +244,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {appointments.map((a) => (
-                <div key={a.id} className="flex items-center justify-between p-3 glass-light rounded-xl">
+                <div key={a.id} onClick={() => openAppointmentDetail(a)} className="flex items-center justify-between p-3 glass-light rounded-xl cursor-pointer hover:bg-[var(--bg-card-hover)] transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="text-sm font-mono text-[var(--text-tertiary)] w-12">
                       {new Date(a.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
@@ -254,6 +308,143 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Appointment Detail Modal */}
+      {selectedAppointment && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+        >
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+          <div ref={modalRef} className="glass-card rounded-2xl p-6 w-full max-w-lg relative z-10 max-h-[80vh] overflow-y-auto border border-[var(--border-color)]">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">
+                  {selectedAppointment.patient.firstName} {selectedAppointment.patient.lastName}
+                </h3>
+                <p className="text-xs text-[var(--text-tertiary)]">
+                  Patiëntnr: {selectedAppointment.patient.patientNumber}
+                </p>
+              </div>
+              <button
+                onClick={closeModal}
+                className="w-8 h-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center hover:bg-[var(--bg-card-hover)] transition-colors"
+              >
+                <X className="h-4 w-4 text-[var(--text-tertiary)]" />
+              </button>
+            </div>
+
+            {/* Appointment Info */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="glass-light rounded-xl p-3">
+                <p className="text-xs text-[var(--text-tertiary)] mb-1">Tijd</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  {new Date(selectedAppointment.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                  {' - '}
+                  {new Date(selectedAppointment.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <div className="glass-light rounded-xl p-3">
+                <p className="text-xs text-[var(--text-tertiary)] mb-1">Type</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  {typeLabels[selectedAppointment.appointmentType] || selectedAppointment.appointmentType}
+                </p>
+              </div>
+              <div className="glass-light rounded-xl p-3">
+                <p className="text-xs text-[var(--text-tertiary)] mb-1">Status</p>
+                <span className={`text-xs px-2.5 py-1 rounded-lg border ${statusConfig[selectedAppointment.status]?.style || ''}`}>
+                  {statusConfig[selectedAppointment.status]?.label || selectedAppointment.status}
+                </span>
+              </div>
+              <div className="glass-light rounded-xl p-3">
+                <p className="text-xs text-[var(--text-tertiary)] mb-1">Kamer</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  {selectedAppointment.room || '—'}
+                </p>
+              </div>
+            </div>
+
+            {/* Extra details */}
+            {detail.loading ? (
+              <div className="flex items-center justify-center py-6">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-[var(--accent)] border-t-transparent"></div>
+              </div>
+            ) : (
+              <div className="space-y-3 mb-5">
+                {/* Treatment Plans */}
+                {detail.treatmentPlans.length > 0 && (
+                  <div className="glass-light rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-3.5 w-3.5 text-[var(--accent)]" />
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Behandelplannen</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      {detail.treatmentPlans.slice(0, 3).map(tp => (
+                        <div key={tp.id} className="flex items-center justify-between text-sm">
+                          <span className="text-[var(--text-primary)]">{tp.treatmentType || tp.description || 'Behandeling'}</span>
+                          <span className="text-xs text-[var(--text-tertiary)]">{tp.status}</span>
+                        </div>
+                      ))}
+                      {detail.treatmentPlans.length > 3 && (
+                        <p className="text-xs text-[var(--text-muted)]">+{detail.treatmentPlans.length - 3} meer</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {detail.notes.length > 0 && (
+                  <div className="glass-light rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-3.5 w-3.5 text-violet-500" />
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Notities</p>
+                    </div>
+                    <p className="text-sm text-[var(--text-tertiary)] line-clamp-3">
+                      {detail.notes[0].content}
+                    </p>
+                    {detail.notes.length > 1 && (
+                      <p className="text-xs text-[var(--text-muted)] mt-1">+{detail.notes.length - 1} meer notities</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Prescriptions count */}
+                {detail.prescriptionCount > 0 && (
+                  <div className="glass-light rounded-xl p-3 flex items-center gap-2">
+                    <Pill className="h-3.5 w-3.5 text-emerald-500" />
+                    <p className="text-sm text-[var(--text-primary)]">{detail.prescriptionCount} recept{detail.prescriptionCount !== 1 ? 'en' : ''}</p>
+                  </div>
+                )}
+
+                {detail.treatmentPlans.length === 0 && detail.notes.length === 0 && detail.prescriptionCount === 0 && (
+                  <p className="text-xs text-[var(--text-muted)] text-center py-2">Geen aanvullende gegevens beschikbaar</p>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Link
+                href="/agenda"
+                onClick={closeModal}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
+              >
+                <Calendar className="h-4 w-4" />
+                Bekijk in agenda
+              </Link>
+              <Link
+                href={`/patients/${selectedAppointment.patient.id}`}
+                onClick={closeModal}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--text-primary)] text-sm font-medium hover:bg-[var(--bg-card-hover)] transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Patiënt bekijken
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

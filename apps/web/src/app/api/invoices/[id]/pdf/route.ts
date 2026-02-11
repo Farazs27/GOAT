@@ -16,6 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             firstName: true,
             lastName: true,
             patientNumber: true,
+            bsn: true,
             email: true,
             addressStreet: true,
             addressCity: true,
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         name: true,
         agbCode: true,
         kvkNumber: true,
+        avgCode: true,
         addressStreet: true,
         addressCity: true,
         addressPostal: true,
@@ -44,6 +46,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     if (!practice) throw new ApiError('Praktijk niet gevonden', 404);
+
+    // Fetch practitioner (logged-in user) details for the PDF
+    const practitioner = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { firstName: true, lastName: true, bigNumber: true },
+    });
 
     const pdfInvoice = {
       invoiceNumber: invoice.invoiceNumber,
@@ -58,10 +66,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       status: invoice.status,
       notes: invoice.notes,
       patient: invoice.patient,
+      practitioner: practitioner ? {
+        name: `${practitioner.firstName} ${practitioner.lastName}`,
+        bigNumber: practitioner.bigNumber,
+      } : null,
       lines: invoice.lines.map((l) => ({
         nzaCode: l.nzaCode,
         description: l.description,
         toothNumber: l.toothNumber,
+        surface: l.surface,
         quantity: l.quantity,
         unitPrice: Number(l.unitPrice),
         lineTotal: Number(l.lineTotal),
