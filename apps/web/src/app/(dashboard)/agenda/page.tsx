@@ -236,6 +236,7 @@ export default function AgendaPage() {
   const [aiEnabled, setAiEnabled] = useState(true);
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
   const [pendingLoading, setPendingLoading] = useState<Record<string, boolean>>({});
+  const [expandedPendingId, setExpandedPendingId] = useState<string | null>(null);
   const [expandedAppointmentId, setExpandedAppointmentId] = useState<string | null>(null);
   const [appointmentDetailCache, setAppointmentDetailCache] = useState<Record<string, { practitioner?: string; room?: string; notes: any[]; treatments: any[]; prescriptions: any[]; declarations: any[]; loading: boolean }>>({});
   const [formData, setFormData] = useState({
@@ -859,52 +860,110 @@ export default function AgendaPage() {
             </span>
           </div>
           <div className="divide-y divide-white/[0.06]">
-            {pendingAppointments.map((appt) => (
-              <div key={appt.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="text-center min-w-[48px]">
-                    <div className="text-lg font-bold text-white/90 leading-none">{new Date(appt.startTime).getDate()}</div>
-                    <div className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">
-                      {new Date(appt.startTime).toLocaleDateString('nl-NL', { month: 'short' })}
+            {pendingAppointments.map((appt) => {
+              const isExpanded = expandedPendingId === appt.id;
+              return (
+                <div key={appt.id}>
+                  <div
+                    className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    onClick={() => setExpandedPendingId(isExpanded ? null : appt.id)}
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <ChevronDown className={`h-4 w-4 text-white/30 transition-transform shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+                      <div className="text-center min-w-[48px]">
+                        <div className="text-lg font-bold text-white/90 leading-none">{new Date(appt.startTime).getDate()}</div>
+                        <div className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">
+                          {new Date(appt.startTime).toLocaleDateString('nl-NL', { month: 'short' })}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-white/90">
+                            {appt.patient.firstName} {appt.patient.lastName}
+                          </span>
+                          <span className="text-xs text-white/30">#{appt.patient.patientNumber}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-white/40">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {new Date(appt.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} – {new Date(appt.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span>{typeLabels[appt.appointmentType] || appt.appointmentType}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleApproveAppointment(appt.id)}
+                        disabled={pendingLoading[appt.id]}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition-all disabled:opacity-50"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Goedkeuren
+                      </button>
+                      <button
+                        onClick={() => handleRejectAppointment(appt.id)}
+                        disabled={pendingLoading[appt.id]}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold hover:bg-red-500/20 transition-all disabled:opacity-50"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Afwijzen
+                      </button>
                     </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium text-white/90">
-                        {appt.patient.firstName} {appt.patient.lastName}
-                      </span>
-                      <span className="text-xs text-white/30">#{appt.patient.patientNumber}</span>
+                  {isExpanded && (
+                    <div className="px-5 pb-4 pt-1 ml-[72px] space-y-3 border-t border-white/[0.04]">
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                        <div>
+                          <span className="text-white/30 text-xs">Datum</span>
+                          <p className="text-white/80">{new Date(appt.startTime).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        </div>
+                        <div>
+                          <span className="text-white/30 text-xs">Tijd</span>
+                          <p className="text-white/80">{new Date(appt.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} – {new Date(appt.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} ({appt.durationMinutes} min)</p>
+                        </div>
+                        <div>
+                          <span className="text-white/30 text-xs">Type afspraak</span>
+                          <p className="text-white/80">{typeLabels[appt.appointmentType] || appt.appointmentType}</p>
+                        </div>
+                        <div>
+                          <span className="text-white/30 text-xs">Behandelaar</span>
+                          <p className="text-white/80">{appt.practitioner.firstName} {appt.practitioner.lastName}</p>
+                        </div>
+                        {appt.patient.phone && (
+                          <div>
+                            <span className="text-white/30 text-xs">Telefoon</span>
+                            <p className="text-white/80 flex items-center gap-1.5"><Phone className="h-3 w-3 text-white/30" />{appt.patient.phone}</p>
+                          </div>
+                        )}
+                        {appt.room && (
+                          <div>
+                            <span className="text-white/30 text-xs">Kamer</span>
+                            <p className="text-white/80">{appt.room}</p>
+                          </div>
+                        )}
+                      </div>
+                      {appt.patientNotes && (
+                        <div>
+                          <span className="text-white/30 text-xs">Opmerking van patiënt</span>
+                          <p className="text-white/70 text-sm mt-0.5 bg-white/[0.03] rounded-xl px-4 py-2.5 border border-white/[0.06]">{appt.patientNotes}</p>
+                        </div>
+                      )}
+                      {appt.patient.medicalAlerts && appt.patient.medicalAlerts.length > 0 && (
+                        <div>
+                          <span className="text-red-400/70 text-xs flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Medische waarschuwingen</span>
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            {appt.patient.medicalAlerts.map((alert: string, i: number) => (
+                              <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-300">{alert}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5 text-xs text-white/40">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(appt.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} – {new Date(appt.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <span>{typeLabels[appt.appointmentType] || appt.appointmentType}</span>
-                      {appt.patientNotes && <span className="truncate max-w-[200px]" title={appt.patientNotes}>"{appt.patientNotes}"</span>}
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-4">
-                  <button
-                    onClick={() => handleApproveAppointment(appt.id)}
-                    disabled={pendingLoading[appt.id]}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition-all disabled:opacity-50"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    Goedkeuren
-                  </button>
-                  <button
-                    onClick={() => handleRejectAppointment(appt.id)}
-                    disabled={pendingLoading[appt.id]}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold hover:bg-red-500/20 transition-all disabled:opacity-50"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    Afwijzen
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

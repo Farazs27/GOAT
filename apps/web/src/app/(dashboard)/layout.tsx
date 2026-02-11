@@ -13,6 +13,7 @@ import {
   ArrowLeftRight,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import AiChat from '@/components/AiChat';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -103,6 +104,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+      <AiChat />
     </div>
   );
 }

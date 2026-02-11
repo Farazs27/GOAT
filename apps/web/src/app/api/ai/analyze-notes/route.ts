@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
-import { buildFewShotPrompt, buildCompanionRulesPrompt, buildShorthandPrompt } from '@/lib/knmt-codebook';
+import { NZA_CODE_EXAMPLES } from '@/lib/ai/nza-codebook';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
@@ -14,72 +14,176 @@ interface AiDetectedCode {
   reasoning: string;
 }
 
-function buildDentalPrompt(
+// Category keywords for pre-filtering — only send relevant categories to prompt
+const CATEGORY_TRIGGERS: Record<string, string[]> = {
+  VERDOVING: ['verdoving', 'loco', 'anesthesie', 'geleidingsverdoving', 'sedatie', 'lachgas', 'verd'],
+  CONSULTATIE: ['consult', 'controle', 'onderzoek', 'recall', 'verwijzing', 'intake', 'telefonisch', 'spoed', 'behandelplan', 'instructie', 'mondverzorging'],
+  ENDO: ['endo', 'wkb', 'wortelkanaal', 'pulpa', 'extirpatie', 'pulpitis', 'kanaal', 'kanalen', 'devitalisatie', 'trepanatie', 'MTA', 'revascularisatie', 'apicoectomie', 'hemisectie', 'open cavum', 'resorptie'],
+  GNATHOLOGIE: ['gnathologie', 'TMJ', 'kaakgewricht', 'opbeetplaat', 'splint', 'bruxisme', 'klikken', 'crepitatie'],
+  IMPLANTOLOGIE_CHIR: ['implantaat', 'impl', 'sinuslift', 'botopbouw', 'augmentatie', 'peri-implantitis', 'membraan', 'explantatie', 'fixture'],
+  ORTHODONTIE: ['ortho', 'bracket', 'beugel', 'retainer', 'aligner', 'Invisalign', 'draadwissel', 'debonding', 'minischroef'],
+  IMPLANTOLOGIE_PROT: ['abutment', 'healing abutment', 'mesostructuur', 'impl kroon', 'implantaatkroon', 'steg', 'drukknop', 'click prothese', 'Locator'],
+  PREVENTIE: ['tandsteen', 'reiniging', 'gebitsreiniging', 'poetsinstructie', 'fluoride', 'fluor', 'sealing', 'sealant', 'paro', 'DPSI', 'parodontaal', 'dieptereiniging', 'scaling', 'mondhygiëne', 'Preventie'],
+  PROTHETIEK: ['prothese', 'kunstgebit', 'rebasen', 'reparatie proth', 'frameprothese', 'immediaatprothese', 'overkappingsprothese', 'klammer', 'Prothetiek'],
+  KROON: ['kroon', 'brug', 'veneer', 'facing', 'inlay', 'onlay', 'overlay', 'stiftkroon', 'Maryland', 'recementation', 'verlijmen', 'prep', 'preparatie', 'kleurbepaling', 'wax-up', 'Kroon'],
+  KAAKCHIRURGIE: ['chirurgisch', 'operatief', 'flap', 'mucoperiostlap', 'cystectomie', 'biopsie', 'frenulectomie', 'torus', 'exostose', 'alveoloplastiek', 'drainage', 'abces', 'hechting', 'hechtingen', 'fractuur', 'repositie', 'Kaakchirurgie'],
+  VULLING: ['vulling', 'comp', 'composiet', 'amalgaam', 'amal', 'glasionomeer', 'GIC', 'compomeer', 'opbouw', 'stift', 'facet', 'hoekopbouw', 'splinting', 'cusp', 'cariës', 'excavatie', 'provisorisch', 'tijdelijk', 'Vulling'],
+  RONTGEN: ['röntgen', 'bitewing', 'bw', 'pano', 'OPT', 'OPG', 'CBCT', 'periapicaal', 'PA foto', 'cephalometrisch', 'ceph', 'foto', 'opname', 'Rontgen'],
+  EXTRACTIE: ['extractie', 'ext', 'trekken', 'exo', 'melkelement', 'melktand', 'Extractie'],
+  IMPLANTAAT: ['implantaat', 'impl', 'implantatie', 'fixture', 'implantaatkroon', 'Implantaat'],
+};
+
+function getRelevantCategories(notes: string): string[] {
+  const lowerNotes = notes.toLowerCase();
+  const matched = new Set<string>();
+
+  for (const [category, triggers] of Object.entries(CATEGORY_TRIGGERS)) {
+    for (const trigger of triggers) {
+      if (lowerNotes.includes(trigger.toLowerCase())) {
+        matched.add(category);
+        break;
+      }
+    }
+  }
+
+  // Always include VERDOVING if any invasive procedure is detected
+  const invasiveCategories = ['ENDO', 'VULLING', 'EXTRACTIE', 'KROON', 'KAAKCHIRURGIE', 'IMPLANTOLOGIE_CHIR', 'IMPLANTAAT'];
+  if (invasiveCategories.some(c => matched.has(c))) {
+    matched.add('VERDOVING');
+  }
+
+  // Always include CONSULTATIE for context
+  matched.add('CONSULTATIE');
+
+  // If nothing specific matched, send everything
+  if (matched.size <= 2) {
+    return Object.keys(CATEGORY_TRIGGERS);
+  }
+
+  return Array.from(matched);
+}
+
+function buildCodebookPrompt(relevantCategories: string[]): string {
+  const categorySet = new Set(relevantCategories);
+  // Match on both uppercase category key and the actual category value in the codebook
+  const relevantExamples = NZA_CODE_EXAMPLES.filter(ex =>
+    categorySet.has(ex.category) || categorySet.has(ex.category.toUpperCase())
+  );
+
+  return relevantExamples.map(ex => {
+    const lines = [
+      `CODE: ${ex.code} — ${ex.description} (€${ex.maxTariff}${ex.requiresTooth ? ', per element' : ''}${ex.requiresSurface ? ', per vlak' : ''})`,
+      `  Voorbeelden: ${ex.examples.map(e => `"${e}"`).join(' | ')}`,
+      `  Trefwoorden: ${ex.keywords.join(', ')}`,
+    ];
+    if (ex.companions.length > 0) {
+      lines.push(`  Begeleidende codes: ${ex.companions.join(', ')}`);
+    }
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
+function buildPrompt(
   notes: { bevindingen: string; behandelplan: string; uitlegAfspraken: string; algemeen: string },
-  codesReference: string
+  codebookSection: string,
+  allCodesList: string
 ): string {
-  const fewShot = buildFewShotPrompt();
-  const companionRules = buildCompanionRulesPrompt();
-  const shorthand = buildShorthandPrompt();
+  return `Je bent een expert Nederlands tandheelkundig declaratiesysteem. Je kent ALLE NZa prestatiecodes, KNMT-richtlijnen, en tandheelkundige terminologie. Je MOET de juiste NZa-codes detecteren uit klinische notities.
 
-  return `Je bent een expert Nederlands tandheelkundig declaratiesysteem gespecialiseerd in NZa prestatiecode mondzorg. Je begrijpt alle KNMT-richtlijnen, afkortingen, en tandheelkundige terminologie. Analyseer de klinische notities en detecteer de juiste NZa-codes.
-
-KLINISCHE NOTITIES:
----
+KLINISCHE NOTITIES VAN DE TANDARTS:
+═══════════════════════════════════
 Bevindingen: ${notes.bevindingen || '(leeg)'}
 Behandelplan: ${notes.behandelplan || '(leeg)'}
 Uitleg & Afspraken: ${notes.uitlegAfspraken || '(leeg)'}
 Algemeen: ${notes.algemeen || '(leeg)'}
----
+═══════════════════════════════════
 
-BESCHIKBARE NZA-CODES:
-${codesReference}
+CODEBOEK MET VOORBEELDEN:
+Hieronder staan de relevante NZa-codes met voorbeelden van hoe tandartsen deze verrichtingen noteren.
+Gebruik deze voorbeelden om de notities hierboven te matchen met de juiste codes.
 
-AFKORTINGEN EN SHORTHAND:
-Tandartsen gebruiken vaak afkortingen. Herken deze:
-${shorthand}
+${codebookSection}
 
-BEGELEIDENDE CODES (companion rules):
-${companionRules}
+ALLE BESCHIKBARE CODES (voor referentie):
+${allCodesList}
 
-BESLISBOMEN:
-- Vullingen: tel vlakken in de notatie (bijv. MOD = 3 vlakken → V23, OB = 2 vlakken → V22)
-  1 vlak → V21, 2 vlakken → V22, 3 vlakken → V23, 4+ vlakken → V24
-- Wortelkanaalbehandeling: tel kanalen
-  1 kanaal → E02, 2 kanalen → E03, 3+ kanalen → E04
-- Vlaknotatie: M=mesiaal, O=occlusaal, D=distaal, B=buccaal, V=vestibulair, L=linguaal, P=palataal
-- Tandnummers: FDI-notatie (11-48 permanent, 51-85 melkgebit)
-- Kwadrant: 1=rechtsboven, 2=linksboven, 3=linksonder, 4=rechtsonder
+AFKORTINGEN DIE TANDARTSEN GEBRUIKEN:
+- comp/composiet = composietvulling
+- amal = amalgaamvulling
+- wkb = wortelkanaalbehandeling
+- ext/exo = extractie
+- loco/verd = lokale verdoving
+- bw = bitewing röntgen
+- pano/OPT/OPG = panoramische röntgen
+- CBCT = cone beam CT
+- PA = periapicaal
+- krn = kroon
+- brg = brug
+- dp = devitalisatie pulpa
+- paro = parodontaal
+- DPSI = Dutch Periodontal Screening Index
+- MO/DO/MOD/MODP = vlaknotatie (M=mesiaal, O=occlusaal, D=distaal, B=buccaal, V=vestibulair, L=linguaal, P=palataal)
+- ok/bk = boven/onderkaak
+- chir = chirurgisch
+- impl = implantaat
+- fluor = fluoride applicatie
+- detrg = detartrage (tandsteen verwijderen)
+- sec car = secundaire cariës
+- GIC = glasionomeer cement
+- IRM = intermediate restorative material
+- CaOH = calciumhydroxide
 
-VOORBEELDEN:
-${fewShot}
+VLAKKEN TELLEN (CRUCIAAL VOOR VULLINGEN):
+- Tel het aantal UNIEKE letters in de vlaknotatie
+- O = 1 vlak → V21 (composiet) of V01 (amalgaam)
+- MO, DO, OB, OL = 2 vlakken → V22 of V02
+- MOD, MOB, DOB, MOL = 3 vlakken → V23 of V03
+- MODP, MODB, MODBL = 4+ vlakken → V24 of V03
+- Let op: "comp 46 MO" = V22 (2 vlakken), "comp 36 MOD" = V23 (3 vlakken)
 
-INSTRUCTIES:
-1. Analyseer alle vier notitienvelden zorgvuldig op uitgevoerde of geplande verrichtingen
-2. Herken afkortingen en shorthand (bijv. "comp" = composiet, "ext" = extractie, "wkb" = wortelkanaalbehandeling)
-3. Tel vlakken nauwkeurig bij vullingen (MOD=3, MO=2, O=1, etc.)
-4. Tel kanalen bij endodontische behandelingen
-5. Detecteer ALLEEN verrichtingen die daadwerkelijk beschreven staan
-6. Voeg verdoving (A01) toe wanneer expliciet vermeld OF wanneer een invasieve behandeling wordt beschreven (vulling, extractie, endo)
-7. Voeg röntgenfoto's (X-codes) toe als vermeld (bw=bitewing, pano=panoramisch)
-8. Let op preventieve codes: tandsteen (M01), fluoride (M05), sealing (M10), instructie (M02)
-9. Bij parodontale behandelingen: DPSI score bepaalt de code (0-2=M30 screening, 3+=M30 intake)
-10. Geef per verrichting het correcte FDI-tandnummer als van toepassing
+KANALEN TELLEN (CRUCIAAL VOOR ENDO):
+- 1 kanaal / 1k → E02
+- 2 kanalen / 2k → E03
+- 3+ kanalen / 3k → E04
+- Incisieven/premolaren = meestal 1-2 kanalen
+- Molaren bovenkaak = meestal 3-4 kanalen
+- Molaren onderkaak = meestal 2-3 kanalen
 
-Retourneer een JSON array met objecten:
+TANDNUMMERS:
+- FDI-notatie: 11-18 (rechtsboven), 21-28 (linksboven), 31-38 (linksonder), 41-48 (rechtsonder)
+- Melkgebit: 51-55, 61-65, 71-75, 81-85
+- "regio 36" = element 36 = tandnummer 36
+
+BEGELEIDENDE CODES (voeg automatisch toe als logisch):
+- Bij ELKE vulling (V-codes) → voeg A01 (verdoving) toe, tenzij expliciet "zonder verdoving" staat
+- Bij ELKE extractie (X30-X34) → voeg A01 (verdoving) toe
+- Bij ELKE endo (E-codes) → voeg A01 (verdoving) + X03 of X10 (röntgen) toe
+- Bij kroonpreparatie → voeg A01 toe
+- Bij chirurgische ingrepen → voeg A01 of A15 toe
+
+STRIKTE REGELS:
+1. Detecteer ALLEEN verrichtingen die DAADWERKELIJK beschreven staan in de notities
+2. Geef bij elke code het FDI-tandnummer als dat vermeld is (of lege string als niet van toepassing)
+3. Tel vlakken NAUWKEURIG bij vullingen — dit bepaalt de juiste code
+4. Tel kanalen NAUWKEURIG bij endo — dit bepaalt de juiste code
+5. Voeg begeleidende codes toe (verdoving, röntgen) als de behandeling dat logisch vereist
+6. Geef NOOIT dezelfde code + tandnummer combinatie dubbel
+7. Gebruik quantity "1" tenzij expliciet meerdere sessies/injecties vermeld
+8. Bij gebitsreiniging: tel het aantal keer 5 minuten voor de quantity van M01
+
+Retourneer een JSON array:
 [
   {
     "code": "NZA-code",
-    "description": "Korte beschrijving van de verrichting",
-    "toothNumber": "FDI-tandnummer of lege string als niet van toepassing",
+    "description": "Korte beschrijving",
+    "toothNumber": "FDI-tandnummer of lege string",
     "quantity": "aantal (standaard 1)",
-    "reasoning": "Korte uitleg waarom deze code is gedetecteerd"
+    "reasoning": "Waarom deze code: citeer het relevante stuk uit de notities"
   }
 ]
 
-Retourneer een LEGE array [] als er geen verrichtingen gedetecteerd worden.
-Retourneer ALLEEN geldige codes uit de bovenstaande lijst.
-Retourneer GEEN dubbele codes voor hetzelfde element en dezelfde verrichting.`;
+Retourneer [] als er geen verrichtingen staan.
+Retourneer ALLEEN codes uit de beschikbare lijst.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -104,14 +208,21 @@ export async function POST(request: NextRequest) {
       orderBy: { code: 'asc' },
     });
 
-    // Build a compact codes reference for the prompt
-    const codesReference = nzaCodes.map(c =>
-      `${c.code}: ${c.descriptionNl} (€${c.maxTariff}${c.requiresTooth ? ', per element' : ''}${c.requiresSurface ? ', per vlak' : ''})`
+    // Determine which categories are relevant based on note content
+    const relevantCategories = getRelevantCategories(combined);
+
+    // Build codebook examples section for relevant categories
+    const codebookSection = buildCodebookPrompt(relevantCategories);
+
+    // Build compact all-codes reference
+    const allCodesList = nzaCodes.map(c =>
+      `${c.code}: ${c.descriptionNl} (€${c.maxTariff})`
     ).join('\n');
 
-    const prompt = buildDentalPrompt(
+    const prompt = buildPrompt(
       { bevindingen, behandelplan, uitlegAfspraken, algemeen },
-      codesReference
+      codebookSection,
+      allCodesList
     );
 
     // Call Gemini API
@@ -121,9 +232,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.1,
+          temperature: 0,
           topP: 0.8,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
           responseMimeType: 'application/json',
         },
       }),
@@ -165,7 +276,6 @@ export async function POST(request: NextRequest) {
         const toothNumber = item.toothNumber || '';
         const dedupeKey = `${item.code}:${toothNumber}`;
 
-        // Skip duplicates
         if (seen.has(dedupeKey)) return null;
         seen.add(dedupeKey);
 
