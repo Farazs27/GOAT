@@ -22,6 +22,7 @@ const typeLabels: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
+  PENDING_APPROVAL: "Wacht op goedkeuring",
   SCHEDULED: "Gepland",
   CONFIRMED: "Bevestigd",
   CHECKED_IN: "Ingecheckt",
@@ -32,6 +33,7 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
+  PENDING_APPROVAL: "bg-orange-500/15 text-orange-300 border border-orange-500/20",
   SCHEDULED: "bg-amber-500/15 text-amber-300 border border-amber-500/20",
   CONFIRMED: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20",
   CHECKED_IN: "bg-amber-500/15 text-amber-300 border border-amber-500/20",

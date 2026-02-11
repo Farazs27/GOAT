@@ -160,6 +160,7 @@ const typeBadgeColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
+  PENDING_APPROVAL: 'Wacht op goedkeuring',
   SCHEDULED: 'Gepland',
   CONFIRMED: 'Bevestigd',
   CHECKED_IN: 'Ingecheckt',
@@ -170,6 +171,7 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
+  PENDING_APPROVAL: 'bg-orange-500/20 text-orange-300 border-orange-500/20',
   SCHEDULED: 'bg-white/5 text-white/40 border-white/10',
   CONFIRMED: 'bg-blue-500/20 text-blue-300 border-blue-500/20',
   CHECKED_IN: 'bg-amber-500/20 text-amber-300 border-amber-500/20',
@@ -232,6 +234,8 @@ export default function AgendaPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
+  const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
+  const [pendingLoading, setPendingLoading] = useState<Record<string, boolean>>({});
   const [expandedAppointmentId, setExpandedAppointmentId] = useState<string | null>(null);
   const [appointmentDetailCache, setAppointmentDetailCache] = useState<Record<string, { practitioner?: string; room?: string; notes: any[]; treatments: any[]; prescriptions: any[]; declarations: any[]; loading: boolean }>>({});
   const [formData, setFormData] = useState({
@@ -278,6 +282,45 @@ export default function AgendaPage() {
       setWeekAppointments(map);
     } catch {}
     setLoading(false);
+  };
+
+  const fetchPendingAppointments = async () => {
+    try {
+      const res = await authFetch('/api/appointments?status=PENDING_APPROVAL');
+      if (res.ok) setPendingAppointments(await res.json());
+    } catch {}
+  };
+
+  const handleApproveAppointment = async (id: string) => {
+    setPendingLoading(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await authFetch(`/api/appointments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'SCHEDULED' }),
+      });
+      if (res.ok) {
+        setPendingAppointments(prev => prev.filter(a => a.id !== id));
+        if (viewMode === 'day') fetchAppointments(selectedDate);
+        else fetchWeekAppointments(selectedDate);
+      }
+    } catch {}
+    setPendingLoading(prev => ({ ...prev, [id]: false }));
+  };
+
+  const handleRejectAppointment = async (id: string) => {
+    setPendingLoading(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await authFetch(`/api/appointments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED', cancelReason: 'Afgewezen door behandelaar' }),
+      });
+      if (res.ok) {
+        setPendingAppointments(prev => prev.filter(a => a.id !== id));
+      }
+    } catch {}
+    setPendingLoading(prev => ({ ...prev, [id]: false }));
   };
 
   const searchPatients = async (query: string) => {
@@ -333,6 +376,7 @@ export default function AgendaPage() {
   useEffect(() => {
     if (viewMode === 'day') fetchAppointments(selectedDate);
     else fetchWeekAppointments(selectedDate);
+    fetchPendingAppointments();
   }, [selectedDate, viewMode]);
 
   const navigateDay = (delta: number) => {
@@ -804,6 +848,66 @@ export default function AgendaPage() {
           </span> afspraken
         </div>
       </div>
+
+      {/* Pending approval requests */}
+      {pendingAppointments.length > 0 && (
+        <div className="glass rounded-2xl border border-orange-500/20 overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-orange-500/10 border-b border-orange-500/15">
+            <AlertCircle className="h-4 w-4 text-orange-400" />
+            <span className="text-sm font-semibold text-orange-300">
+              Afspraakverzoeken ({pendingAppointments.length})
+            </span>
+          </div>
+          <div className="divide-y divide-white/[0.06]">
+            {pendingAppointments.map((appt) => (
+              <div key={appt.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="text-center min-w-[48px]">
+                    <div className="text-lg font-bold text-white/90 leading-none">{new Date(appt.startTime).getDate()}</div>
+                    <div className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">
+                      {new Date(appt.startTime).toLocaleDateString('nl-NL', { month: 'short' })}
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-white/90">
+                        {appt.patient.firstName} {appt.patient.lastName}
+                      </span>
+                      <span className="text-xs text-white/30">#{appt.patient.patientNumber}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 text-xs text-white/40">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(appt.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} – {new Date(appt.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span>{typeLabels[appt.appointmentType] || appt.appointmentType}</span>
+                      {appt.patientNotes && <span className="truncate max-w-[200px]" title={appt.patientNotes}>"{appt.patientNotes}"</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-4">
+                  <button
+                    onClick={() => handleApproveAppointment(appt.id)}
+                    disabled={pendingLoading[appt.id]}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/25 transition-all disabled:opacity-50"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Goedkeuren
+                  </button>
+                  <button
+                    onClick={() => handleRejectAppointment(appt.id)}
+                    disabled={pendingLoading[appt.id]}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold hover:bg-red-500/20 transition-all disabled:opacity-50"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Afwijzen
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* New appointment form */}
       {showForm && (

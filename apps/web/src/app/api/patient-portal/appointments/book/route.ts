@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
         endTime,
         durationMinutes: duration,
         appointmentType: appointmentType as AppointmentType,
-        status: "SCHEDULED",
+        status: "PENDING_APPROVAL",
         patientNotes: notes || null,
       },
       include: {

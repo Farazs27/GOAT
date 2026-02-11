@@ -405,6 +405,7 @@ enum AppointmentType {
 }
 
 enum AppointmentStatus {
+  PENDING_APPROVAL
   SCHEDULED
   CONFIRMED
   CHECKED_IN
