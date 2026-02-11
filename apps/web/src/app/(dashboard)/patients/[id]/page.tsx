@@ -334,9 +334,6 @@ export default function PatientDetailPage() {
 
   const tabs = [
     { id: 'overview', icon: User, label: 'Overzicht' },
-    { id: 'odontogram', icon: ImageIcon, label: 'Gebitsstatus' },
-    { id: 'treatments', icon: ClipboardList, label: 'Behandelingen' },
-    { id: 'notes', icon: FileText, label: 'Notities' },
     { id: 'prescriptions', icon: Pill, label: 'Recepten' },
     { id: 'invoices', icon: CreditCard, label: 'Facturen' },
     { id: 'rontgen', icon: ImageIcon, label: 'Rontgen' },
@@ -550,7 +547,45 @@ export default function PatientDetailPage() {
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Gebitsstatus — Always visible */}
+      <div className="glass-card rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <ImageIcon className="h-4 w-4 text-blue-400" />
+          <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Gebitsstatus</h3>
+        </div>
+        <Odontogram
+          patientId={patientId}
+          teeth={odontogramTeeth}
+          surfaces={odontogramSurfaces}
+          onToothSelect={handleToothSelect}
+          onTreatmentApply={handleTreatmentApply}
+        />
+      </div>
+
+      {/* Behandelingen & Notities — Side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <ClipboardList className="h-4 w-4 text-emerald-400" />
+            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Behandelingen</h3>
+          </div>
+          <TreatmentPlanBuilder patientId={patientId} />
+        </div>
+
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="h-4 w-4 text-violet-400" />
+            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Notities</h3>
+          </div>
+          <SoapNoteForm
+            patientId={patientId}
+            notes={notes}
+            onNoteCreated={fetchNotes}
+          />
+        </div>
+      </div>
+
+      {/* Tabs for remaining sections */}
       <div className="space-y-4">
         <div className="flex gap-1 glass rounded-2xl p-1.5 overflow-x-auto">
           {tabs.map((tab) => (
@@ -568,7 +603,7 @@ export default function PatientDetailPage() {
           ))}
         </div>
 
-        {/* Tab content with transition wrapper */}
+        {/* Tab content */}
         <div className="transition-opacity duration-200 ease-in-out">
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -600,12 +635,9 @@ export default function PatientDetailPage() {
                   <p className="text-white/40 text-sm">Geen recente activiteit</p>
                 ) : (
                   <div className="relative pl-6 space-y-4 max-h-80 overflow-y-auto">
-                    {/* Vertical timeline line */}
                     <div className="absolute left-2 top-1 bottom-1 w-px bg-white/10" />
-
                     {Object.entries(treatmentsByDate).slice(0, 5).map(([date, items]) => (
                       <div key={date} className="relative">
-                        {/* Timeline dot */}
                         <div className="absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-blue-500/30 shadow-sm shadow-blue-500/20" />
                         <p className="text-[10px] text-white/30 font-medium mb-1.5">{date}</p>
                         <div className="space-y-1.5">
@@ -641,28 +673,6 @@ export default function PatientDetailPage() {
                 )}
               </div>
             </div>
-          )}
-
-          {activeTab === 'odontogram' && (
-            <Odontogram
-              patientId={patientId}
-              teeth={odontogramTeeth}
-              surfaces={odontogramSurfaces}
-              onToothSelect={handleToothSelect}
-              onTreatmentApply={handleTreatmentApply}
-            />
-          )}
-
-          {activeTab === 'treatments' && (
-            <TreatmentPlanBuilder patientId={patientId} />
-          )}
-
-          {activeTab === 'notes' && (
-            <SoapNoteForm
-              patientId={patientId}
-              notes={notes}
-              onNoteCreated={fetchNotes}
-            />
           )}
 
           {activeTab === 'prescriptions' && (
