@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Search, Plus, Phone, Calendar } from 'lucide-react';
+import { Users, Search, Plus, Phone, Calendar, Upload, Loader2, CheckCircle, AlertTriangle, X } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface Patient {
@@ -22,6 +22,13 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    success: boolean;
+    patient?: { id: string; patientNumber: string; firstName: string; lastName: string };
+    stats?: { treatmentsImported: number; treatmentsUnmatched: number; totalTreatments: number };
+    error?: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchPatients();
@@ -38,6 +45,32 @@ export default function PatientsPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = localStorage.getItem('access_token');
+      const res = await fetch('/api/patients/import', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImportResult({ success: false, error: data.error || 'Import mislukt' });
+      } else {
+        setImportResult({ success: true, patient: data.patient, stats: data.stats });
+        fetchPatients();
+      }
+    } catch {
+      setImportResult({ success: false, error: 'Verbindingsfout bij import' });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -74,13 +107,68 @@ export default function PatientsPage() {
           <h2 className="text-2xl font-bold text-white">Patiënten</h2>
           <p className="text-white/50">Beheer alle patiënten van uw praktijk</p>
         </div>
-        <Link href="/patients/new">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20">
-            <Plus className="h-4 w-4" />
-            Nieuwe patiënt
-          </button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <label className={`flex items-center gap-2 px-4 py-2.5 glass rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
+            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {importing ? 'Importeren...' : 'Importeer PDF'}
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              disabled={importing}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImport(file);
+                e.target.value = '';
+              }}
+            />
+          </label>
+          <Link href="/patients/new">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20">
+              <Plus className="h-4 w-4" />
+              Nieuwe patiënt
+            </button>
+          </Link>
+        </div>
       </div>
+
+      {/* Import result banner */}
+      {importResult && (
+        <div className={`flex items-start gap-3 px-5 py-4 rounded-2xl border ${
+          importResult.success
+            ? 'bg-emerald-500/15 border-emerald-500/30'
+            : 'bg-red-500/15 border-red-500/30'
+        }`}>
+          {importResult.success ? (
+            <CheckCircle className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          ) : (
+            <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1">
+            {importResult.success ? (
+              <>
+                <p className="text-sm font-medium text-emerald-300">
+                  {importResult.patient?.firstName} {importResult.patient?.lastName} succesvol geïmporteerd ({importResult.patient?.patientNumber})
+                </p>
+                {importResult.stats && (
+                  <p className="text-xs text-emerald-300/70 mt-1">
+                    {importResult.stats.treatmentsImported} behandelingen geïmporteerd
+                    {importResult.stats.treatmentsUnmatched > 0 && `, ${importResult.stats.treatmentsUnmatched} niet-gekoppeld (opgeslagen als notitie)`}
+                  </p>
+                )}
+                <Link href={`/patients/${importResult.patient?.id}`} className="text-xs text-emerald-400 hover:text-emerald-300 mt-1 inline-block">
+                  Bekijk patiënt →
+                </Link>
+              </>
+            ) : (
+              <p className="text-sm text-red-300">{importResult.error}</p>
+            )}
+          </div>
+          <button onClick={() => setImportResult(null)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+            <X className="h-4 w-4 text-white/40" />
+          </button>
+        </div>
+      )}
 
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="p-5 border-b border-white/5">
