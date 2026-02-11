@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Calendar, Users, Euro, AlertCircle, Clock, TrendingUp, Activity, X, ExternalLink, FileText, Pill } from 'lucide-react';
+import { Calendar, Users, Euro, AlertCircle, Clock, TrendingUp, Activity, X, ExternalLink, FileText, Pill, ChevronDown, ChevronUp, Stethoscope, User } from 'lucide-react';
 import Link from 'next/link';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -79,11 +79,19 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [detail, setDetail] = useState<AppointmentDetail>({ treatmentPlans: [], notes: [], prescriptionCount: 0, loading: false });
+  const [prevAppointments, setPrevAppointments] = useState<Appointment[]>([]);
+  const [prevApptLoading, setPrevApptLoading] = useState(false);
+  const [expandedPrevAppt, setExpandedPrevAppt] = useState<string | null>(null);
+  const [prevApptDetailCache, setPrevApptDetailCache] = useState<Record<string, { notes: any[]; treatments: any[]; prescriptions: any[]; loading: boolean }>>({});
   const modalRef = useRef<HTMLDivElement>(null);
 
   const openAppointmentDetail = useCallback((appt: Appointment) => {
     setSelectedAppointment(appt);
     setDetail({ treatmentPlans: [], notes: [], prescriptionCount: 0, loading: true });
+    setPrevAppointments([]);
+    setPrevApptLoading(true);
+    setExpandedPrevAppt(null);
+    setPrevApptDetailCache({});
 
     Promise.all([
       authFetch(`/api/treatment-plans?patientId=${appt.patient.id}`).then(r => r.ok ? r.json() : []).catch(() => []),
@@ -99,7 +107,47 @@ export default function DashboardPage() {
     }).catch(() => {
       setDetail(prev => ({ ...prev, loading: false }));
     });
+
+    // Fetch previous appointments for this patient
+    authFetch(`/api/appointments?patientId=${appt.patient.id}`)
+      .then(r => r.ok ? r.json() : [])
+      .then((allAppts: Appointment[]) => {
+        const prev = (Array.isArray(allAppts) ? allAppts : [])
+          .filter((a: Appointment) => a.id !== appt.id)
+          .sort((a: Appointment, b: Appointment) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+          .slice(0, 5);
+        setPrevAppointments(prev);
+      })
+      .catch(() => setPrevAppointments([]))
+      .finally(() => setPrevApptLoading(false));
   }, []);
+
+  const togglePrevApptExpand = useCallback((apptId: string, patientId: string) => {
+    if (expandedPrevAppt === apptId) {
+      setExpandedPrevAppt(null);
+      return;
+    }
+    setExpandedPrevAppt(apptId);
+    if (prevApptDetailCache[apptId]) return;
+    setPrevApptDetailCache(prev => ({ ...prev, [apptId]: { notes: [], treatments: [], prescriptions: [], loading: true } }));
+    Promise.all([
+      authFetch(`/api/clinical-notes?appointmentId=${apptId}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      authFetch(`/api/treatment-plans?patientId=${patientId}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      authFetch(`/api/prescriptions?patientId=${patientId}`).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([notes, treatments, prescriptions]) => {
+      setPrevApptDetailCache(prev => ({
+        ...prev,
+        [apptId]: {
+          notes: Array.isArray(notes) ? notes : notes?.data || [],
+          treatments: Array.isArray(treatments) ? treatments : treatments?.data || [],
+          prescriptions: Array.isArray(prescriptions) ? prescriptions : prescriptions?.data || [],
+          loading: false,
+        },
+      }));
+    }).catch(() => {
+      setPrevApptDetailCache(prev => ({ ...prev, [apptId]: { ...prev[apptId], loading: false } }));
+    });
+  }, [expandedPrevAppt, prevApptDetailCache]);
 
   const closeModal = useCallback(() => setSelectedAppointment(null), []);
 
@@ -422,6 +470,112 @@ export default function DashboardPage() {
                 )}
               </div>
             )}
+
+            {/* Eerdere afspraken */}
+            <div className="mb-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-3.5 w-3.5 text-[var(--text-tertiary)]" />
+                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Eerdere afspraken</p>
+              </div>
+              {prevApptLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--accent)] border-t-transparent"></div>
+                </div>
+              ) : prevAppointments.length === 0 ? (
+                <p className="text-xs text-[var(--text-muted)] text-center py-2">Geen eerdere afspraken</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {prevAppointments.map(pa => {
+                    const isExp = expandedPrevAppt === pa.id;
+                    const cached = prevApptDetailCache[pa.id];
+                    const paDate = new Date(pa.startTime);
+                    return (
+                      <div key={pa.id} className="glass-light rounded-xl overflow-hidden">
+                        <div
+                          className="flex items-center justify-between p-2.5 cursor-pointer hover:bg-[var(--bg-card-hover)] transition-colors"
+                          onClick={() => togglePrevApptExpand(pa.id, pa.patient.id)}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-xs font-mono text-[var(--text-tertiary)] w-10 flex-shrink-0">
+                              {paDate.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' })}
+                            </span>
+                            <span className="text-xs text-[var(--text-primary)] truncate">
+                              {typeLabels[pa.appointmentType] || pa.appointmentType}
+                            </span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-lg border flex-shrink-0 ${statusConfig[pa.status]?.style || ''}`}>
+                              {statusConfig[pa.status]?.label || pa.status}
+                            </span>
+                          </div>
+                          {isExp ? (
+                            <ChevronUp className="h-3.5 w-3.5 text-[var(--text-muted)] flex-shrink-0" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5 text-[var(--text-muted)] flex-shrink-0" />
+                          )}
+                        </div>
+                        <div
+                          className="overflow-hidden transition-all duration-300"
+                          style={{ maxHeight: isExp ? '400px' : '0px', opacity: isExp ? 1 : 0 }}
+                        >
+                          <div className="px-2.5 pb-2.5 space-y-1.5 border-t border-[var(--border-color)] pt-2">
+                            {cached?.loading ? (
+                              <div className="flex items-center justify-center py-3">
+                                <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-[var(--accent)] border-t-transparent"></div>
+                              </div>
+                            ) : cached ? (
+                              <>
+                                {pa.practitioner && (
+                                  <div className="flex items-center gap-1.5">
+                                    <User className="h-3 w-3 text-[var(--accent)]" />
+                                    <span className="text-[11px] text-[var(--text-tertiary)]">{pa.practitioner.firstName} {pa.practitioner.lastName}</span>
+                                  </div>
+                                )}
+                                {pa.notes && (
+                                  <p className="text-[11px] text-[var(--text-tertiary)]">{pa.notes}</p>
+                                )}
+                                {cached.notes.length > 0 && (
+                                  <div>
+                                    <div className="flex items-center gap-1 mb-0.5">
+                                      <FileText className="h-3 w-3 text-violet-500" />
+                                      <span className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase">Notities</span>
+                                    </div>
+                                    {cached.notes.slice(0, 2).map((n: any) => (
+                                      <p key={n.id} className="text-[11px] text-[var(--text-tertiary)] line-clamp-2">{n.content || n.noteText || ''}</p>
+                                    ))}
+                                  </div>
+                                )}
+                                {cached.treatments.length > 0 && (
+                                  <div>
+                                    <div className="flex items-center gap-1 mb-0.5">
+                                      <Stethoscope className="h-3 w-3 text-emerald-500" />
+                                      <span className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase">Behandelingen</span>
+                                    </div>
+                                    {cached.treatments.slice(0, 2).map((t: any) => (
+                                      <div key={t.id} className="flex justify-between">
+                                        <span className="text-[11px] text-[var(--text-tertiary)]">{t.title || t.treatmentType || t.description || 'Behandeling'}</span>
+                                        <span className="text-[10px] text-[var(--text-muted)]">{t.status}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {cached.prescriptions.length > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Pill className="h-3 w-3 text-emerald-500" />
+                                    <span className="text-[11px] text-[var(--text-tertiary)]">{cached.prescriptions.length} recept{cached.prescriptions.length !== 1 ? 'en' : ''}</span>
+                                  </div>
+                                )}
+                                {cached.notes.length === 0 && cached.treatments.length === 0 && cached.prescriptions.length === 0 && !pa.notes && (
+                                  <p className="text-[11px] text-[var(--text-muted)] text-center">Geen details</p>
+                                )}
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex gap-3">

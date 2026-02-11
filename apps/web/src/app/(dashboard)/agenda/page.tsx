@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  ChevronUp,
   Plus,
   Clock,
   User,
@@ -231,6 +232,8 @@ export default function AgendaPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
+  const [expandedAppointmentId, setExpandedAppointmentId] = useState<string | null>(null);
+  const [appointmentDetailCache, setAppointmentDetailCache] = useState<Record<string, { practitioner?: string; room?: string; notes: any[]; treatments: any[]; prescriptions: any[]; declarations: any[]; loading: boolean }>>({});
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
@@ -298,6 +301,34 @@ export default function AgendaPage() {
     };
     loadNzaCodes();
   }, []);
+
+  const toggleAppointmentExpand = useCallback((appointmentId: string, patientId: string) => {
+    if (expandedAppointmentId === appointmentId) {
+      setExpandedAppointmentId(null);
+      return;
+    }
+    setExpandedAppointmentId(appointmentId);
+    if (appointmentDetailCache[appointmentId]) return;
+    setAppointmentDetailCache(prev => ({ ...prev, [appointmentId]: { notes: [], treatments: [], prescriptions: [], declarations: [], loading: true } }));
+    Promise.all([
+      authFetch(`/api/clinical-notes?appointmentId=${appointmentId}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      authFetch(`/api/treatment-plans?patientId=${patientId}`).then(r => r.ok ? r.json() : []).catch(() => []),
+      authFetch(`/api/prescriptions?patientId=${patientId}`).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]).then(([notes, treatments, prescriptions]) => {
+      setAppointmentDetailCache(prev => ({
+        ...prev,
+        [appointmentId]: {
+          notes: Array.isArray(notes) ? notes : notes?.data || [],
+          treatments: Array.isArray(treatments) ? treatments : treatments?.data || [],
+          prescriptions: Array.isArray(prescriptions) ? prescriptions : prescriptions?.data || [],
+          declarations: [],
+          loading: false,
+        },
+      }));
+    }).catch(() => {
+      setAppointmentDetailCache(prev => ({ ...prev, [appointmentId]: { ...prev[appointmentId], loading: false } }));
+    });
+  }, [expandedAppointmentId, appointmentDetailCache]);
 
   useEffect(() => {
     if (viewMode === 'day') fetchAppointments(selectedDate);
@@ -1537,48 +1568,167 @@ export default function AgendaPage() {
                     patientAppointments.map(pa => {
                       const isCurrent = pa.id === selectedAppointment.id;
                       const date = new Date(pa.startTime);
+                      const isExpanded = expandedAppointmentId === pa.id;
+                      const cachedDetail = appointmentDetailCache[pa.id];
                       return (
                         <div key={pa.id}
-                          className={`p-3 rounded-xl transition-all ${
+                          className={`rounded-xl transition-all ${
                             isCurrent
                               ? 'glass-card border border-blue-500/30 shadow-lg shadow-blue-500/10'
                               : 'glass-light hover:bg-white/5'
                           }`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[pa.appointmentType] || 'from-gray-400 to-gray-600'} flex items-center justify-center flex-shrink-0 ${isCurrent ? 'shadow-lg' : ''}`}>
-                              <span className="text-[9px] font-bold text-white">
-                                {typeLabels[pa.appointmentType]?.[0] || '?'}
-                              </span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-white/70">
-                                  {date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          <div
+                            className="p-3 cursor-pointer"
+                            onClick={() => toggleAppointmentExpand(pa.id, pa.patient?.id || selectedAppointment.patient.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[pa.appointmentType] || 'from-gray-400 to-gray-600'} flex items-center justify-center flex-shrink-0 ${isCurrent ? 'shadow-lg' : ''}`}>
+                                <span className="text-[9px] font-bold text-white">
+                                  {typeLabels[pa.appointmentType]?.[0] || '?'}
                                 </span>
-                                {isCurrent && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-blue-500/20 text-blue-300 border border-blue-500/20">
-                                    Huidig
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium text-white/70">
+                                    {date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
                                   </span>
+                                  {isCurrent && (
+                                    <span className="px-1.5 py-0.5 rounded text-[9px] bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                                      Huidig
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[11px] text-white/40">
+                                    {date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                                    {' - '}
+                                    {new Date(pa.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[9px] border ${typeBadgeColors[pa.appointmentType]}`}>
+                                    {typeLabels[pa.appointmentType]}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className={`px-2 py-0.5 rounded-lg text-[10px] border ${statusColors[pa.status]}`}>
+                                  {statusLabels[pa.status]}
+                                </span>
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4 text-white/30" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-white/30" />
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[11px] text-white/40">
-                                  {date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                                  {' - '}
-                                  {new Date(pa.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                <span className={`px-1.5 py-0.5 rounded text-[9px] border ${typeBadgeColors[pa.appointmentType]}`}>
-                                  {typeLabels[pa.appointmentType]}
-                                </span>
-                              </div>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-lg text-[10px] border flex-shrink-0 ${statusColors[pa.status]}`}>
-                              {statusLabels[pa.status]}
-                            </span>
+                            {pa.notes && !isExpanded && (
+                              <p className="text-[11px] text-white/30 mt-2 pl-11 line-clamp-1">{pa.notes}</p>
+                            )}
                           </div>
-                          {pa.notes && (
-                            <p className="text-[11px] text-white/30 mt-2 pl-11 line-clamp-1">{pa.notes}</p>
-                          )}
+                          {/* Expandable detail section */}
+                          <div
+                            className="overflow-hidden transition-all duration-300"
+                            style={{ maxHeight: isExpanded ? '600px' : '0px', opacity: isExpanded ? 1 : 0 }}
+                          >
+                            <div className="px-3 pb-3 space-y-2 border-t border-white/5 pt-2">
+                              {cachedDetail?.loading ? (
+                                <div className="flex items-center justify-center py-4">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-400 border-t-transparent"></div>
+                                </div>
+                              ) : cachedDetail ? (
+                                <>
+                                  {/* Practitioner & Room */}
+                                  {(pa.practitioner || pa.room) && (
+                                    <div className="glass-light rounded-lg p-2.5 space-y-1">
+                                      {pa.practitioner && (
+                                        <div className="flex items-center gap-2">
+                                          <User className="h-3 w-3 text-blue-400 flex-shrink-0" />
+                                          <span className="text-[11px] text-white/50">Behandelaar:</span>
+                                          <span className="text-[11px] text-white/80">{pa.practitioner.firstName} {pa.practitioner.lastName}</span>
+                                        </div>
+                                      )}
+                                      {pa.room && (
+                                        <div className="flex items-center gap-2">
+                                          <FileText className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                                          <span className="text-[11px] text-white/50">Kamer:</span>
+                                          <span className="text-[11px] text-white/80">{pa.room}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Notes */}
+                                  {pa.notes && (
+                                    <div className="glass-light rounded-lg p-2.5">
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <FileText className="h-3 w-3 text-violet-400" />
+                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Notities</span>
+                                      </div>
+                                      <p className="text-[11px] text-white/60">{pa.notes}</p>
+                                    </div>
+                                  )}
+
+                                  {/* Clinical Notes */}
+                                  {cachedDetail.notes.length > 0 && (
+                                    <div className="glass-light rounded-lg p-2.5">
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <FileText className="h-3 w-3 text-cyan-400" />
+                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Klinische notities</span>
+                                      </div>
+                                      {cachedDetail.notes.slice(0, 3).map((n: any) => (
+                                        <p key={n.id} className="text-[11px] text-white/60 mb-1 line-clamp-2">{n.content || n.noteText || ''}</p>
+                                      ))}
+                                      {cachedDetail.notes.length > 3 && (
+                                        <p className="text-[10px] text-white/30">+{cachedDetail.notes.length - 3} meer</p>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Treatments */}
+                                  {cachedDetail.treatments.length > 0 && (
+                                    <div className="glass-light rounded-lg p-2.5">
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <Stethoscope className="h-3 w-3 text-emerald-400" />
+                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Behandelingen</span>
+                                      </div>
+                                      {cachedDetail.treatments.slice(0, 3).map((t: any) => (
+                                        <div key={t.id} className="flex items-center justify-between mb-1">
+                                          <span className="text-[11px] text-white/60">{t.title || t.treatmentType || t.description || 'Behandeling'}</span>
+                                          <span className="text-[10px] text-white/30">{t.status}</span>
+                                        </div>
+                                      ))}
+                                      {cachedDetail.treatments.length > 3 && (
+                                        <p className="text-[10px] text-white/30">+{cachedDetail.treatments.length - 3} meer</p>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Prescriptions */}
+                                  {cachedDetail.prescriptions.length > 0 && (
+                                    <div className="glass-light rounded-lg p-2.5">
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <Pill className="h-3 w-3 text-pink-400" />
+                                        <span className="text-[10px] font-medium text-white/50 uppercase tracking-wider">Recepten</span>
+                                      </div>
+                                      {cachedDetail.prescriptions.slice(0, 3).map((rx: any) => (
+                                        <div key={rx.id} className="flex items-center justify-between mb-1">
+                                          <span className="text-[11px] text-white/60">{rx.medicationName || rx.medication || 'Recept'}</span>
+                                          <span className="text-[10px] text-white/30">{rx.dosage || ''}</span>
+                                        </div>
+                                      ))}
+                                      {cachedDetail.prescriptions.length > 3 && (
+                                        <p className="text-[10px] text-white/30">+{cachedDetail.prescriptions.length - 3} meer</p>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Empty state */}
+                                  {cachedDetail.notes.length === 0 && cachedDetail.treatments.length === 0 && cachedDetail.prescriptions.length === 0 && !pa.notes && (
+                                    <p className="text-[11px] text-white/20 text-center py-2">Geen aanvullende gegevens</p>
+                                  )}
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
                       );
                     })
