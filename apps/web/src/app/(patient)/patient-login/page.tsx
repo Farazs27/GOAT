@@ -58,7 +58,7 @@ export default function PatientLoginPage() {
         </div>
 
         {/* Login card */}
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white/[0.07] backdrop-blur-3xl border border-white/[0.12] rounded-3xl p-8 shadow-2xl shadow-black/20">
           <h2 className="text-xl font-semibold text-white/90 mb-2">Inloggen</h2>
           <p className="text-base text-white/45 mb-8">
             Gebruik uw e-mailadres en de laatste 4 cijfers van uw BSN
@@ -84,7 +84,7 @@ export default function PatientLoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="uw@email.nl"
-                  className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/90 text-base placeholder:text-white/25 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/10 transition-all duration-200"
+                  className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl text-white/90 text-base placeholder:text-white/30 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 transition-all duration-200"
                 />
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function PatientLoginPage() {
                   placeholder="0000"
                   maxLength={4}
                   inputMode="numeric"
-                  className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/90 text-2xl placeholder:text-white/25 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/10 transition-all duration-200 tracking-[0.5em] text-center font-mono"
+                  className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl text-white/90 text-2xl placeholder:text-white/30 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 transition-all duration-200 tracking-[0.5em] text-center font-mono"
                 />
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function PatientLoginPage() {
             <button
               type="submit"
               disabled={loading || bsnLastFour.length !== 4}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] hover:from-[#f0a06a] hover:to-[#e0926a] text-white font-semibold text-lg shadow-lg shadow-[#e8945a]/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium text-lg shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-3">
@@ -136,7 +136,7 @@ export default function PatientLoginPage() {
             </a>
 
             {/* Demo Credentials */}
-            <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-4 space-y-2">
+            <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-4 space-y-2">
               <p className="text-xs text-white/40 font-medium">Testgegevens:</p>
               <div className="space-y-1">
                 <p className="text-xs text-white/30">

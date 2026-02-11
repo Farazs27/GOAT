@@ -292,9 +292,9 @@ export default function MessagesPage() {
       )}
 
       {/* Chat container */}
-      <div className="flex-1 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl flex flex-col overflow-hidden min-h-0">
+      <div className="flex-1 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl flex flex-col overflow-hidden min-h-0 shadow-xl shadow-black/10">
         {/* Practice header */}
-        <div className="px-6 py-4 border-b border-white/[0.08] flex-shrink-0">
+        <div className="px-6 py-4 border-b border-white/[0.12] flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e8945a]/20 to-[#d4783e]/20 flex items-center justify-center border border-[#e8945a]/15">
               <span className="text-sm font-bold text-[#e8945a]">
@@ -349,7 +349,7 @@ export default function MessagesPage() {
                   {/* Date separator */}
                   {showDateSeparator && (
                     <div className="flex items-center justify-center my-6">
-                      <div className="bg-white/[0.06] px-4 py-1.5 rounded-full">
+                      <div className="bg-white/[0.06] backdrop-blur-2xl px-4 py-1.5 rounded-full border border-white/[0.12]">
                         <span className="text-xs text-white/40 font-medium">
                           {formatFullDate(message.createdAt)}
                         </span>
@@ -378,8 +378,8 @@ export default function MessagesPage() {
                       <div
                         className={`rounded-2xl px-4 py-3 ${
                           isOwn
-                            ? "bg-[#e8945a] text-white rounded-tr-lg"
-                            : "bg-white/[0.08] border border-white/[0.12] text-white/90 rounded-tl-lg"
+                            ? "bg-[#e8945a] text-white rounded-tr-lg shadow-lg shadow-[#e8945a]/25"
+                            : "bg-white/[0.06] border border-white/[0.12] backdrop-blur-2xl text-white/90 rounded-tl-lg"
                         }`}
                       >
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -409,7 +409,7 @@ export default function MessagesPage() {
         </div>
 
         {/* Input area */}
-        <div className="px-4 lg:px-6 py-4 border-t border-white/[0.08] bg-white/[0.02] flex-shrink-0">
+        <div className="px-4 lg:px-6 py-4 border-t border-white/[0.12] bg-white/[0.04] flex-shrink-0">
           <div className="flex items-end gap-3">
             <div className="flex-1 relative">
               <textarea
@@ -420,7 +420,7 @@ export default function MessagesPage() {
                 placeholder="Typ uw bericht..."
                 disabled={isSending}
                 rows={1}
-                className="w-full bg-white/[0.06] border border-white/[0.1] rounded-2xl px-4 py-3 pr-12 text-white/90 placeholder:text-white/30 resize-none focus:outline-none focus:ring-2 focus:ring-[#e8945a]/30 focus:border-[#e8945a]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl px-4 py-3 pr-12 text-white/90 placeholder:text-white/30 resize-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 style={{ minHeight: "48px", maxHeight: "120px" }}
               />
               <div className="absolute bottom-3 right-3 text-xs text-white/20 pointer-events-none">
@@ -430,7 +430,7 @@ export default function MessagesPage() {
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || isSending}
-              className="flex-shrink-0 h-12 w-12 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] hover:from-[#f0a06a] hover:to-[#e8945a] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-[#e8945a] disabled:hover:to-[#d4783e] flex items-center justify-center transition-all shadow-lg shadow-[#e8945a]/20"
+              className="flex-shrink-0 h-12 w-12 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] hover:from-[#f0a06a] hover:to-[#e8945a] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-[#e8945a] disabled:hover:to-[#d4783e] flex items-center justify-center transition-all shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40"
             >
               {isSending ? (
                 <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -446,7 +446,7 @@ export default function MessagesPage() {
       </div>
 
       {/* Contact info */}
-      <div className="flex-shrink-0 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-4">
+      <div className="flex-shrink-0 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-2xl p-4 shadow-xl shadow-black/10 hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300">
         <div className="flex items-center gap-3 text-white/50">
           <Phone className="w-4 h-4" />
           <p className="text-sm">

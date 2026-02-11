@@ -33,13 +33,13 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  PENDING_APPROVAL: "bg-orange-500/15 text-orange-300 border border-orange-500/20",
-  SCHEDULED: "bg-amber-500/15 text-amber-300 border border-amber-500/20",
-  CONFIRMED: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20",
-  CHECKED_IN: "bg-amber-500/15 text-amber-300 border border-amber-500/20",
-  IN_PROGRESS: "bg-amber-500/15 text-amber-300 border border-amber-500/20",
-  COMPLETED: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20",
-  NO_SHOW: "bg-red-500/15 text-red-300 border border-red-500/20",
+  PENDING_APPROVAL: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  SCHEDULED: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  CONFIRMED: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  CHECKED_IN: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  IN_PROGRESS: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  COMPLETED: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  NO_SHOW: "bg-red-500/10 text-red-400 border border-red-500/20",
   CANCELLED: "bg-white/5 text-white/30 border border-white/10",
 };
 
@@ -147,7 +147,7 @@ export default function AppointmentsPage() {
         </div>
         <Link
           href="/portal/appointments/book"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium rounded-2xl shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all"
         >
           <Plus className="w-4 h-4" />
           Afspraak Maken
@@ -179,7 +179,7 @@ export default function AppointmentsPage() {
                 {data.upcoming.map((appt: any, i: number) => (
                   <div
                     key={appt.id}
-                    className="group relative bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-2px] hover:border-white/[0.14] hover:shadow-lg hover:shadow-orange-500/5"
+                    className="group relative bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 overflow-hidden transition-all duration-300 hover:translate-y-[-2px] hover:bg-white/[0.09] hover:border-white/[0.18] hover:shadow-lg hover:shadow-orange-500/5"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateY(0)" : "translateY(12px)",
@@ -277,7 +277,7 @@ export default function AppointmentsPage() {
                             ) : (
                               <button
                                 onClick={() => setConfirmId(appt.id)}
-                                className="px-4 py-2 rounded-xl border border-white/10 text-white/40 text-xs font-medium hover:border-red-500/30 hover:text-red-300 hover:bg-red-500/5 transition-all"
+                                className="px-4 py-2 bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl text-white/70 rounded-2xl hover:bg-white/[0.1] transition-all text-xs font-medium"
                               >
                                 Annuleren
                               </button>
@@ -291,7 +291,7 @@ export default function AppointmentsPage() {
               </div>
             ) : (
               <div
-                className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-3xl p-10 text-center"
+                className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 p-10 text-center"
                 style={{
                   opacity: mounted ? 1 : 0,
                   transition: "opacity 0.5s ease 0.1s",
@@ -309,7 +309,7 @@ export default function AppointmentsPage() {
                   </p>
                   <Link
                     href="/portal/appointments/book"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-300 text-sm font-medium hover:bg-orange-500/25 transition-all"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium rounded-2xl shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all text-sm"
                   >
                     <Plus className="w-4 h-4" />
                     Afspraak Maken
@@ -337,7 +337,7 @@ export default function AppointmentsPage() {
                 {visiblePast.map((appt: any, i: number) => (
                   <div
                     key={appt.id}
-                    className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] rounded-2xl px-5 py-4 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.08]"
+                    className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-xl shadow-black/10 px-5 py-4 transition-all duration-300 hover:bg-white/[0.09] hover:border-white/[0.18]"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateY(0)" : "translateY(8px)",
@@ -376,7 +376,7 @@ export default function AppointmentsPage() {
                 {pastAppointments.length > 5 && (
                   <button
                     onClick={() => setShowAllPast(!showAllPast)}
-                    className="w-full mt-3 py-3 rounded-2xl border border-white/[0.06] text-white/30 text-xs font-medium hover:text-white/50 hover:border-white/[0.1] hover:bg-white/[0.02] transition-all flex items-center justify-center gap-1.5"
+                    className="w-full mt-3 py-3 bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl text-white/70 rounded-2xl hover:bg-white/[0.1] transition-all text-xs font-medium flex items-center justify-center gap-1.5"
                   >
                     <ChevronDown
                       className={`w-3.5 h-3.5 transition-transform duration-300 ${showAllPast ? "rotate-180" : ""}`}
@@ -389,7 +389,7 @@ export default function AppointmentsPage() {
               </div>
             ) : (
               <div
-                className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-8 text-center"
+                className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-xl shadow-black/10 p-8 text-center"
                 style={{
                   opacity: mounted ? 1 : 0,
                   transition: "opacity 0.5s ease 0.3s",

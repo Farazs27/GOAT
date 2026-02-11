@@ -151,6 +151,19 @@ export default function PatientDetailPage() {
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  // Referrals
+  const [referrals, setReferrals] = useState<any[]>([]);
+  const [showReferralForm, setShowReferralForm] = useState(false);
+  const [referralSubmitting, setReferralSubmitting] = useState(false);
+  const [referralForm, setReferralForm] = useState({
+    specialistType: '',
+    specialistName: '',
+    specialistPractice: '',
+    reason: '',
+    clinicalInfo: '',
+    urgency: 'ROUTINE',
+  });
+
   useEffect(() => {
     fetchPatient();
   }, [patientId]);
@@ -212,6 +225,39 @@ export default function PatientDetailPage() {
     }
   }, [patientId]);
 
+  const fetchReferrals = useCallback(async () => {
+    try {
+      const response = await authFetch(`/api/patients/${patientId}/referrals`);
+      if (response.ok) {
+        const data = await response.json();
+        setReferrals(data.referrals || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [patientId]);
+
+  const handleSubmitReferral = async () => {
+    if (!referralForm.specialistType || !referralForm.reason) return;
+    setReferralSubmitting(true);
+    try {
+      const response = await authFetch(`/api/patients/${patientId}/referrals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(referralForm),
+      });
+      if (response.ok) {
+        setShowReferralForm(false);
+        setReferralForm({ specialistType: '', specialistName: '', specialistPractice: '', reason: '', clinicalInfo: '', urgency: 'ROUTINE' });
+        fetchReferrals();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setReferralSubmitting(false);
+    }
+  };
+
   const uploadPatientImage = async (file: File, imageType: string = 'XRAY') => {
     setImageUploading(true);
     try {
@@ -257,7 +303,8 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     fetchTreatmentHistory();
-  }, [fetchTreatmentHistory]);
+    fetchReferrals();
+  }, [fetchTreatmentHistory, fetchReferrals]);
 
   const fetchOutstandingBalance = useCallback(async () => {
     try {
@@ -372,6 +419,7 @@ export default function PatientDetailPage() {
     { id: 'overview', icon: User, label: 'Overzicht' },
     { id: 'prescriptions', icon: Pill, label: 'Recepten' },
     { id: 'invoices', icon: CreditCard, label: 'Facturen' },
+    { id: 'referrals', icon: ExternalLink, label: 'Verwijzingen' },
     { id: 'rontgen', icon: ImageIcon, label: 'Rontgen' },
   ];
 
@@ -791,6 +839,142 @@ export default function PatientDetailPage() {
             <div className="glass-card rounded-2xl p-6">
               <h3 className="text-sm font-semibold text-white/80 mb-4 uppercase tracking-wider">Facturen</h3>
               <p className="text-white/40 text-sm">Geen facturen gevonden — wordt geimplementeerd in Phase 3</p>
+            </div>
+          )}
+
+          {activeTab === 'referrals' && (
+            <div className="glass-card rounded-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Verwijzingen</h3>
+                <button
+                  onClick={() => setShowReferralForm(!showReferralForm)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors"
+                >
+                  {showReferralForm ? 'Annuleren' : '+ Nieuwe verwijzing'}
+                </button>
+              </div>
+
+              {showReferralForm && (
+                <div className="bg-white/5 rounded-xl p-4 space-y-3 border border-white/10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-white/40 block mb-1">Specialisme *</label>
+                      <select
+                        value={referralForm.specialistType}
+                        onChange={(e) => setReferralForm(f => ({ ...f, specialistType: e.target.value }))}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 focus:border-blue-500/50 outline-none"
+                      >
+                        <option value="">Selecteer...</option>
+                        <option value="Kaakchirurg">Kaakchirurg</option>
+                        <option value="Orthodontist">Orthodontist</option>
+                        <option value="Parodontoloog">Parodontoloog</option>
+                        <option value="Endodontoloog">Endodontoloog</option>
+                        <option value="Mondhygiënist">Mondhygiënist</option>
+                        <option value="Implantoloog">Implantoloog</option>
+                        <option value="Gnatoloog">Gnatoloog</option>
+                        <option value="Overig">Overig</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-white/40 block mb-1">Urgentie</label>
+                      <select
+                        value={referralForm.urgency}
+                        onChange={(e) => setReferralForm(f => ({ ...f, urgency: e.target.value }))}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 focus:border-blue-500/50 outline-none"
+                      >
+                        <option value="ROUTINE">Regulier</option>
+                        <option value="URGENT">Spoed</option>
+                        <option value="EMERGENCY">Noodgeval</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-white/40 block mb-1">Naam specialist</label>
+                      <input
+                        value={referralForm.specialistName}
+                        onChange={(e) => setReferralForm(f => ({ ...f, specialistName: e.target.value }))}
+                        placeholder="Optioneel"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/20 focus:border-blue-500/50 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-white/40 block mb-1">Praktijk specialist</label>
+                      <input
+                        value={referralForm.specialistPractice}
+                        onChange={(e) => setReferralForm(f => ({ ...f, specialistPractice: e.target.value }))}
+                        placeholder="Optioneel"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/20 focus:border-blue-500/50 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-white/40 block mb-1">Reden van verwijzing *</label>
+                    <textarea
+                      value={referralForm.reason}
+                      onChange={(e) => setReferralForm(f => ({ ...f, reason: e.target.value }))}
+                      rows={2}
+                      placeholder="Beschrijf de reden..."
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/20 focus:border-blue-500/50 outline-none resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-white/40 block mb-1">Klinische informatie</label>
+                    <textarea
+                      value={referralForm.clinicalInfo}
+                      onChange={(e) => setReferralForm(f => ({ ...f, clinicalInfo: e.target.value }))}
+                      rows={2}
+                      placeholder="Optioneel: relevante klinische gegevens..."
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/20 focus:border-blue-500/50 outline-none resize-none"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSubmitReferral}
+                    disabled={referralSubmitting || !referralForm.specialistType || !referralForm.reason}
+                    className="px-4 py-2 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {referralSubmitting ? 'Verwijzing aanmaken...' : 'Verwijzing aanmaken'}
+                  </button>
+                </div>
+              )}
+
+              {referrals.length === 0 && !showReferralForm ? (
+                <p className="text-white/40 text-sm py-4 text-center">Geen verwijzingen — maak een nieuwe verwijzing aan</p>
+              ) : (
+                <div className="space-y-2">
+                  {referrals.map((ref: any) => (
+                    <div key={ref.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-white/90">{ref.specialistType}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                            ref.status === 'SENT' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
+                            ref.status === 'APPOINTMENT_MADE' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                            ref.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                            'bg-red-500/20 text-red-300 border-red-500/30'
+                          }`}>
+                            {ref.status === 'SENT' ? 'Verstuurd' : ref.status === 'APPOINTMENT_MADE' ? 'Afspraak gemaakt' : ref.status === 'COMPLETED' ? 'Afgerond' : 'Geannuleerd'}
+                          </span>
+                          {ref.urgency !== 'ROUTINE' && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${ref.urgency === 'EMERGENCY' ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                              {ref.urgency === 'EMERGENCY' ? 'Noodgeval' : 'Spoed'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/40 mt-1 truncate">{ref.reason}</p>
+                        <p className="text-[10px] text-white/25 mt-0.5">
+                          {new Date(ref.referralDate).toLocaleDateString('nl-NL')}
+                          {ref.specialistName && ` — ${ref.specialistName}`}
+                          {ref.creator && ` — door ${ref.creator.firstName} ${ref.creator.lastName}`}
+                        </p>
+                      </div>
+                      {ref.pdfUrl && (
+                        <a href={ref.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-white/40 hover:text-white/70 transition-colors">
+                          <FileText className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

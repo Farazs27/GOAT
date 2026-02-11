@@ -176,7 +176,7 @@ export default function ProfilePage() {
     .join(", ");
 
   const inputClasses =
-    "w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/90 text-sm outline-none focus:border-[#e8945a]/60 focus:shadow-[0_0_0_3px_rgba(232,148,90,0.1)] transition-all placeholder:text-white/20";
+    "w-full px-4 py-3 bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl text-white/90 text-sm placeholder:text-white/30 focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 outline-none transition-all";
 
   return (
     <div className="space-y-6">
@@ -193,7 +193,7 @@ export default function ProfilePage() {
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#e8945a]/10 border border-[#e8945a]/20 text-[#e8945a] text-sm font-medium hover:bg-[#e8945a]/20 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl text-white/70 rounded-2xl hover:bg-white/[0.1] transition-all text-sm font-medium"
           >
             <Pencil className="w-4 h-4" />
             Wijzigen
@@ -211,7 +211,7 @@ export default function ProfilePage() {
                   addressPostal: profile?.addressPostal || "",
                 });
               }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-white/[0.1] text-white/50 text-sm font-medium hover:bg-white/[0.04] transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl text-white/70 rounded-2xl hover:bg-white/[0.1] transition-all text-sm font-medium"
             >
               <X className="w-4 h-4" />
               Annuleren
@@ -219,7 +219,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4803f] text-white text-sm font-medium shadow-lg shadow-[#e8945a]/20 hover:shadow-[#e8945a]/30 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium rounded-2xl shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all text-sm disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? "Opslaan..." : "Opslaan"}
@@ -244,7 +244,7 @@ export default function ProfilePage() {
       {/* Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* ── Personal Info (spans 2 cols) ── */}
-        <div className="md:col-span-2 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden">
+        <div className="md:col-span-2 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 overflow-hidden">
           {/* Accent header bar */}
           <div className="h-1 bg-gradient-to-r from-[#e8945a] to-[#d4803f]" />
           <div className="p-7">
@@ -292,7 +292,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Contact Info ── */}
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-7">
+        <div className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 p-7">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-[#e8945a]/10 flex items-center justify-center">
               <Mail className="w-5 h-5 text-[#e8945a]" />
@@ -392,7 +392,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Insurance ── */}
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-7">
+        <div className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 p-7">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-[#e8945a]/10 flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-[#e8945a]" />
@@ -420,7 +420,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Medical Info (spans 2 cols) ── */}
-        <div className="md:col-span-2 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-7">
+        <div className="md:col-span-2 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 p-7">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-[#e8945a]/10 flex items-center justify-center">
               <Heart className="w-5 h-5 text-[#e8945a]" />
@@ -497,7 +497,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ── Email Preferences (spans 2 cols) ── */}
-        <div className="md:col-span-2 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-7">
+        <div className="md:col-span-2 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 p-7">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#e8945a]/10 flex items-center justify-center">
@@ -515,7 +515,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSavePrefs}
               disabled={prefsSaving || prefsLoading}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4803f] text-white text-sm font-medium shadow-lg shadow-[#e8945a]/20 hover:shadow-[#e8945a]/30 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium rounded-2xl shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all text-sm disabled:opacity-50"
             >
               {prefsSaving ? (
                 <>
@@ -552,7 +552,7 @@ export default function ProfilePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Appointment Confirmation */}
-              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl cursor-pointer hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300">
                 <div className="relative flex items-center">
                   <input
                     type="checkbox"
@@ -582,7 +582,7 @@ export default function ProfilePage() {
               </label>
 
               {/* Appointment Reminder */}
-              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl cursor-pointer hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300">
                 <div className="relative flex items-center">
                   <input
                     type="checkbox"
@@ -612,7 +612,7 @@ export default function ProfilePage() {
               </label>
 
               {/* Invoice Notification */}
-              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl cursor-pointer hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300">
                 <div className="relative flex items-center">
                   <input
                     type="checkbox"
@@ -642,7 +642,7 @@ export default function ProfilePage() {
               </label>
 
               {/* Message Notification */}
-              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl cursor-pointer hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300">
                 <div className="relative flex items-center">
                   <input
                     type="checkbox"

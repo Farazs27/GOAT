@@ -110,6 +110,7 @@ export default function InvoicesPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [payingId, setPayingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -173,6 +174,39 @@ export default function InvoicesPage() {
     }
   };
 
+  const handlePayNow = async (invoiceId: string) => {
+    setPayingId(invoiceId);
+
+    try {
+      const token = localStorage.getItem("patient_token");
+      const response = await fetch(
+        `/api/patient-portal/payments/create`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ invoiceId }),
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Mollie checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to create payment");
+        setPayingId(null);
+      }
+    } catch (error) {
+      console.error("Failed to create payment:", error);
+      alert("Er is een fout opgetreden bij het aanmaken van de betaling");
+      setPayingId(null);
+    }
+  };
+
   const isOverdue = (invoice: Invoice) => {
     return invoice.status !== "PAID" && new Date(invoice.dueDate) < new Date();
   };
@@ -207,7 +241,7 @@ export default function InvoicesPage() {
         {/* Filter Button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="p-2 rounded-xl border border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/[0.15] transition-all"
+          className="p-2 rounded-xl border border-white/[0.12] text-white/40 hover:text-white/70 hover:border-white/[0.15] transition-all"
         >
           <Filter className="w-5 h-5" />
         </button>
@@ -215,7 +249,7 @@ export default function InvoicesPage() {
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-4">
+        <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white/90 font-medium">Filter op status</h3>
             <button
@@ -231,7 +265,7 @@ export default function InvoicesPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 statusFilter === ""
                   ? "bg-[#e8945a] text-white"
-                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.1]"
+                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.09]"
               }`}
             >
               Alle ({summary?.totalInvoices || 0})
@@ -241,7 +275,7 @@ export default function InvoicesPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 statusFilter === "SENT"
                   ? "bg-[#e8945a] text-white"
-                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.1]"
+                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.09]"
               }`}
             >
               Verstuurd
@@ -251,7 +285,7 @@ export default function InvoicesPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 statusFilter === "OVERDUE"
                   ? "bg-[#e8945a] text-white"
-                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.1]"
+                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.09]"
               }`}
             >
               Overschreden ({summary?.overdueCount || 0})
@@ -261,7 +295,7 @@ export default function InvoicesPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 statusFilter === "PAID"
                   ? "bg-[#e8945a] text-white"
-                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.1]"
+                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.09]"
               }`}
             >
               Betaald
@@ -271,7 +305,7 @@ export default function InvoicesPage() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 statusFilter === "PARTIALLY_PAID"
                   ? "bg-[#e8945a] text-white"
-                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.1]"
+                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.09]"
               }`}
             >
               Gedeeltelijk betaald
@@ -283,7 +317,7 @@ export default function InvoicesPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+          <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white/60" />
@@ -295,7 +329,7 @@ export default function InvoicesPage() {
             </p>
           </div>
 
-          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+          <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-amber-400" />
@@ -310,7 +344,7 @@ export default function InvoicesPage() {
             </p>
           </div>
 
-          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+          <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-red-400/10 flex items-center justify-center">
                 <AlertCircle className="w-5 h-5 text-red-400" />
@@ -322,7 +356,7 @@ export default function InvoicesPage() {
             </p>
           </div>
 
-          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+          <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-400/10 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
@@ -337,7 +371,7 @@ export default function InvoicesPage() {
       )}
 
       {/* Invoices List */}
-      <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden">
+      <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-3xl overflow-hidden">
         {invoices.length === 0 ? (
           <div className="text-center py-16">
             <FileText className="w-16 h-16 text-white/20 mx-auto mb-4" />
@@ -353,7 +387,7 @@ export default function InvoicesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="border-b border-white/[0.08]">
+              <thead className="border-b border-white/[0.12]">
                 <tr className="text-left">
                   <th className="px-6 py-4 text-white/40 text-sm font-medium">
                     Factuur
@@ -375,7 +409,7 @@ export default function InvoicesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y divide-white/[0.12]">
                 {invoices.map((invoice) => {
                   const StatusIcon = getStatusIcon(invoice.status);
                   const overdue = isOverdue(invoice);
@@ -458,6 +492,26 @@ export default function InvoicesPage() {
 
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
+                          {/* Show payment button for unpaid invoices */}
+                          {(invoice.status === "SENT" ||
+                            invoice.status === "PARTIALLY_PAID" ||
+                            invoice.status === "OVERDUE") && (
+                            <button
+                              onClick={() => handlePayNow(invoice.id)}
+                              disabled={payingId === invoice.id}
+                              className="px-3 py-2 rounded-xl bg-[#e8945a] text-white hover:bg-[#d4864a] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40"
+                              title="Betaal nu"
+                            >
+                              {payingId === invoice.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <CreditCard className="w-4 h-4" />
+                              )}
+                              <span className="text-sm font-medium">
+                                Betaal nu
+                              </span>
+                            </button>
+                          )}
                           <button
                             onClick={() =>
                               handleDownloadPdf(
@@ -466,7 +520,7 @@ export default function InvoicesPage() {
                               )
                             }
                             disabled={downloadingId === invoice.id}
-                            className="p-2 rounded-xl border border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/[0.15] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 rounded-xl border border-white/[0.12] text-white/40 hover:text-white/70 hover:border-white/[0.15] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Download PDF"
                           >
                             {downloadingId === invoice.id ? (
@@ -487,7 +541,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* Contact Info */}
-      <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-4">
+      <div className="bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl p-4">
         <div className="flex items-center gap-3 text-white/50">
           <AlertCircle className="w-4 h-4" />
           <p className="text-sm">

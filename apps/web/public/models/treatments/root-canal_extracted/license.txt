@@ -1,0 +1,11 @@
+Model Information:
+* title:	Sistema de conductos de un molar mandibular
+* source:	https://sketchfab.com/3d-models/sistema-de-conductos-de-un-molar-mandibular-f7f8a0877f314c4998f21d80ffc9a729
+* author:	GIDPTD (https://sketchfab.com/GIDPTD)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Sistema de conductos de un molar mandibular" (https://sketchfab.com/3d-models/sistema-de-conductos-de-un-molar-mandibular-f7f8a0877f314c4998f21d80ffc9a729) by GIDPTD (https://sketchfab.com/GIDPTD) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

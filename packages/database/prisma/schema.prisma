@@ -60,6 +60,8 @@ model Practice {
   anamneses             Anamnesis[]
   messages              Message[]
   prescriptions         Prescription[]
+  referrals             Referral[]
+  complaints            Complaint[]
 
   @@map("practices")
 }
@@ -99,6 +101,7 @@ model User {
   patientImagesUploaded      PatientImage[]         @relation("PatientImageUploader")
   prescriptionsWritten       Prescription[]         @relation("Prescriber")
   messagesSent               Message[]              @relation("MessageSender")
+  referralsCreated           Referral[]             @relation("ReferralCreator")
 
   @@map("users")
 }
@@ -178,6 +181,8 @@ model Patient {
   anamneses         Anamnesis[]
   prescriptions     Prescription[]
   messages          Message[]
+  referrals         Referral[]
+  complaints        Complaint[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -973,4 +978,107 @@ model Message {
 enum SenderType {
   PATIENT
   STAFF
+}
+
+// ============================================================
+// REFERRALS
+// ============================================================
+
+model Referral {
+  id                 String          @id @default(uuid())
+  practiceId         String          @map("practice_id")
+  patientId          String          @map("patient_id")
+  createdBy          String          @map("created_by")
+
+  specialistType     String          @map("specialist_type")
+  specialistName     String?         @map("specialist_name")
+  specialistPractice String?         @map("specialist_practice")
+  specialistPhone    String?         @map("specialist_phone")
+  specialistEmail    String?         @map("specialist_email")
+
+  reason             String
+  clinicalInfo       String?         @map("clinical_info") @db.Text
+  urgency            ReferralUrgency @default(ROUTINE)
+  status             ReferralStatus  @default(SENT)
+
+  referralDate       DateTime        @default(now()) @map("referral_date")
+  appointmentMadeAt  DateTime?       @map("appointment_made_at")
+  completedAt        DateTime?       @map("completed_at")
+
+  pdfUrl             String?         @map("pdf_url")
+
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  practice  Practice @relation(fields: [practiceId], references: [id])
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  creator   User     @relation("ReferralCreator", fields: [createdBy], references: [id])
+
+  @@map("referrals")
+}
+
+enum ReferralUrgency {
+  ROUTINE
+  URGENT
+  EMERGENCY
+}
+
+enum ReferralStatus {
+  SENT
+  APPOINTMENT_MADE
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================================
+// COMPLAINTS (Wkkgz compliant)
+// ============================================================
+
+model Complaint {
+  id               String           @id @default(uuid())
+  practiceId       String           @map("practice_id")
+  patientId        String?          @map("patient_id")
+
+  type             ComplaintType
+  subject          ComplaintSubject
+  description      String           @db.Text
+  attachmentUrl    String?          @map("attachment_url")
+
+  anonymous        Boolean          @default(false)
+  referenceNumber  String           @unique @map("reference_number")
+
+  status           ComplaintStatus  @default(ONTVANGEN)
+  response         String?          @db.Text
+  resolvedAt       DateTime?        @map("resolved_at")
+
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  practice Practice  @relation(fields: [practiceId], references: [id])
+  patient  Patient?  @relation(fields: [patientId], references: [id])
+
+  @@map("complaints")
+}
+
+enum ComplaintType {
+  KLACHT
+  SUGGESTIE
+  COMPLIMENT
+}
+
+enum ComplaintSubject {
+  BEHANDELING
+  COMMUNICATIE
+  WACHTTIJD
+  HYGIENE
+  BEREIKBAARHEID
+  FACTURERING
+  PERSONEEL
+  OVERIG
+}
+
+enum ComplaintStatus {
+  ONTVANGEN
+  IN_BEHANDELING
+  AFGEHANDELD
 }

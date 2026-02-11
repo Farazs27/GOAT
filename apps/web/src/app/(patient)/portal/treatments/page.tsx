@@ -143,7 +143,7 @@ export default function TreatmentsPage() {
         </div>
       ) : treatments.length === 0 ? (
         <div
-          className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-3xl p-10 text-center"
+          className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl p-10 text-center shadow-xl shadow-black/10"
           style={{
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.5s ease 0.1s",
@@ -169,7 +169,7 @@ export default function TreatmentsPage() {
                 <h2 className="text-lg font-semibold text-white/70 capitalize">
                   {monthYear}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-white/5 text-white/30 text-xs font-medium border border-white/[0.06]">
+                <span className="px-2 py-0.5 rounded-full bg-white/5 text-white/30 text-xs font-medium border border-white/[0.12]">
                   {groupedTreatments[monthYear].length}
                 </span>
               </div>
@@ -178,7 +178,7 @@ export default function TreatmentsPage() {
                 {groupedTreatments[monthYear].map((treatment, index) => (
                   <div
                     key={treatment.id}
-                    className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-2px] hover:border-white/[0.14] hover:shadow-lg hover:shadow-orange-500/5"
+                    className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl overflow-hidden shadow-xl shadow-black/10 transition-all duration-300 hover:translate-y-[-2px] hover:bg-white/[0.09] hover:border-white/[0.18] hover:shadow-lg hover:shadow-orange-500/5"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateY(0)" : "translateY(12px)",
@@ -242,11 +242,11 @@ export default function TreatmentsPage() {
 
                     {/* Expanded details */}
                     {expandedId === treatment.id && (
-                      <div className="px-5 pb-5 pt-2 border-t border-white/[0.06]">
+                      <div className="px-5 pb-5 pt-2 border-t border-white/[0.12]">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                           {/* Practitioner */}
                           <div className="flex items-start gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+                            <div className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
                               <User className="w-4 h-4 text-orange-400/60" />
                             </div>
                             <div>
@@ -263,7 +263,7 @@ export default function TreatmentsPage() {
                           {/* Duration */}
                           {treatment.durationMinutes && (
                             <div className="flex items-start gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+                              <div className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
                                 <Clock className="w-4 h-4 text-orange-400/60" />
                               </div>
                               <div>
@@ -280,7 +280,7 @@ export default function TreatmentsPage() {
                           {/* NZA Code */}
                           {treatment.nzaCode && (
                             <div className="flex items-start gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+                              <div className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
                                 <FileText className="w-4 h-4 text-orange-400/60" />
                               </div>
                               <div>
@@ -300,7 +300,7 @@ export default function TreatmentsPage() {
                           {/* Cost details */}
                           {(treatment.unitPrice || treatment.totalPrice) && (
                             <div className="flex items-start gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+                              <div className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
                                 <Euro className="w-4 h-4 text-orange-400/60" />
                               </div>
                               <div>
@@ -328,7 +328,7 @@ export default function TreatmentsPage() {
 
                         {/* Notes */}
                         {treatment.notes && (
-                          <div className="mt-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                          <div className="mt-4 p-4 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-2xl">
                             <p className="text-xs text-white/30 mb-1.5">
                               Opmerkingen
                             </p>

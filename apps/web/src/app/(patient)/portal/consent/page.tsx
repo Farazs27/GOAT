@@ -89,7 +89,7 @@ function SignatureCanvas({
             <p className="text-sm text-white/50">
                 Teken uw handtekening in het vak hieronder
             </p>
-            <div className="relative rounded-2xl border-2 border-dashed border-[#e8945a]/30 overflow-hidden bg-white/[0.03]">
+            <div className="relative rounded-2xl border-2 border-dashed border-[#e8945a]/30 overflow-hidden bg-white/[0.06]">
                 <canvas
                     ref={canvasRef}
                     width={800}
@@ -116,14 +116,14 @@ function SignatureCanvas({
             <div className="flex gap-3 flex-wrap">
                 <button
                     onClick={clear}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.04] transition-all text-sm font-medium"
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/[0.12] text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-medium"
                 >
                     <Eraser className="w-4 h-4" />
                     Wissen
                 </button>
                 <button
                     onClick={onCancel}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.04] transition-all text-sm font-medium"
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/[0.12] text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-medium"
                 >
                     <X className="w-4 h-4" />
                     Annuleren
@@ -134,7 +134,7 @@ function SignatureCanvas({
                         const dataUrl = canvasRef.current!.toDataURL('image/png');
                         onSave(dataUrl);
                     }}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-sm shadow-lg shadow-[#e8945a]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-xl hover:shadow-[#e8945a]/30 active:scale-[0.98]"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-sm shadow-lg shadow-[#e8945a]/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[#e8945a]/40 active:scale-[0.98]"
                 >
                     <PenLine className="w-4 h-4" />
                     Ondertekenen
@@ -283,7 +283,7 @@ export default function ConsentPage() {
                 </button>
 
                 {/* Form card */}
-                <div className={`bg-white/[0.04] backdrop-blur-xl border rounded-3xl p-8 space-y-6 shadow-lg ${cardBorderClass(selected.status)}`}>
+                <div className={`bg-white/[0.06] backdrop-blur-2xl border rounded-3xl p-8 space-y-6 shadow-xl shadow-black/10 ${cardBorderClass(selected.status)}`}>
                     <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
                             <h2 className="text-xl font-semibold text-white/90">
@@ -297,7 +297,7 @@ export default function ConsentPage() {
                     </div>
 
                     {/* Consent content */}
-                    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-6 max-h-[50vh] overflow-y-auto">
+                    <div className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-6 max-h-[50vh] overflow-y-auto">
                         <pre className="whitespace-pre-wrap text-sm text-white/70 font-sans leading-relaxed">
                             {selected.content}
                         </pre>
@@ -337,13 +337,13 @@ export default function ConsentPage() {
                                     value={signName}
                                     onChange={(e) => setSignName(e.target.value)}
                                     placeholder="Volledige naam"
-                                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-5 py-4 text-base text-white/90 outline-none focus:border-[#e8945a]/40 focus:ring-1 focus:ring-[#e8945a]/20 transition-all placeholder:text-white/20"
+                                    className="w-full bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl px-5 py-4 text-base text-white/90 outline-none focus:border-[#e8945a]/40 focus:ring-1 focus:ring-[#e8945a]/20 transition-all placeholder:text-white/20"
                                 />
                             </div>
                             <button
                                 disabled={!signName.trim()}
                                 onClick={() => setSigning(true)}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-base shadow-lg shadow-[#e8945a]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-xl hover:shadow-[#e8945a]/30 active:scale-[0.99] flex items-center justify-center gap-2"
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-base shadow-lg shadow-[#e8945a]/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[#e8945a]/40 active:scale-[0.99] flex items-center justify-center gap-2"
                             >
                                 <PenLine className="w-5 h-5" />
                                 Ga verder naar ondertekening
@@ -404,7 +404,7 @@ export default function ConsentPage() {
             )}
 
             {!loading && forms.length === 0 && (
-                <div className="text-center py-16 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl">
+                <div className="text-center py-16 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10">
                     <FileCheck className="w-12 h-12 mx-auto text-white/10 mb-3" />
                     <p className="text-sm text-white/30">
                         Geen toestemmingsformulieren gevonden
@@ -418,11 +418,11 @@ export default function ConsentPage() {
                         <button
                             key={form.id}
                             onClick={() => openForm(form)}
-                            className={`w-full bg-white/[0.04] backdrop-blur-xl border rounded-3xl p-5 text-left hover:bg-white/[0.06] transition-all active:scale-[0.99] group shadow-lg ${cardBorderClass(form.status)}`}
+                            className={`w-full bg-white/[0.06] backdrop-blur-2xl border rounded-3xl p-5 text-left hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300 active:scale-[0.99] group shadow-xl shadow-black/10 ${cardBorderClass(form.status)}`}
                         >
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                                    <div className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                                    <div className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center flex-shrink-0">
                                         {form.status === 'SIGNED' ? (
                                             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                                         ) : form.status === 'REVOKED' ? (

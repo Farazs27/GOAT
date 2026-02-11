@@ -282,6 +282,7 @@ async function main() {
   console.log('Cleaning existing data...\n');
 
   // Delete in FK-safe order
+  await prisma.message.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.credential.deleteMany();
@@ -294,6 +295,8 @@ async function main() {
   await prisma.payment.deleteMany();
   await prisma.invoiceLine.deleteMany();
   await prisma.invoice.deleteMany();
+  await prisma.referral.deleteMany();
+  await prisma.complaint.deleteMany();
   await prisma.prescription.deleteMany();
   await prisma.treatment.deleteMany();
   await prisma.treatmentPlan.deleteMany();
@@ -747,7 +750,40 @@ async function main() {
     },
   });
 
-  console.log('  4 treatment plans seeded');
+  // Plan 5: Peter Jansen - implant + kroon element 46 (in progress, multi-step)
+  const plan5 = await prisma.treatmentPlan.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      createdBy: dentist.id,
+      title: 'Implantaat en kroon element 46',
+      description: 'Extractie wortelrest 46, botopbouw, implantaat plaatsing en definitieve kroon',
+      status: 'IN_PROGRESS',
+      proposedAt: daysAgo(90),
+      acceptedAt: daysAgo(88),
+      totalEstimate: 2450.00,
+      insuranceEstimate: 1225.00,
+      patientEstimate: 1225.00,
+    },
+  });
+
+  // Plan 6: Peter Jansen - proposed kostenraming for whitening
+  const plan6 = await prisma.treatmentPlan.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      createdBy: dentist.id,
+      title: 'Tanden bleken bovenkaak',
+      description: 'In-office bleaching bovenfront met thuisbleken nabehandeling',
+      status: 'PROPOSED',
+      proposedAt: daysAgo(5),
+      totalEstimate: 350.00,
+      insuranceEstimate: 0,
+      patientEstimate: 350.00,
+    },
+  });
+
+  console.log('  6 treatment plans seeded');
 
   // ─── Treatments ──────────────────────────────────────────
   console.log('Seeding treatments...');
@@ -850,7 +886,111 @@ async function main() {
     },
   });
 
-  console.log('  5 treatments seeded');
+  // Peter's implant plan (plan5) treatments - multi-step journey
+  const tooth46_p0 = await prisma.tooth.findUnique({
+    where: { patientId_toothNumber: { patientId: patients[0].id, toothNumber: 46 } },
+  });
+
+  // Step 1: Extraction (completed)
+  await prisma.treatment.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      treatmentPlanId: plan5.id,
+      performedBy: dentist.id,
+      toothId: tooth46_p0?.id,
+      description: 'Extractie wortelrest element 46',
+      status: 'COMPLETED',
+      performedAt: daysAgo(80),
+      durationMinutes: 30,
+      unitPrice: 95.00,
+      totalPrice: 95.00,
+    },
+  });
+
+  // Step 2: Botopbouw (completed)
+  await prisma.treatment.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      treatmentPlanId: plan5.id,
+      performedBy: dentist.id,
+      toothId: tooth46_p0?.id,
+      description: 'Botopbouw (augmentatie) regio 46',
+      status: 'COMPLETED',
+      performedAt: daysAgo(75),
+      durationMinutes: 45,
+      unitPrice: 450.00,
+      totalPrice: 450.00,
+    },
+  });
+
+  // Step 3: Implantaat plaatsing (completed)
+  await prisma.treatment.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      treatmentPlanId: plan5.id,
+      performedBy: dentist.id,
+      toothId: tooth46_p0?.id,
+      description: 'Implantaat plaatsing element 46',
+      status: 'COMPLETED',
+      performedAt: daysAgo(50),
+      durationMinutes: 60,
+      unitPrice: 1200.00,
+      totalPrice: 1200.00,
+    },
+  });
+
+  // Step 4: Healing abutment (completed)
+  await prisma.treatment.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      treatmentPlanId: plan5.id,
+      performedBy: dentist.id,
+      toothId: tooth46_p0?.id,
+      description: 'Plaatsing healing abutment element 46',
+      status: 'COMPLETED',
+      performedAt: daysAgo(20),
+      durationMinutes: 20,
+      unitPrice: 150.00,
+      totalPrice: 150.00,
+    },
+  });
+
+  // Step 5: Afdruk / scan (planned - next step)
+  await prisma.treatment.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      treatmentPlanId: plan5.id,
+      performedBy: dentist.id,
+      toothId: tooth46_p0?.id,
+      description: 'Digitale afdruk voor kroon op implantaat 46',
+      status: 'PLANNED',
+      unitPrice: 105.00,
+      totalPrice: 105.00,
+    },
+  });
+
+  // Step 6: Definitieve kroon plaatsing (planned)
+  await prisma.treatment.create({
+    data: {
+      practiceId: practice.id,
+      patientId: patients[0].id,
+      treatmentPlanId: plan5.id,
+      performedBy: dentist.id,
+      toothId: tooth46_p0?.id,
+      nzaCodeId: nzaMap['R02'],
+      description: 'Kroon op implantaat element 46 (zirconia)',
+      status: 'PLANNED',
+      unitPrice: 450.00,
+      totalPrice: 450.00,
+    },
+  });
+
+  console.log('  11 treatments seeded');
 
   // ─── Clinical Notes ──────────────────────────────────────
   console.log('Seeding clinical notes...');
@@ -1269,6 +1409,68 @@ async function main() {
     ],
   });
   console.log('  5 prescriptions seeded');
+
+  // ─── Referrals ──────────────────────────────────────────
+  console.log('Seeding referrals...');
+  await prisma.referral.createMany({
+    data: [
+      {
+        practiceId: practice.id,
+        patientId: patients[0].id,
+        createdBy: dentist.id,
+        specialistType: 'Kaakchirurg',
+        specialistName: 'Dr. R. van der Berg',
+        specialistPractice: 'Centrum voor Kaakchirurgie Amsterdam',
+        specialistPhone: '+31 20 555 0101',
+        specialistEmail: 'info@kaakchirurgie-adam.nl',
+        reason: 'Verwijdering verstandskiezen 18 en 28 (geïmpacteerd)',
+        clinicalInfo: 'OPT toont mesioangulaire impactie 18 en 28, beide in contact met nervus alveolaris inferior. Patient ervaart recidiverende pericoronitis.',
+        urgency: 'ROUTINE',
+        status: 'APPOINTMENT_MADE',
+        referralDate: daysAgo(30),
+        appointmentMadeAt: daysAgo(25),
+        pdfUrl: null,
+      },
+      {
+        practiceId: practice.id,
+        patientId: patients[0].id,
+        createdBy: dentist.id,
+        specialistType: 'Parodontoloog',
+        specialistName: 'Dr. M. Bakker',
+        specialistPractice: 'Amsterdam Parodontologie',
+        specialistPhone: '+31 20 555 0202',
+        reason: 'Verdiepte pockets (6-7mm) regio 16-17, ondanks adequate mondhygiëne',
+        clinicalInfo: 'BOP positief, pockets 6-7mm buccaal 16-17. Subgingivale tandsteen op röntgen. Initiële parodontale therapie uitgevoerd zonder verbetering.',
+        urgency: 'URGENT',
+        status: 'SENT',
+        referralDate: daysAgo(5),
+        pdfUrl: null,
+      },
+    ],
+  });
+  console.log('  2 referrals seeded');
+
+  // ─── Complaints ─────────────────────────────────────────
+  console.log('Seeding complaints...');
+  await prisma.complaint.createMany({
+    data: [
+      {
+        practiceId: practice.id,
+        patientId: patients[0].id,
+        type: 'COMPLIMENT',
+        subject: 'BEHANDELING',
+        description: 'Ik wil de tandarts en het hele team bedanken voor de uitstekende behandeling. De implantaat procedure verliep zeer soepel en ik voel me goed geïnformeerd over elk stap.',
+        anonymous: false,
+        referenceNumber: 'KLACHT-20260115-1001',
+        status: 'AFGEHANDELD',
+        response: 'Hartelijk dank voor uw mooie woorden! We waarderen het dat u de tijd neemt om dit met ons te delen.',
+        resolvedAt: daysAgo(20),
+        createdAt: daysAgo(25),
+        updatedAt: daysAgo(20),
+      },
+    ],
+  });
+  console.log('  1 complaint seeded');
 
   // ─── Credentials ─────────────────────────────────────────
   console.log('Seeding credentials...');

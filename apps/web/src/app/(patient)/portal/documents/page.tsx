@@ -337,7 +337,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex border-b border-white/[0.08]">
+      <div className="flex gap-2 p-1.5 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = tab === t.key;
@@ -345,17 +345,14 @@ export default function DocumentsPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative ${
+              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl relative ${
                 isActive
-                  ? "text-[#e8945a]"
-                  : "text-white/40 hover:text-white/60"
+                  ? "bg-white/[0.08] text-[#e8945a] border border-white/[0.12] shadow-lg shadow-black/10"
+                  : "text-white/40 hover:text-white/60 hover:bg-white/[0.04] border border-transparent"
               }`}
             >
               <Icon className="w-4 h-4" />
               {t.label}
-              {isActive && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e8945a] rounded-full" />
-              )}
             </button>
           );
         })}
@@ -458,7 +455,7 @@ function InvoicesTab({
         return (
           <div
             key={inv.id}
-            className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden transition-all duration-300 shadow-lg"
+            className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl overflow-hidden transition-all duration-300 shadow-xl shadow-black/10 hover:bg-white/[0.09] hover:border-white/[0.18]"
           >
             {/* Invoice header */}
             <div className="p-6">
@@ -515,7 +512,7 @@ function InvoicesTab({
                   <button
                     onClick={() => onDownload(inv.id, inv.invoiceNumber)}
                     disabled={downloadingId === inv.id}
-                    className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-[#e8945a]/10 hover:text-[#e8945a] hover:border-[#e8945a]/20 transition-all flex-shrink-0 disabled:opacity-50"
+                    className="w-10 h-10 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all flex-shrink-0 disabled:opacity-50 flex items-center justify-center"
                     title="Download PDF"
                   >
                     {downloadingId === inv.id ? (
@@ -526,7 +523,7 @@ function InvoicesTab({
                   </button>
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : inv.id)}
-                    className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.04] hover:text-[#e8945a] transition-all flex-shrink-0"
+                    className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-xl text-white/70 hover:bg-white/[0.1] transition-all flex-shrink-0 flex items-center justify-center"
                   >
                     {isExpanded ? (
                       <ChevronUp className="w-4 h-4" />
@@ -668,10 +665,10 @@ function XRayTab({
           return (
             <div
               key={image.id}
-              className={`group relative aspect-square rounded-2xl border overflow-hidden transition-all duration-300 ${
+              className={`group relative aspect-square rounded-3xl border overflow-hidden transition-all duration-300 shadow-xl shadow-black/10 ${
                 isSelected
-                  ? "border-[#e8945a] ring-2 ring-[#e8945a]/30"
-                  : "border-white/[0.08] hover:border-white/[0.15]"
+                  ? "border-[#e8945a] ring-2 ring-[#e8945a]/30 bg-white/[0.06]"
+                  : "border-white/[0.12] hover:border-white/[0.18] hover:bg-white/[0.09] bg-white/[0.06] backdrop-blur-2xl"
               }`}
             >
               {/* Thumbnail */}
@@ -794,7 +791,7 @@ function DocumentsTab({
             placeholder="Zoek documenten..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-2xl text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-[#e8945a]/50 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl text-sm text-white/90 placeholder:text-white/30 focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 outline-none transition-all"
           />
         </div>
         <div className="relative">
@@ -802,7 +799,7 @@ function DocumentsTab({
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="pl-10 pr-8 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-2xl text-sm text-white/90 focus:outline-none focus:border-[#e8945a]/50 transition-all appearance-none cursor-pointer"
+            className="pl-10 pr-8 py-2.5 bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl text-sm text-white/90 placeholder:text-white/30 focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="all" className="bg-[#1a1a2e]">
               Alle types
@@ -836,7 +833,7 @@ function DocumentsTab({
             return (
               <div
                 key={doc.id}
-                className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-5 transition-all duration-300 hover:bg-white/[0.06] shadow-lg"
+                className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl p-5 transition-all duration-300 hover:bg-white/[0.09] hover:border-white/[0.18] shadow-xl shadow-black/10"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4 min-w-0">
@@ -899,7 +896,7 @@ function DocumentsTab({
                       <button
                         onClick={() => onDownload(doc)}
                         disabled={downloadingId === doc.id}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#e8945a]/10 text-[#e8945a] hover:bg-[#e8945a]/20 transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all disabled:opacity-50"
                       >
                         {downloadingId === doc.id ? (
                           <div className="w-4 h-4 border-2 border-[#e8945a] border-t-transparent rounded-full animate-spin" />
@@ -933,7 +930,7 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <div className="text-center py-16 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl">
+    <div className="text-center py-16 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10">
       <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
         <Icon className="w-8 h-8 text-white/20" />
       </div>

@@ -177,6 +177,106 @@ const navItems = [
     ),
   },
   {
+    label: "Behandelplan",
+    href: "/portal/behandelplan",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Kostenramingen",
+    href: "/portal/kostenraming",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M14.25 7.756a4.5 4.5 0 1 0 0 8.488M7.5 10.5h5.25m-5.25 3h5.25M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Verwijzingen",
+    href: "/portal/verwijzingen",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Praktijk Info",
+    href: "/portal/praktijk",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Feedback",
+    href: "/portal/klachten",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+        />
+      </svg>
+    ),
+  },
+  {
     label: "Berichten",
     href: "/portal/messages",
     icon: (
@@ -247,10 +347,10 @@ export default function PatientPortalLayout({
         <aside
           className="hidden lg:flex w-72 flex-col fixed h-screen z-20"
           style={{
-            background: "rgba(255, 255, 255, 0.02)",
-            backdropFilter: "blur(40px)",
-            WebkitBackdropFilter: "blur(40px)",
-            borderRight: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "rgba(255, 255, 255, 0.04)",
+            backdropFilter: "blur(64px)",
+            WebkitBackdropFilter: "blur(64px)",
+            borderRight: "1px solid rgba(255, 255, 255, 0.1)",
             boxShadow: "4px 0 24px rgba(0, 0, 0, 0.2)",
             opacity: mounted ? 1 : 0,
             transform: mounted ? "translateX(0)" : "translateX(-20px)",
@@ -307,11 +407,12 @@ export default function PatientPortalLayout({
                 }`}
                 style={{
                   background: isActive(item.href)
-                    ? "rgba(232, 148, 90, 0.08)"
+                    ? "rgba(232, 148, 90, 0.12)"
                     : "transparent",
                   borderLeft: isActive(item.href)
                     ? "3px solid #e8945a"
                     : "3px solid transparent",
+                  borderRadius: isActive(item.href) ? "12px" : undefined,
                   marginLeft: isActive(item.href) ? "0" : "3px",
                   opacity: mounted ? 1 : 0,
                   transform: mounted ? "translateX(0)" : "translateX(-10px)",
@@ -338,10 +439,13 @@ export default function PatientPortalLayout({
           {/* User Section - Premium Card */}
           <div className="p-4 border-t border-white/[0.06]">
             <div
-              className="p-4 rounded-2xl transition-all duration-300 hover:bg-white/[0.04]"
+              className="p-4 rounded-2xl transition-all duration-300 hover:bg-white/[0.09] hover:border-white/[0.18]"
               style={{
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid rgba(255, 255, 255, 0.04)",
+                background: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(40px)",
+                WebkitBackdropFilter: "blur(40px)",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
               }}
             >
               <div className="flex items-center gap-3 mb-4">

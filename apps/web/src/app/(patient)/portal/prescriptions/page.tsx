@@ -97,7 +97,7 @@ export default function PrescriptionsPage() {
     isActive: boolean;
   }) => (
     <div
-      className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-2px] hover:border-white/[0.14] hover:shadow-lg hover:shadow-orange-500/5"
+      className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl overflow-hidden shadow-xl shadow-black/10 transition-all duration-300 hover:translate-y-[-2px] hover:bg-white/[0.09] hover:border-white/[0.18] hover:shadow-lg hover:shadow-orange-500/5"
       style={{
         opacity: mounted ? 1 : 0,
         transform: mounted ? "translateY(0)" : "translateY(12px)",
@@ -142,22 +142,22 @@ export default function PrescriptionsPage() {
             <Pill className="w-3 h-3" />
             {prescription.dosage}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs text-white/50 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+          <span className="inline-flex items-center gap-1.5 text-xs text-white/50 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.12]">
             <Clock className="w-3 h-3 text-white/30" />
             {prescription.frequency}
           </span>
           {prescription.route && prescription.route !== "oraal" && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-white/50 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+            <span className="inline-flex items-center gap-1.5 text-xs text-white/50 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.12]">
               {prescription.route}
             </span>
           )}
         </div>
 
         {/* Details grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-white/[0.06]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-white/[0.12]">
           {/* Prescriber */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
               <User className="w-3.5 h-3.5 text-orange-400/60" />
             </div>
             <div>
@@ -171,7 +171,7 @@ export default function PrescriptionsPage() {
 
           {/* Date */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
               <Calendar className="w-3.5 h-3.5 text-orange-400/60" />
             </div>
             <div>
@@ -185,7 +185,7 @@ export default function PrescriptionsPage() {
           {/* Duration */}
           {prescription.duration && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
                 <Clock className="w-3.5 h-3.5 text-orange-400/60" />
               </div>
               <div>
@@ -198,7 +198,7 @@ export default function PrescriptionsPage() {
           {/* Quantity */}
           {prescription.quantity && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shrink-0">
                 <FileText className="w-3.5 h-3.5 text-orange-400/60" />
               </div>
               <div>
@@ -213,7 +213,7 @@ export default function PrescriptionsPage() {
 
         {/* Instructions */}
         {prescription.instructions && (
-          <div className="mt-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="mt-4 p-4 rounded-2xl bg-white/[0.06] border border-white/[0.12] backdrop-blur-2xl">
             <p className="text-[11px] text-white/30 mb-1.5">Instructies</p>
             <p className="text-sm text-white/60 leading-relaxed">
               {prescription.instructions}
@@ -223,7 +223,7 @@ export default function PrescriptionsPage() {
 
         {/* Discontinued date */}
         {prescription.discontinuedAt && (
-          <div className="mt-4 pt-3 border-t border-white/[0.06]">
+          <div className="mt-4 pt-3 border-t border-white/[0.12]">
             <p className="text-xs text-amber-400/70">
               Gestopt op: {formatDate(prescription.discontinuedAt)}
             </p>
@@ -252,7 +252,7 @@ export default function PrescriptionsPage() {
         </div>
       ) : prescriptions.length === 0 ? (
         <div
-          className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-3xl p-10 text-center"
+          className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl p-10 text-center shadow-xl shadow-black/10"
           style={{
             opacity: mounted ? 1 : 0,
             transition: "opacity 0.5s ease 0.1s",
@@ -303,7 +303,7 @@ export default function PrescriptionsPage() {
                 <h2 className="text-xl font-semibold text-white/50">
                   Eerdere medicatie
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/5 text-white/30 text-xs font-semibold border border-white/[0.06]">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/5 text-white/30 text-xs font-semibold border border-white/[0.12]">
                   {pastPrescriptions.length}
                 </span>
               </div>

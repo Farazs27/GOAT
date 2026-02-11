@@ -1,0 +1,11 @@
+Model Information:
+* title:	MSDI dental implants- Conical
+* source:	https://sketchfab.com/3d-models/msdi-dental-implants-conical-42cd398aac8b4e3ba06780fd6aa8d2d3
+* author:	MSDI (https://sketchfab.com/roli)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "MSDI dental implants- Conical" (https://sketchfab.com/3d-models/msdi-dental-implants-conical-42cd398aac8b4e3ba06780fd6aa8d2d3) by MSDI (https://sketchfab.com/roli) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
