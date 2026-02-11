@@ -95,34 +95,43 @@ BELANGRIJK:
 - Filter regels met codes zoals "factu", "oproep", of die beginnen met "Email uit:" of "-----F/"
 - Retourneer ALLEEN geldige JSON, geen extra tekst`;
 
-    const geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                mimeType: 'application/pdf',
-                data: base64,
-              },
+    const requestBody = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          {
+            inlineData: {
+              mimeType: 'application/pdf',
+              data: base64,
             },
-          ],
-        }],
-        generationConfig: {
-          temperature: 0,
-          maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
-        },
-      }),
+          },
+        ],
+      }],
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+      },
     });
 
-    if (!geminiResponse.ok) {
-      const errText = await geminiResponse.text();
+    // Retry up to 3 times with exponential backoff for rate limits
+    let geminiResponse: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody,
+      });
+      if (geminiResponse.status !== 429) break;
+      console.log(`Gemini rate limited, retrying in ${(attempt + 1) * 5}s...`);
+      await new Promise(r => setTimeout(r, (attempt + 1) * 5000));
+    }
+
+    if (!geminiResponse || !geminiResponse.ok) {
+      const errText = geminiResponse ? await geminiResponse.text() : 'No response';
       console.error('Gemini PDF parse error:', errText);
-      if (geminiResponse.status === 429) {
-        throw new ApiError('AI service is tijdelijk overbelast. Probeer het over 1 minuut opnieuw.', 429);
+      if (geminiResponse?.status === 429) {
+        throw new ApiError('AI service is overbelast. Probeer het over 1 minuut opnieuw.', 429);
       }
       throw new ApiError('PDF analyse mislukt', 502);
     }
