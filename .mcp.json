@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sketchfab": {
+      "command": "node",
+      "args": [
+        "/Users/farazsharifi/GOAT/sketchfab-mcp-server/build/index.js",
+        "--api-key",
+        "64fe15908b9e4b21acc2d90f955e1542"
+      ]
+    }
+  }
+}

@@ -214,6 +214,8 @@ enum ToothStatus {
   IMPLANT
   CROWN
   BRIDGE_ABUTMENT
+  PONTIC
+  ROOT_REMNANT
 }
 
 model ToothSurface {
@@ -222,8 +224,9 @@ model ToothSurface {
   toothId     String           @map("tooth_id")
   surface     String // M, D, O, B/V, L/P
   condition   SurfaceCondition
-  material    String? // COMPOSITE, AMALGAM, CERAMIC, GOLD
-  treatmentId String?          @map("treatment_id")
+  material        Material? // COMPOSITE, AMALGAM, CERAMIC, GOLD
+  restorationType RestorationType?  @map("restoration_type")
+  treatmentId     String?          @map("treatment_id")
   recordedAt  DateTime         @default(now()) @map("recorded_at")
   recordedBy  String           @map("recorded_by")
 
@@ -242,6 +245,28 @@ enum SurfaceCondition {
   FILLING
   FRACTURE
   DECAY
+  VENEER
+  INLAY
+  ONLAY
+  PARTIAL_CROWN
+}
+
+enum RestorationType {
+  FILLING
+  INLAY
+  ONLAY
+  VENEER
+  PARTIAL_CROWN
+  CROWN_RESTORATION
+}
+
+enum Material {
+  COMPOSITE
+  CERAMIC
+  AMALGAM
+  GOLD
+  NON_PRECIOUS_METAL
+  TEMPORARY
 }
 
 // ============================================================

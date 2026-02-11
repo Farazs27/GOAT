@@ -46,11 +46,12 @@ No test framework is configured. No ESLint config exists.
 
 ### Auth Pattern
 - **Staff dashboard**: `access_token` + `refresh_token` in localStorage. All API calls go through `authFetch` wrapper (`src/lib/auth-fetch.ts`) which auto-refreshes on 401.
-- **Patient portal**: `patient_token` in localStorage. Does NOT use `authFetch`.
+- **Patient portal**: `patient_token` in localStorage. Does NOT use `authFetch`. Uses plain fetch with Bearer token.
 - Backend: JWT via `jsonwebtoken` + `bcryptjs`. No Next.js middleware file.
 
 ### API Routes (`apps/web/src/app/api/`)
-Major domains: auth, users, practices, patients (with nested clinical data: odontogram, anamnesis, images), appointments, schedules, invoices, clinical-notes, treatment-plans, consent, credentials, audit-logs, patient-portal/*, nza-codes, ai/analyze-notes.
+- Staff routes: auth, users, practices, patients (with nested clinical data: odontogram, anamnesis, images), appointments, schedules, invoices, clinical-notes, treatment-plans, consent, credentials, audit-logs, nza-codes, ai/analyze-notes
+- Patient routes: `api/portal/*` — separate endpoints scoped to authenticated patient
 
 ## Critical Rules
 
@@ -61,34 +62,49 @@ Major domains: auth, users, practices, patients (with nested clinical data: odon
 ### Prisma
 - All relations must have **both sides** defined (model field + inverse on related model)
 - Seed cleanup must include **all tables** in FK-safe order
+- After schema changes, run `pnpm db:generate && pnpm db:push` then verify with `pnpm --filter @dentflow/web build`
 
 ### Git
 - **Do NOT** commit or push unless the user explicitly asks
 - User pushes through GitHub Desktop
+
+## Patient Portal Development Rules
+
+When developing the patient portal, these rules are mandatory. See `apps/web/PORTAL-SYNC.md` for full details.
+
+1. **NEVER modify files in `app/(dashboard)/`** — dentist portal is stable and must not be affected
+2. **NEVER modify existing API routes** — create new ones under `api/portal/`
+3. **NEVER modify existing shared components** — create patient-specific wrappers in `src/components/patient/` or co-locate in `(patient)/`
+4. **Auth separation**: Patient portal uses `patient_token` in localStorage, NOT `access_token`. Patient API routes validate `patient_token`, not `access_token`.
+5. **Data scoping**: Every patient portal query MUST filter by the authenticated patient's `patientId`
 
 ## Login Credentials (from seed)
 - Staff: `faraz@tandarts-amsterdam.nl` / `Sharifi1997` (DENTIST)
 - Staff: `admin@dentflow.nl` / `Welcome123` (PRACTICE_ADMIN)
 - Patient: use patient email + last 4 digits of BSN
 
-## ⚠️ Patient Portal Development Rules
-- NEVER modify files in `app/(dashboard)/` during patient portal work
-- NEVER modify existing API routes — create new ones under `api/portal/`
-- NEVER modify existing shared components — create patient-specific wrappers
-- Patient auth uses `patient_token` in localStorage, NOT `access_token`
-- See `apps/web/PORTAL-SYNC.md` for full details
+## UI Components
+- `src/components/ui/` — shadcn/ui primitives (Radix UI + Tailwind): button, input, dialog, select, tabs, etc.
+- Icons: `lucide-react`
+- Three.js: `@react-three/fiber` + `@react-three/drei` for 3D rendering (used in odontogram)
+- Three.js components must use `next/dynamic` with `{ ssr: false }` — no SSR support
 
-## Portal Sync Rules
-
-When developing the patient portal, these rules are mandatory:
-
-1. **DO NOT modify dentist portal pages** — no changes to files in `app/(dashboard)/`
-2. **DO NOT modify existing API routes** — patient portal uses separate endpoints under `app/api/portal/`
-3. **DO NOT alter Prisma schema** without verifying all existing relations still work
-4. **Shared components** in `src/components/` can be USED but not MODIFIED — create patient-portal wrappers if needed
-5. **Auth separation**: Dentist portal uses `access_token` via `authFetch`, Patient portal uses `patient_token` — never mix these
-
-See `apps/web/PORTAL-SYNC.md` for full documentation.
+### Odontogram (Dental Chart)
+Complex subsystem at `src/components/odontogram/`:
+- `odontogram.tsx` — Main orchestrator with mode tabs (overview/perio/quickselect)
+- `modes/overview-mode.tsx` — Dual view: DentalArch3D (full arch) + ToothDetail3D (click to inspect)
+- `modes/perio-mode.tsx` — Periodontal probing data with 3D tooth models (buccal view)
+- `restoration/restoration-panel.tsx` — Side panel for tooth treatment details
+- `svg/tooth-renderer.tsx` — SVG tooth renderer (occlusal surfaces)
+- `svg/tooth-paths.ts` — SVG path data for all 8 tooth types
+- `three/tooth-3d.tsx` — Individual 3D tooth renderer (used in perio mode)
+- `three/dental-arch-3d.tsx` — Full arch 3D scene with all 32 teeth in flat rows
+- `three/tooth-detail-3d.tsx` — Large single-tooth 3D viewer with auto-rotate
+- `three/model-paths.ts` — Maps FDI numbers to glTF model paths
+- `perio/indicator-rows.tsx` — Dot rows for plaque, bleeding, pus indicators
+- `perio/probing-panel.tsx` — Right-side panel for probing data entry
+- 3D models: `public/models/teeth/` (16 dirs: 8 maxillary + 8 mandibular, glTF format)
+- **Model orientation**: Tooth long axis is along Z. For buccal view, rotate -90° around X (upper) or +90° (lower).
 
 ## Environment Variables
 - `DATABASE_URL` — Neon Postgres pooler URL

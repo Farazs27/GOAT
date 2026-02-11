@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderOpen,
+  ChevronDown,
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import type { ToothData, SurfaceData } from '@/components/odontogram/odontogram';
@@ -44,6 +45,7 @@ const SoapNoteForm = dynamic(() => import('@/components/clinical/soap-note-form'
 const TreatmentPlanBuilder = dynamic(() => import('@/components/treatments/treatment-plan-builder'));
 const PrescriptionList = dynamic(() => import('@/components/prescriptions/prescription-list'));
 const MedicalHistoryPanel = dynamic(() => import('@/components/patient-history/medical-history-panel'));
+const DentalXRayViewer = dynamic(() => import('@/components/xray-viewer/DentalXRayViewer'), { ssr: false });
 
 interface Patient {
   id: string;
@@ -51,6 +53,7 @@ interface Patient {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
+  gender: string | null;
   email: string | null;
   phone: string | null;
   addressStreet: string | null;
@@ -66,6 +69,7 @@ interface Patient {
 interface PatientImage {
   id: string;
   fileName: string;
+  filePath: string;
   fileSize: number;
   mimeType: string;
   imageType: string;
@@ -87,6 +91,8 @@ interface TreatmentRecord {
   status: string;
   performedAt: string | null;
   createdAt: string;
+  totalPrice: number | null;
+  notes: string | null;
   nzaCode: { code: string; descriptionNl: string } | null;
   tooth: { toothNumber: number } | null;
   performer: { firstName: string; lastName: string };
@@ -99,13 +105,23 @@ const TREATMENT_STATUS_CLASSES: Record<string, string> = {
   CANCELLED: 'bg-red-500/20 text-red-300 border-red-500/30',
 };
 
+const TREATMENT_STATUS_LABELS: Record<string, string> = {
+  COMPLETED: 'Voltooid',
+  PLANNED: 'Gepland',
+  IN_PROGRESS: 'Bezig',
+  CANCELLED: 'Geannuleerd',
+};
+
 export default function PatientDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const patientId = params.id as string;
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // BSN state
   const [showBsn, setShowBsn] = useState(false);
@@ -133,6 +149,7 @@ export default function PatientDetailPage() {
 
   // Treatment history for overview timeline
   const [treatmentHistory, setTreatmentHistory] = useState<TreatmentRecord[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     fetchPatient();
@@ -273,6 +290,8 @@ export default function PatientDetailPage() {
     treatmentType: string;
     nzaCode: string;
     surfaces?: string[];
+    material?: string;
+    restorationType?: string;
   }) => {
     try {
       const response = await authFetch(`/api/patients/${patientId}/odontogram`, {
@@ -329,6 +348,23 @@ export default function PatientDetailPage() {
     );
   }
 
+  const handleDeletePatient = async () => {
+    setDeleting(true);
+    try {
+      const res = await authFetch(`/api/patients/${patientId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || 'Verwijderen mislukt');
+        setDeleting(false);
+        return;
+      }
+      router.push('/patients');
+    } catch {
+      setError('Verbindingsfout bij verwijderen');
+      setDeleting(false);
+    }
+  };
+
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('nl-NL');
   const getInitials = (firstName: string, lastName: string) => `${firstName[0]}${lastName[0]}`.toUpperCase();
 
@@ -339,20 +375,7 @@ export default function PatientDetailPage() {
     { id: 'rontgen', icon: ImageIcon, label: 'Rontgen' },
   ];
 
-  // Group treatment history by date for timeline
-  const treatmentsByDate = treatmentHistory.reduce(
-    (acc, t) => {
-      const dateKey = new Date(t.performedAt || t.createdAt).toLocaleDateString('nl-NL', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
-      if (!acc[dateKey]) acc[dateKey] = [];
-      acc[dateKey].push(t);
-      return acc;
-    },
-    {} as Record<string, TreatmentRecord[]>
-  );
+
 
   return (
     <div className="space-y-6">
@@ -385,8 +408,45 @@ export default function PatientDetailPage() {
             <Edit className="h-4 w-4" />
             Bewerken
           </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-2 px-4 py-2.5 glass rounded-xl text-red-400/70 hover:text-red-300 hover:bg-red-500/10 transition-all text-sm font-medium"
+          >
+            <Trash2 className="h-4 w-4" />
+            Verwijderen
+          </button>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      {showDeleteConfirm && (
+        <div className="flex items-start gap-3 px-5 py-4 rounded-2xl bg-red-500/15 border border-red-500/30">
+          <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-300">
+              Weet u zeker dat u {patient.firstName} {patient.lastName} wilt verwijderen?
+            </p>
+            <p className="text-xs text-red-300/60 mt-1">
+              Alle behandelingen, notities, facturen en overige gegevens worden permanent verwijderd.
+            </p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={handleDeletePatient}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-500/80 hover:bg-red-500 rounded-xl text-sm font-medium text-white transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Verwijderen...' : 'Ja, verwijderen'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 glass rounded-xl text-sm font-medium text-white/70 hover:text-white transition-colors"
+              >
+                Annuleren
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Outstanding Balance Banner */}
       {outstandingBalance > 0 && (
@@ -585,6 +645,81 @@ export default function PatientDetailPage() {
         </div>
       </div>
 
+      {/* Behandelhistorie — Full treatment history (dropdown) */}
+      <div className="glass-card rounded-2xl">
+        <button
+          onClick={() => setHistoryOpen(!historyOpen)}
+          className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors rounded-2xl"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/20">
+              <ClipboardList className="h-4 w-4 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+                Behandelhistorie
+              </h3>
+              <p className="text-[11px] text-white/30">{treatmentHistory.length} behandelingen</p>
+            </div>
+          </div>
+          <ChevronDown className={`h-4 w-4 text-white/40 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {historyOpen && (
+          <div className="px-6 pb-6">
+            {treatmentHistory.length === 0 ? (
+              <div className="flex flex-col items-center py-8">
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
+                  <ClipboardList className="h-5 w-5 text-white/20" />
+                </div>
+                <p className="text-white/40 text-sm">Geen behandelingen gevonden</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {treatmentHistory.map((t) => (
+                    <div key={t.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group">
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-white/80 truncate">{t.description}</span>
+                          {t.nzaCode && (
+                            <span className="text-[10px] font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                              {t.nzaCode.code}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <span className="text-[11px] text-white/30">
+                            {t.performedAt ? formatDate(t.performedAt) : 'Niet uitgevoerd'}
+                          </span>
+                          {t.tooth && (
+                            <span className="text-[11px] text-white/40 flex items-center gap-1">
+                              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C8 2 6 6 6 10c0 3 1 5 2 7s2 5 4 5 3-3 4-5 2-4 2-7c0-4-2-8-6-8z"/></svg>
+                              Tand {t.tooth.toothNumber}
+                            </span>
+                          )}
+                          <span className="text-[11px] text-white/25">{t.performer.firstName} {t.performer.lastName}</span>
+                        </div>
+                      </div>
+
+                      {/* Price & Status */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {t.totalPrice && (
+                          <span className="text-sm font-medium text-white/60">
+                            &euro;{Number(t.totalPrice).toFixed(2)}
+                          </span>
+                        )}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${TREATMENT_STATUS_CLASSES[t.status] || 'bg-white/10 text-white/40 border-white/10'}`}>
+                          {TREATMENT_STATUS_LABELS[t.status] || t.status}
+                        </span>
+                      </div>
+                    </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Tabs for remaining sections */}
       <div className="space-y-4">
         <div className="flex gap-1 glass rounded-2xl p-1.5 overflow-x-auto">
@@ -606,9 +741,9 @@ export default function PatientDetailPage() {
         {/* Tab content */}
         <div className="transition-opacity duration-200 ease-in-out">
           {activeTab === 'overview' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="glass-card rounded-2xl p-5">
-                <h3 className="text-sm font-semibold text-white/80 mb-4 uppercase tracking-wider">Patientgegevens</h3>
+            <div className="glass-card rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-white/80 mb-4 uppercase tracking-wider">Patientgegevens</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
                     <p className="text-xs text-white/40">Adres</p>
@@ -626,51 +761,21 @@ export default function PatientDetailPage() {
                     <p className="text-xs text-white/40 mt-0.5">Polis: {patient.insuranceNumber || 'Niet ingevuld'}</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Treatment history timeline */}
-              <div className="glass-card rounded-2xl p-5">
-                <h3 className="text-sm font-semibold text-white/80 mb-4 uppercase tracking-wider">Laatste activiteit</h3>
-                {treatmentHistory.length === 0 ? (
-                  <p className="text-white/40 text-sm">Geen recente activiteit</p>
-                ) : (
-                  <div className="relative pl-6 space-y-4 max-h-80 overflow-y-auto">
-                    <div className="absolute left-2 top-1 bottom-1 w-px bg-white/10" />
-                    {Object.entries(treatmentsByDate).slice(0, 5).map(([date, items]) => (
-                      <div key={date} className="relative">
-                        <div className="absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-blue-500/30 shadow-sm shadow-blue-500/20" />
-                        <p className="text-[10px] text-white/30 font-medium mb-1.5">{date}</p>
-                        <div className="space-y-1.5">
-                          {items.map((t) => (
-                            <div key={t.id} className="p-2 rounded-lg bg-white/5 border border-white/5">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                {t.nzaCode && (
-                                  <span className="text-[10px] font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded">
-                                    {t.nzaCode.code}
-                                  </span>
-                                )}
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${TREATMENT_STATUS_CLASSES[t.status] || 'bg-white/10 text-white/40 border-white/10'}`}>
-                                  {t.status}
-                                </span>
-                                {t.tooth && (
-                                  <span className="text-[10px] text-white/40">
-                                    Element {t.tooth.toothNumber}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-white/80">
-                                {t.nzaCode?.descriptionNl || t.description}
-                              </p>
-                              <p className="text-[10px] text-white/30 mt-0.5">
-                                {t.performer.firstName} {t.performer.lastName}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-white/40">Geboortedatum</p>
+                    <p className="text-white/80 mt-0.5">{formatDate(patient.dateOfBirth)}</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-xs text-white/40">Contact</p>
+                    {patient.phone && <p className="text-white/80 mt-0.5 flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-emerald-400" />{patient.phone}</p>}
+                    {patient.email && <p className="text-white/80 mt-0.5 flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-blue-400" />{patient.email}</p>}
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/40">Geslacht</p>
+                    <p className="text-white/80 mt-0.5">{patient.gender === 'M' ? 'Man' : patient.gender === 'F' ? 'Vrouw' : 'Niet ingevuld'}</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -707,10 +812,13 @@ export default function PatientDetailPage() {
                     <input
                       type="file"
                       accept="image/*,.dcm,.dicom"
+                      multiple
                       className="hidden"
                       onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) uploadPatientImage(file);
+                        const files = e.target.files;
+                        if (files) {
+                          Array.from(files).forEach(file => uploadPatientImage(file));
+                        }
                         e.target.value = '';
                       }}
                     />
@@ -735,7 +843,7 @@ export default function PatientDetailPage() {
                       <div className="aspect-square relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={`/api/patients/${patientId}/images/${img.id}/file`}
+                          src={img.filePath}
                           alt={img.fileName}
                           className="w-full h-full object-cover"
                         />
@@ -759,56 +867,14 @@ export default function PatientDetailPage() {
                 </div>
               )}
 
-              {/* Full-size image modal */}
-              {imageModal !== null && patientImages[imageModal.index] && (
-                <div className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center" onClick={() => setImageModal(null)}>
-                  <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deletePatientImage(patientImages[imageModal.index].id); }}
-                      className="p-2 glass rounded-xl text-red-400 hover:bg-red-500/20 transition-colors"
-                      title="Verwijderen"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setImageModal(null)}
-                      className="p-2 glass rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {imageModal.index > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setImageModal({ index: imageModal.index - 1 }); }}
-                      className="absolute left-4 p-3 glass rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors z-10"
-                    >
-                      <ChevronLeft className="h-6 w-6" />
-                    </button>
-                  )}
-                  {imageModal.index < patientImages.length - 1 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setImageModal({ index: imageModal.index + 1 }); }}
-                      className="absolute right-4 p-3 glass rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors z-10"
-                    >
-                      <ChevronRight className="h-6 w-6" />
-                    </button>
-                  )}
-                  <div className="max-w-[90vw] max-h-[85vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/api/patients/${patientId}/images/${patientImages[imageModal.index].id}/file`}
-                      alt={patientImages[imageModal.index].fileName}
-                      className="max-w-full max-h-[80vh] object-contain rounded-xl"
-                    />
-                    <div className="mt-3 text-center">
-                      <p className="text-sm text-white/70">{patientImages[imageModal.index].fileName}</p>
-                      <p className="text-xs text-white/40 mt-0.5">
-                        {new Date(patientImages[imageModal.index].createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        {patientImages[imageModal.index].notes && ` — ${patientImages[imageModal.index].notes}`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              {/* Professional X-Ray Viewer */}
+              {imageModal !== null && patientImages.length > 0 && (
+                <DentalXRayViewer
+                  images={patientImages}
+                  initialIndex={imageModal.index}
+                  onClose={() => setImageModal(null)}
+                  onDelete={(id) => { deletePatientImage(id); setImageModal(null); }}
+                />
               )}
             </div>
           )}

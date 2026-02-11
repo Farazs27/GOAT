@@ -13,13 +13,16 @@ export enum ToothStatus {
   IMPLANT = 'IMPLANT',
   CROWN = 'CROWN',
   BRIDGE_ABUTMENT = 'BRIDGE_ABUTMENT',
+  PONTIC = 'PONTIC',
+  ROOT_REMNANT = 'ROOT_REMNANT',
 }
 
 export interface ToothSurfaceDto {
   id: string;
   surface: string;
   condition: SurfaceCondition;
-  material: string | null;
+  material: Material | null;
+  restorationType: RestorationType | null;
   recordedAt: Date;
 }
 
@@ -29,6 +32,28 @@ export enum SurfaceCondition {
   FILLING = 'FILLING',
   FRACTURE = 'FRACTURE',
   DECAY = 'DECAY',
+  VENEER = 'VENEER',
+  INLAY = 'INLAY',
+  ONLAY = 'ONLAY',
+  PARTIAL_CROWN = 'PARTIAL_CROWN',
+}
+
+export enum RestorationType {
+  FILLING = 'FILLING',
+  INLAY = 'INLAY',
+  ONLAY = 'ONLAY',
+  VENEER = 'VENEER',
+  PARTIAL_CROWN = 'PARTIAL_CROWN',
+  CROWN_RESTORATION = 'CROWN_RESTORATION',
+}
+
+export enum Material {
+  COMPOSITE = 'COMPOSITE',
+  CERAMIC = 'CERAMIC',
+  AMALGAM = 'AMALGAM',
+  GOLD = 'GOLD',
+  NON_PRECIOUS_METAL = 'NON_PRECIOUS_METAL',
+  TEMPORARY = 'TEMPORARY',
 }
 
 export interface UpdateToothStatusDto {
@@ -39,5 +64,39 @@ export interface UpdateToothStatusDto {
 export interface RecordSurfaceFindingDto {
   surface: string;
   condition: SurfaceCondition;
-  material?: string;
+  material?: Material;
+  restorationType?: RestorationType;
+}
+
+export interface PerioToothData {
+  buccal: {
+    probingDepth: [number, number, number]; // DB, B, MB
+    gingivalMargin: [number, number, number];
+    bleeding: [boolean, boolean, boolean];
+    plaque: [boolean, boolean, boolean];
+    pus: [boolean, boolean, boolean];
+    tartar: [boolean, boolean, boolean];
+  };
+  palatal: {
+    probingDepth: [number, number, number]; // DP, P, MP
+    gingivalMargin: [number, number, number];
+    bleeding: [boolean, boolean, boolean];
+    plaque: [boolean, boolean, boolean];
+    pus: [boolean, boolean, boolean];
+    tartar: [boolean, boolean, boolean];
+  };
+  mobility: number;
+  furcation: number;
+}
+
+export interface PerioChartData {
+  teeth: Record<string, PerioToothData>;
+}
+
+export interface BatchToothUpdateDto {
+  teeth: Array<{
+    toothNumber: number;
+    status?: ToothStatus;
+    surfaces?: RecordSurfaceFindingDto[];
+  }>;
 }

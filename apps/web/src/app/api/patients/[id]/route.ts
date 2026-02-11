@@ -54,3 +54,39 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return handleError(error);
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const user = await withAuth(request);
+    const { id } = await params;
+
+    const patient = await prisma.patient.findFirst({ where: { id, practiceId: user.practiceId } });
+    if (!patient) throw new ApiError('Patiënt niet gevonden', 404);
+
+    // Delete all related records in FK-safe order
+    await prisma.$transaction(async (tx) => {
+      await tx.toothSurface.deleteMany({ where: { tooth: { patientId: id } } });
+      await tx.tooth.deleteMany({ where: { patientId: id } });
+      await tx.invoiceLine.deleteMany({ where: { invoice: { patientId: id } } });
+      await tx.payment.deleteMany({ where: { invoice: { patientId: id } } });
+      await tx.insuranceClaim.deleteMany({ where: { patientId: id } });
+      await tx.invoice.deleteMany({ where: { patientId: id } });
+      await tx.treatment.deleteMany({ where: { patientId: id } });
+      await tx.treatmentPlan.deleteMany({ where: { patientId: id } });
+      await tx.clinicalNote.deleteMany({ where: { patientId: id } });
+      await tx.appointment.deleteMany({ where: { patientId: id } });
+      await tx.prescription.deleteMany({ where: { patientId: id } });
+      await tx.periodontalChart.deleteMany({ where: { patientId: id } });
+      await tx.patientImage.deleteMany({ where: { patientId: id } });
+      await tx.anamnesis.deleteMany({ where: { patientId: id } });
+      await tx.message.deleteMany({ where: { patientId: id } });
+      await tx.consentForm.deleteMany({ where: { patientId: id } });
+      await tx.document.deleteMany({ where: { patientId: id } });
+      await tx.patient.delete({ where: { id } });
+    });
+
+    return Response.json({ success: true });
+  } catch (error) {
+    return handleError(error);
+  }
+}

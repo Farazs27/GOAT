@@ -31,17 +31,18 @@ export async function GET(
 
     const [treatments, clinicalNotes, images, prescriptions, anamnesis, periodontalChart] =
       await Promise.all([
-        // Last 50 treatments
+        // All treatments
         prisma.treatment.findMany({
           where: { patientId, practiceId: user.practiceId },
           orderBy: { performedAt: 'desc' },
-          take: 50,
           select: {
             id: true,
             description: true,
             status: true,
             performedAt: true,
             createdAt: true,
+            totalPrice: true,
+            notes: true,
             nzaCode: { select: { code: true, descriptionNl: true } },
             tooth: { select: { toothNumber: true } },
             performer: { select: { firstName: true, lastName: true } },

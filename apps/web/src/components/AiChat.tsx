@@ -77,7 +77,7 @@ export default function AiChat() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl bg-[var(--accent)] text-white shadow-lg hover:bg-[var(--accent-hover)] transition-all duration-200 flex items-center justify-center hover:scale-105"
+        className="fixed bottom-20 left-6 z-50 w-14 h-14 rounded-2xl bg-[var(--accent)] text-white shadow-lg hover:bg-[var(--accent-hover)] transition-all duration-200 flex items-center justify-center hover:scale-105"
       >
         <MessageCircle className="h-6 w-6" />
       </button>
@@ -86,7 +86,7 @@ export default function AiChat() {
 
   const panelClasses = isExpanded
     ? 'fixed inset-4 z-50'
-    : 'fixed bottom-6 right-6 z-50 w-[420px] h-[600px]';
+    : 'fixed bottom-20 left-6 z-50 w-[420px] h-[600px]';
 
   return (
     <div className={`${panelClasses} flex flex-col bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl shadow-2xl overflow-hidden`}>

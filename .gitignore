@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+sketchfab-mcp-server/
 .pnpm-store/
 npm-debug.log*
 yarn-debug.log*
@@ -147,3 +148,13 @@ pids
 
 # DynamoDB Local files
 .dynamodb/
+Screenshot 2026-02-11 at 14.20.12 (2).png
+Screenshot 2026-02-11 at 14.24.26.png
+Screenshot 2026-02-11 at 14.20.12 (2).png
+Screenshot 2026-02-11 at 14.20.12 (2).png
+Screenshot 2026-02-11 at 14.20.12 (2).png
+Screenshot 2026-02-11 at 14.48.27.png
+Screenshot 2026-02-11 at 14.20.12 (2).png
+Screenshot 2026-02-11 at 15.28.30.png
+odontogram example.pdf
+*.png

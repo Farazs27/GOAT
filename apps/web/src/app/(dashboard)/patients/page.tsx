@@ -26,7 +26,7 @@ export default function PatientsPage() {
   const [importResult, setImportResult] = useState<{
     success: boolean;
     patient?: { id: string; patientNumber: string; firstName: string; lastName: string };
-    stats?: { treatmentsImported: number; treatmentsUnmatched: number; totalTreatments: number };
+    stats?: { treatmentsImported: number; treatmentsUnmatched: number; totalTreatments: number; invoicesCreated?: number };
     error?: string;
   } | null>(null);
 
@@ -153,6 +153,7 @@ export default function PatientsPage() {
                 {importResult.stats && (
                   <p className="text-xs text-emerald-300/70 mt-1">
                     {importResult.stats.treatmentsImported} behandelingen geïmporteerd
+                    {importResult.stats.invoicesCreated ? `, ${importResult.stats.invoicesCreated} facturen` : ''}
                     {importResult.stats.treatmentsUnmatched > 0 && `, ${importResult.stats.treatmentsUnmatched} niet-gekoppeld (opgeslagen als notitie)`}
                   </p>
                 )}
