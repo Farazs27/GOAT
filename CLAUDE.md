@@ -51,7 +51,7 @@ No test framework is configured. No ESLint config exists.
 
 ### API Routes (`apps/web/src/app/api/`)
 - Staff routes: auth, users, practices, patients (with nested clinical data: odontogram, anamnesis, images), appointments, schedules, invoices, clinical-notes, treatment-plans, consent, credentials, audit-logs, nza-codes, ai/analyze-notes
-- Patient routes: `api/portal/*` — separate endpoints scoped to authenticated patient
+- Patient routes: `api/patient-portal/*` — separate endpoints scoped to authenticated patient
 
 ## Critical Rules
 
@@ -73,10 +73,18 @@ No test framework is configured. No ESLint config exists.
 When developing the patient portal, these rules are mandatory. See `apps/web/PORTAL-SYNC.md` for full details.
 
 1. **NEVER modify files in `app/(dashboard)/`** — dentist portal is stable and must not be affected
-2. **NEVER modify existing API routes** — create new ones under `api/portal/`
+2. **NEVER modify existing API routes** — create new ones under `api/patient-portal/`
 3. **NEVER modify existing shared components** — create patient-specific wrappers in `src/components/patient/` or co-locate in `(patient)/`
 4. **Auth separation**: Patient portal uses `patient_token` in localStorage, NOT `access_token`. Patient API routes validate `patient_token`, not `access_token`.
 5. **Data scoping**: Every patient portal query MUST filter by the authenticated patient's `patientId`
+
+## Patient Portal Glass UI
+The patient portal uses Apple iOS-style glassmorphism. When adding new patient portal pages, use these patterns:
+- **Glass cards**: `bg-white/[0.06] backdrop-blur-2xl shadow-xl shadow-black/10 border border-white/[0.12] rounded-2xl`
+- **Hover**: `hover:bg-white/[0.09] hover:border-white/[0.18] transition-all duration-300`
+- **Inputs**: `bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20`
+- **Primary buttons**: `bg-[#e8945a] hover:bg-[#d4864a] shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 rounded-2xl`
+- **Accent color**: `#e8945a` (warm orange) throughout
 
 ## Login Credentials (from seed)
 - Staff: `faraz@tandarts-amsterdam.nl` / `Sharifi1997` (DENTIST)

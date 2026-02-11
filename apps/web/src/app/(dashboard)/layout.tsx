@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import Link from 'next/link';
+import { ReactNode } from "react";
+import Link from "next/link";
 import {
   LayoutDashboard,
   Users,
@@ -11,18 +11,22 @@ import {
   Search,
   BarChart3,
   ArrowLeftRight,
-} from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import AiChat from '@/components/AiChat';
+  Mail,
+  MessageSquare,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import AiChat from "@/components/AiChat";
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: Users, label: 'Patiënten', href: '/patients' },
-  { icon: Calendar, label: 'Agenda', href: '/agenda' },
-  { icon: FileText, label: 'Facturen', href: '/billing' },
-  { icon: CreditCard, label: 'Betalingen', href: '/payments' },
-  { icon: BarChart3, label: 'Rapportage', href: '/reports' },
-  { icon: Settings, label: 'Instellingen', href: '/settings' },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: Users, label: "Patiënten", href: "/patients" },
+  { icon: Calendar, label: "Agenda", href: "/agenda" },
+  { icon: Mail, label: "Email", href: "/email" },
+  { icon: MessageSquare, label: "WhatsApp", href: "/whatsapp" },
+  { icon: FileText, label: "Facturen", href: "/billing" },
+  { icon: CreditCard, label: "Betalingen", href: "/payments" },
+  { icon: BarChart3, label: "Rapportage", href: "/reports" },
+  { icon: Settings, label: "Instellingen", href: "/settings" },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -36,7 +40,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="w-9 h-9 bg-[var(--accent)] rounded-xl flex items-center justify-center">
                 <span className="text-sm font-bold text-white">DF</span>
               </div>
-              <span className="font-semibold text-lg text-[var(--text-primary)]">DentFlow</span>
+              <span className="font-semibold text-lg text-[var(--text-primary)]">
+                DentFlow
+              </span>
             </div>
             <ThemeToggle />
           </div>
@@ -76,7 +82,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <span className="text-xs font-bold text-white">FS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--text-primary)] truncate">Faraz Sharifi</p>
+              <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                Faraz Sharifi
+              </p>
               <p className="text-xs text-[var(--text-tertiary)] truncate flex items-center gap-1">
                 <ArrowLeftRight className="h-3 w-3" />
                 Portaal wisselen
@@ -89,7 +97,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main content */}
       <main className="flex-1 flex flex-col min-h-screen md:ml-64">
         <header className="h-16 bg-[var(--bg-card)] border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-10">
-          <h1 className="text-lg font-semibold text-[var(--text-primary)]">Dashboard</h1>
+          <h1 className="text-lg font-semibold text-[var(--text-primary)]">
+            Dashboard
+          </h1>
           <div className="flex items-center gap-4">
             <button className="relative p-2 rounded-xl hover:bg-[var(--bg-card-hover)] transition-colors">
               <Bell className="h-5 w-5 text-[var(--text-secondary)]" />
@@ -100,9 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </span>
           </div>
         </header>
-        <div className="flex-1 p-6 overflow-auto">
-          {children}
-        </div>
+        <div className="flex-1 p-6 overflow-auto">{children}</div>
       </main>
       <AiChat />
     </div>

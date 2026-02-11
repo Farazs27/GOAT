@@ -62,6 +62,10 @@ model Practice {
   prescriptions         Prescription[]
   referrals             Referral[]
   complaints            Complaint[]
+  emailThreads          EmailThread[]
+  emailMessages         EmailMessage[]
+  whatsappConversations WhatsAppConversation[]
+  whatsappMessages      WhatsAppMessage[]
 
   @@map("practices")
 }
@@ -102,6 +106,7 @@ model User {
   prescriptionsWritten       Prescription[]         @relation("Prescriber")
   messagesSent               Message[]              @relation("MessageSender")
   referralsCreated           Referral[]             @relation("ReferralCreator")
+  whatsappMessagesSent       WhatsAppMessage[]      @relation("WhatsAppSender")
 
   @@map("users")
 }
@@ -183,6 +188,8 @@ model Patient {
   messages          Message[]
   referrals         Referral[]
   complaints        Complaint[]
+  emailThreads      EmailThread[]
+  whatsappConversations WhatsAppConversation[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -841,6 +848,7 @@ enum CredentialType {
   MAILGUN
   RESEND
   CUSTOM
+  GMAIL
 }
 
 // ============================================================
@@ -1081,4 +1089,122 @@ enum ComplaintStatus {
   ONTVANGEN
   IN_BEHANDELING
   AFGEHANDELD
+}
+
+// ============================================================
+// EMAIL & WHATSAPP INTEGRATION
+// ============================================================
+
+model EmailThread {
+  id              String   @id @default(uuid())
+  practiceId      String   @map("practice_id")
+  gmailThreadId   String   @map("gmail_thread_id")
+  gmailMessageIds String[] @map("gmail_message_ids")
+
+  subject         String
+  participants    String[]
+  lastMessageAt   DateTime @map("last_message_at")
+
+  patientId       String?  @map("patient_id")
+
+  isUnread        Boolean  @default(false) @map("is_unread")
+  isStarred       Boolean  @default(false) @map("is_starred")
+  labels          String[]
+
+  snippet         String?
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient? @relation(fields: [patientId], references: [id])
+  messages EmailMessage[]
+
+  @@unique([practiceId, gmailThreadId])
+  @@index([practiceId, lastMessageAt])
+  @@index([patientId])
+  @@map("email_threads")
+}
+
+model EmailMessage {
+  id             String   @id @default(uuid())
+  practiceId     String   @map("practice_id")
+  threadId       String   @map("thread_id")
+  gmailMessageId String   @map("gmail_message_id")
+
+  from           String
+  to             String[]
+  cc             String[]
+  bcc            String[]
+
+  subject        String
+  bodyHtml       String?  @map("body_html") @db.Text
+  bodyText       String?  @map("body_text") @db.Text
+  snippet        String?
+
+  attachments    Json?    @default("[]")
+
+  isUnread       Boolean  @default(false) @map("is_unread")
+  isStarred      Boolean  @default(false) @map("is_starred")
+  labels         String[]
+
+  internalDate   DateTime @map("internal_date")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  practice Practice     @relation(fields: [practiceId], references: [id])
+  thread   EmailThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([practiceId, gmailMessageId])
+  @@index([threadId])
+  @@map("email_messages")
+}
+
+model WhatsAppConversation {
+  id            String   @id @default(uuid())
+  practiceId    String   @map("practice_id")
+  patientId     String   @map("patient_id")
+
+  phoneNumber   String   @map("phone_number")
+  lastMessageAt DateTime @map("last_message_at")
+  isActive      Boolean  @default(true) @map("is_active")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  practice Practice            @relation(fields: [practiceId], references: [id])
+  patient  Patient             @relation(fields: [patientId], references: [id])
+  messages WhatsAppMessage[]
+
+  @@unique([practiceId, patientId])
+  @@index([practiceId, lastMessageAt])
+  @@map("whatsapp_conversations")
+}
+
+model WhatsAppMessage {
+  id             String   @id @default(uuid())
+  practiceId     String   @map("practice_id")
+  conversationId String   @map("conversation_id")
+
+  twilioSid      String   @unique @map("twilio_sid")
+  direction      String   // 'inbound' or 'outbound'
+  from           String
+  to             String
+  body           String?
+  mediaUrl       String?  @map("media_url")
+  mediaType      String?  @map("media_type")
+
+  status         String   // 'sent', 'delivered', 'read', 'failed'
+  errorCode      String?  @map("error_code")
+  errorMessage   String?  @map("error_message")
+
+  sentBy         String?  @map("sent_by")
+
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  practice     Practice              @relation(fields: [practiceId], references: [id])
+  conversation WhatsAppConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?                 @relation("WhatsAppSender", fields: [sentBy], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("whatsapp_messages")
 }
