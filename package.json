@@ -17,7 +17,7 @@
     "postinstall": "pnpm db:generate"
   },
   "devDependencies": {
-    "next": "15.1.0",
+    "next": "15.1.11",
     "prettier": "^3.2.5",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
