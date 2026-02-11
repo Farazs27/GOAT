@@ -194,7 +194,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Total Revenue */}
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-start justify-between">

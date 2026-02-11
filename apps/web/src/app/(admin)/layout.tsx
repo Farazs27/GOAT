@@ -69,13 +69,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex">
       {/* Admin Sidebar */}
-      <aside className="w-64 glass-sidebar hidden md:flex flex-col fixed h-screen z-10" style={{ borderRight: '1px solid rgba(139, 92, 246, 0.15)' }}>
+      <aside className="w-16 lg:w-64 glass-sidebar hidden md:flex flex-col fixed h-screen z-10 transition-all duration-300" style={{ borderRight: '1px solid rgba(139, 92, 246, 0.15)' }}>
         <div className="p-6 border-b border-violet-500/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-violet-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20 flex-shrink-0">
               <Crown className="h-4 w-4 text-white" />
             </div>
-            <div>
+            <div className="hidden lg:block">
               <span className="font-semibold text-lg text-white/90">DentFlow</span>
               <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/20 font-medium uppercase tracking-wider">Admin</span>
             </div>
@@ -83,7 +83,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Search */}
-        <div className="px-4 pt-4">
+        <div className="hidden lg:block px-4 pt-4">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-white/30" />
             <input
@@ -93,6 +93,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             />
           </div>
         </div>
+        <div className="lg:hidden flex justify-center pt-3">
+          <Search className="h-5 w-5 text-white/30" />
+        </div>
 
         <nav className="flex-1 p-4 space-y-1">
           {adminNavItems.map((item) => {
@@ -101,14 +104,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center justify-center lg:justify-start gap-3 px-0 lg:px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] ${
                   isActive
                     ? 'bg-violet-500/20 text-violet-300 shadow-lg shadow-violet-500/5'
                     : 'text-white/60 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden lg:inline">{item.label}</span>
               </Link>
             );
           })}
@@ -118,12 +121,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="p-4 border-t border-violet-500/10">
           <Link
             href="/select-portal"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-all duration-200 group"
+            className="flex items-center justify-center lg:justify-start gap-3 px-0 lg:px-3 py-2.5 rounded-xl hover:bg-white/10 transition-all duration-200 group"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20 flex-shrink-0">
               <span className="text-xs font-bold text-white">{initials}</span>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 hidden lg:block">
               <p className="text-sm font-medium text-white/90 truncate">
                 {user?.firstName} {user?.lastName}
               </p>
@@ -137,7 +140,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-h-screen md:ml-64">
+      <main className="flex-1 flex flex-col min-h-screen md:ml-16 lg:ml-64 transition-all duration-300">
         <header className="h-16 glass border-b border-violet-500/10 flex items-center justify-between px-6 sticky top-0 z-10">
           <h1 className="text-lg font-semibold text-white/90">Admin Portaal</h1>
           <div className="flex items-center gap-4">

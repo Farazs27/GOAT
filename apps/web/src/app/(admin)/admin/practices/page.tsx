@@ -154,7 +154,7 @@ export default function AdminPracticesPage() {
       </div>
 
       {/* Team Summary */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {Object.entries(usersByRole).map(([role, count]) => (
           <div key={role} className="glass-card rounded-2xl p-5">
             <div className="flex items-center justify-between mb-2">

@@ -520,7 +520,7 @@ export default function PatientDetailPage() {
               {getInitials(patient.firstName, patient.lastName)}
             </span>
           </div>
-          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-white/40 uppercase tracking-wider">Geboortedatum</p>
               <p className="font-medium text-white/90 mt-1">{formatDate(patient.dateOfBirth)}</p>

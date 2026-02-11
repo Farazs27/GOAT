@@ -35,33 +35,41 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex bg-[var(--bg-primary)]">
       {/* Desktop & iPad Sidebar - Always visible on md+ */}
-      <aside className="responsive-sidebar bg-[var(--bg-secondary)] border-r border-[var(--border-color)] hidden md:flex flex-col fixed h-screen z-20">
+      <aside className="w-16 lg:w-[260px] xl:w-[280px] 2xl:w-[300px] bg-[var(--bg-secondary)] border-r border-[var(--border-color)] hidden md:flex flex-col fixed h-screen z-20 transition-all duration-300">
         {/* Logo Section */}
         <div className="p-4 lg:p-6 border-b border-[var(--border-color)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 lg:w-11 lg:h-11 bg-[var(--accent)] rounded-xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/20">
+              <div className="w-10 h-10 lg:w-11 lg:h-11 bg-[var(--accent)] rounded-xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/20 flex-shrink-0">
                 <span className="text-base lg:text-lg font-bold text-white">
                   DF
                 </span>
               </div>
-              <span className="font-semibold text-base lg:text-lg text-[var(--text-primary)]">
+              <span className="font-semibold text-base lg:text-lg text-[var(--text-primary)] hidden lg:inline">
                 DentFlow
               </span>
             </div>
-            <ThemeToggle />
+            <div className="hidden lg:block">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
 
-        {/* Search - Hidden on smaller iPad */}
-        <div className="px-3 lg:px-4 pt-3 lg:pt-4">
+        {/* Search - Hidden on collapsed sidebar */}
+        <div className="hidden lg:block px-4 pt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]" />
             <input
               type="text"
               placeholder="Zoeken..."
-              className="w-full glass-input rounded-xl pl-9 pr-3 py-2.5 lg:py-3 text-sm outline-none"
+              className="w-full glass-input rounded-xl pl-9 pr-3 py-3 text-sm outline-none"
             />
+          </div>
+        </div>
+        {/* Search icon only on collapsed sidebar */}
+        <div className="lg:hidden flex justify-center pt-3">
+          <div className="p-2.5 rounded-xl text-[var(--text-muted)]">
+            <Search className="h-5 w-5" />
           </div>
         </div>
 
@@ -71,10 +79,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-3 lg:px-4 py-3 lg:py-3.5 rounded-xl text-sm lg:text-base font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] transition-all duration-200 touch-target min-h-[48px] lg:min-h-[44px]"
+              className="flex items-center justify-center lg:justify-start gap-3 px-0 lg:px-4 py-3 lg:py-3.5 rounded-xl text-sm lg:text-base font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] transition-all duration-200 min-h-[44px]"
             >
-              <item.icon className="h-5 w-5 lg:h-5 lg:w-5 flex-shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <item.icon className="h-5 w-5 flex-shrink-0" />
+              <span className="truncate hidden lg:inline">{item.label}</span>
             </Link>
           ))}
         </nav>
@@ -83,14 +91,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="p-3 lg:p-4 border-t border-[var(--border-color)]">
           <Link
             href="/select-portal"
-            className="flex items-center gap-3 px-3 lg:px-4 py-3 rounded-xl hover:bg-[var(--bg-card-hover)] transition-all duration-200 group touch-target min-h-[48px]"
+            className="flex items-center justify-center lg:justify-start gap-3 px-0 lg:px-4 py-3 rounded-xl hover:bg-[var(--bg-card-hover)] transition-all duration-200 group min-h-[44px]"
           >
             <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
               <span className="text-xs lg:text-sm font-bold text-white">
                 FS
               </span>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 hidden lg:block">
               <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                 Faraz Sharifi
               </p>
@@ -148,7 +156,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-h-screen md:ml-[260px] lg:ml-[280px] xl:ml-[300px] pt-16 md:pt-0">
+      <main className="flex-1 flex flex-col min-h-screen md:ml-16 lg:ml-[260px] xl:ml-[280px] 2xl:ml-[300px] pt-16 md:pt-0 transition-all duration-300">
         {/* Desktop Header */}
         <header className="hidden md:flex h-16 lg:h-[72px] bg-[var(--bg-card)] border-b border-[var(--border-color)] items-center justify-between px-4 lg:px-8 sticky top-0 z-10">
           <h1 className="text-lg lg:text-xl font-semibold text-[var(--text-primary)]">

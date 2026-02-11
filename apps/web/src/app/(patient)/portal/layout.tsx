@@ -345,7 +345,7 @@ export default function PatientPortalLayout({
       <div className="flex min-h-screen relative z-10">
         {/* Desktop Sidebar - Premium Glass */}
         <aside
-          className="hidden lg:flex w-72 flex-col fixed h-screen z-20"
+          className="hidden md:flex md:w-56 lg:w-72 flex-col fixed h-screen z-20"
           style={{
             background: "rgba(255, 255, 255, 0.04)",
             backdropFilter: "blur(64px)",
@@ -498,7 +498,7 @@ export default function PatientPortalLayout({
 
         {/* Mobile Header - Premium Glass */}
         <div
-          className="lg:hidden fixed top-0 left-0 right-0 z-30"
+          className="md:hidden fixed top-0 left-0 right-0 z-30"
           style={{
             background: "rgba(255, 255, 255, 0.03)",
             backdropFilter: "blur(40px)",
@@ -611,8 +611,8 @@ export default function PatientPortalLayout({
         </div>
 
         {/* Main Content Area */}
-        <main className="flex-1 lg:ml-72 pt-20 lg:pt-0">
-          <div className="p-5 lg:p-8 xl:p-10 max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 md:ml-56 lg:ml-72 pt-20 md:pt-0 transition-all duration-300">
+          <div className="p-5 md:p-6 lg:p-8 xl:p-10 max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
     </div>

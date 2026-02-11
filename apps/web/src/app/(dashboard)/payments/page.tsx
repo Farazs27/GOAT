@@ -297,7 +297,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="text-xs text-white/40 uppercase tracking-wider">

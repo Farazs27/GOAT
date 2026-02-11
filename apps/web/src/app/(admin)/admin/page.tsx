@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statCards.map((stat) => (
           <div key={stat.title} className="glass-card rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
