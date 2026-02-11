@@ -1,43 +1,66 @@
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { withAuth, handleError, ApiError } from '@/lib/auth';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require('pdf-parse');
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@dentflow/database";
+import { withAuth, handleError, ApiError } from "@/lib/auth";
+
+// Dynamic import for pdf-parse to handle serverless environment
+async function parsePdf(buffer: Buffer): Promise<{ text: string }> {
+  const pdfModule: any = await import("pdf-parse");
+  // Handle both CommonJS and ESM exports
+  const parse = pdfModule.default || pdfModule;
+  return parse(buffer);
+}
 
 // Comprehensive mapping from old dental system codes to NZA codes
 const CODE_ALIASES: Record<string, string> = {
   // Vullingen (old shorthand → NZA)
-  '1C': 'V21', '2C': 'V22', '3C': 'V23', '4C': 'V24',
-  '1V': 'V21', '2V': 'V22', '3V': 'V23', '4V': 'V24',
+  "1C": "V21",
+  "2C": "V22",
+  "3C": "V23",
+  "4C": "V24",
+  "1V": "V21",
+  "2V": "V22",
+  "3V": "V23",
+  "4V": "V24",
   // Anesthesie
-  'GIA': 'A10', 'ANESTH': 'A10',
+  GIA: "A10",
+  ANESTH: "A10",
   // Cofferdam
-  'COF': 'A15', 'COFFERDAM': 'A15',
+  COF: "A15",
+  COFFERDAM: "A15",
   // Gebitsreiniging (old 4-digit → NZA 3-char)
-  'M0340': 'M03', 'M0330': 'M03', 'M0320': 'M03',
-  'M340': 'M03', 'M330': 'M03', 'M320': 'M03',
+  M0340: "M03",
+  M0330: "M03",
+  M0320: "M03",
+  M340: "M03",
+  M330: "M03",
+  M320: "M03",
   // Röntgen
-  'BW2': 'X02', 'BW4': 'X03', 'OPG': 'X21',
+  BW2: "X02",
+  BW4: "X03",
+  OPG: "X21",
   // Consulten (old 3-digit with leading zero → NZA 2-digit)
-  'C001': 'C01', 'C002': 'C02', 'C003': 'C03',
-  'C011': 'C11', 'C013': 'C13',
+  C001: "C01",
+  C002: "C02",
+  C003: "C03",
+  C011: "C11",
+  C013: "C13",
   // PPS score
-  'PPS': 'M05',
+  PPS: "M05",
 };
 
 // Codes to skip (not real treatments)
-const SKIP_CODES = new Set(['FACTU', 'OPROEP', 'BEGIN', '#', 'GEPIND']);
+const SKIP_CODES = new Set(["FACTU", "OPROEP", "BEGIN", "#", "GEPIND"]);
 
 // Parse DD-MM-YY or DD-MM-YYYY to YYYY-MM-DD
 function parseDate(dateStr: string): string | null {
   const m = dateStr.trim().match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
   if (!m) return null;
-  const day = m[1].padStart(2, '0');
-  const month = m[2].padStart(2, '0');
+  const day = m[1].padStart(2, "0");
+  const month = m[2].padStart(2, "0");
   let year = m[3];
   if (year.length === 2) {
     const y = parseInt(year);
-    year = (y > 50 ? '19' : '20') + year;
+    year = (y > 50 ? "19" : "20") + year;
   }
   return `${year}-${month}-${day}`;
 }
@@ -46,28 +69,28 @@ function parseDate(dateStr: string): string | null {
 function parsePatientHeader(text: string) {
   const get = (label: string): string => {
     // Match "Label: value" or "Label:\nvalue" patterns
-    const regex = new RegExp(`${label}:\\s*(.+?)(?:\\n|$)`, 'i');
+    const regex = new RegExp(`${label}:\\s*(.+?)(?:\\n|$)`, "i");
     const match = text.match(regex);
-    return match ? match[1].trim() : '';
+    return match ? match[1].trim() : "";
   };
 
-  const rawName = get('Naam');
-  const voornaam = get('Voornaam');
-  const geslacht = get('Geslacht');
-  const geboortedatum = get('Geboortedatum');
-  const adres = get('Adres');
-  const woonplaats = get('Woonplaats');
-  const bsn = get('BSN');
-  const mobielnr = get('Mobielnr\\.?') || get('Mobielnr');
-  const telnrPrive = get('Telnr\\.privé') || get('Telnr\\.prive');
-  const code = get('Code');
+  const rawName = get("Naam");
+  const voornaam = get("Voornaam");
+  const geslacht = get("Geslacht");
+  const geboortedatum = get("Geboortedatum");
+  const adres = get("Adres");
+  const woonplaats = get("Woonplaats");
+  const bsn = get("BSN");
+  const mobielnr = get("Mobielnr\\.?") || get("Mobielnr");
+  const telnrPrive = get("Telnr\\.privé") || get("Telnr\\.prive");
+  const code = get("Code");
 
   // Parse insurance from BasisVerz line
-  const basisVerz = get('BasisVerz\\.?') || get('BasisVerz');
-  const polisNr = get('Polisnr\\. basis\\.?') || get('Polisnr\\. basis');
+  const basisVerz = get("BasisVerz\\.?") || get("BasisVerz");
+  const polisNr = get("Polisnr\\. basis\\.?") || get("Polisnr\\. basis");
 
   // Extract last name from "F. (Faysal) MULLER" format
-  let lastName = '';
+  let lastName = "";
   let firstName = voornaam;
   if (rawName) {
     // Try "F. (Faysal) MULLER" or "MULLER" pattern
@@ -82,8 +105,8 @@ function parsePatientHeader(text: string) {
   }
 
   // Parse woonplaats into postal + city
-  let addressPostal = '';
-  let addressCity = '';
+  let addressPostal = "";
+  let addressCity = "";
   if (woonplaats) {
     const postalMatch = woonplaats.match(/^(\d{4}\s*[A-Z]{2})\s+(.+)/);
     if (postalMatch) {
@@ -95,7 +118,7 @@ function parsePatientHeader(text: string) {
   }
 
   // Extract email from oproep lines
-  let email = '';
+  let email = "";
   const emailMatch = text.match(/Opgeroepen per email\s*\(([^)]+)\)/i);
   if (emailMatch) {
     email = emailMatch[1].trim();
@@ -112,16 +135,16 @@ function parsePatientHeader(text: string) {
     patientNumber: code,
     firstName,
     lastName,
-    dateOfBirth: parseDate(geboortedatum) || '',
-    gender: geslacht === 'M' ? 'M' : geslacht === 'V' ? 'F' : geslacht,
+    dateOfBirth: parseDate(geboortedatum) || "",
+    gender: geslacht === "M" ? "M" : geslacht === "V" ? "F" : geslacht,
     phone: mobielnr || telnrPrive,
     email,
-    bsn: bsn.replace(/\D/g, ''),
+    bsn: bsn.replace(/\D/g, ""),
     addressStreet: adres,
     addressCity,
     addressPostal,
     insuranceCompany,
-    insuranceNumber: polisNr.replace(/\D/g, '') || bsn.replace(/\D/g, ''),
+    insuranceNumber: polisNr.replace(/\D/g, "") || bsn.replace(/\D/g, ""),
   };
 }
 
@@ -142,27 +165,32 @@ interface ParsedInvoice {
 }
 
 // Parse treatment lines from the table section
-function parseTreatmentLines(text: string): { treatments: ParsedTreatment[]; invoices: ParsedInvoice[] } {
+function parseTreatmentLines(text: string): {
+  treatments: ParsedTreatment[];
+  invoices: ParsedInvoice[];
+} {
   const treatments: ParsedTreatment[] = [];
   const invoices: ParsedInvoice[] = [];
-  const lines = text.split('\n');
+  const lines = text.split("\n");
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
     // Skip email lines
-    if (trimmed.includes('Email uit:')) continue;
+    if (trimmed.includes("Email uit:")) continue;
 
     // Parse invoice lines: "21-03-21 -----F/1900056---... 78,38 F*"
-    const invoiceMatch = trimmed.match(/^(\d{1,2}-\d{1,2}-\d{2,4})\s+-----F\/(\d+)-+\s+([\d,.]+)/);
+    const invoiceMatch = trimmed.match(
+      /^(\d{1,2}-\d{1,2}-\d{2,4})\s+-----F\/(\d+)-+\s+([\d,.]+)/,
+    );
     if (invoiceMatch) {
       const date = parseDate(invoiceMatch[1]);
       if (date) {
         invoices.push({
           date,
           invoiceNumber: invoiceMatch[2],
-          totalAmount: parseFloat(invoiceMatch[3].replace(',', '.')),
+          totalAmount: parseFloat(invoiceMatch[3].replace(",", ".")),
         });
       }
       continue;
@@ -180,12 +208,17 @@ function parseTreatmentLines(text: string): { treatments: ParsedTreatment[]; inv
     const rest = dateMatch[2];
 
     // Skip non-treatment lines
-    if (rest.startsWith('-----') || rest.startsWith('#') || rest.startsWith('begin')) continue;
+    if (
+      rest.startsWith("-----") ||
+      rest.startsWith("#") ||
+      rest.startsWith("begin")
+    )
+      continue;
     if (/^(factu|oproep|gepind)/i.test(rest)) continue;
 
     // Try to parse: [toothNumber] code description cost [indicator] practitioner
     // Tooth number is 2 digits (11-48), code is alphanumeric
-    let toothNumber = '';
+    let toothNumber = "";
     let remaining = rest;
 
     // Check if starts with tooth number (2 digits, range 11-48)
@@ -211,15 +244,17 @@ function parseTreatmentLines(text: string): { treatments: ParsedTreatment[]; inv
     // Extract cost and practitioner from the end
     // Pattern: "description 63,31 ** FA" or "description 0,00 >> FA"
     let patientCost = 0;
-    let practitioner = '';
+    let practitioner = "";
     let description = remaining;
-    let surface = '';
+    let surface = "";
 
     // Try to extract cost + indicator + practitioner from end
-    const costMatch = remaining.match(/^(.+?)\s+([\d,.]+)\s+([*>]+|F\*?)\s*([A-Z]{1,3})\s*$/);
+    const costMatch = remaining.match(
+      /^(.+?)\s+([\d,.]+)\s+([*>]+|F\*?)\s*([A-Z]{1,3})\s*$/,
+    );
     if (costMatch) {
       description = costMatch[1].trim();
-      patientCost = parseFloat(costMatch[2].replace(',', '.')) || 0;
+      patientCost = parseFloat(costMatch[2].replace(",", ".")) || 0;
       practitioner = costMatch[4];
     } else {
       // Try without cost (some lines just have practitioner)
@@ -255,30 +290,30 @@ export async function POST(request: NextRequest) {
     const user = await withAuth(request);
 
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get("file") as File | null;
 
     if (!file) {
-      throw new ApiError('PDF bestand is vereist', 400);
+      throw new ApiError("PDF bestand is vereist", 400);
     }
 
-    if (!file.type.includes('pdf')) {
-      throw new ApiError('Alleen PDF bestanden worden ondersteund', 400);
+    if (!file.type.includes("pdf")) {
+      throw new ApiError("Alleen PDF bestanden worden ondersteund", 400);
     }
 
     // Extract text from PDF
     const bytes = await file.arrayBuffer();
-    const pdfData = await pdf(Buffer.from(bytes));
+    const pdfData = await parsePdf(Buffer.from(bytes));
     const text = pdfData.text;
 
     if (!text || text.length < 50) {
-      throw new ApiError('PDF bevat geen leesbare tekst', 400);
+      throw new ApiError("PDF bevat geen leesbare tekst", 400);
     }
 
     // Parse patient header
     const patientInfo = parsePatientHeader(text);
 
     if (!patientInfo.firstName || !patientInfo.lastName) {
-      throw new ApiError('Geen patiëntgegevens gevonden in PDF', 400);
+      throw new ApiError("Geen patiëntgegevens gevonden in PDF", 400);
     }
 
     // Parse treatment lines
@@ -291,9 +326,17 @@ export async function POST(request: NextRequest) {
         OR: [
           ...(patientInfo.bsn ? [{ bsn: patientInfo.bsn }] : []),
           {
-            firstName: { equals: patientInfo.firstName, mode: 'insensitive' as const },
-            lastName: { equals: patientInfo.lastName, mode: 'insensitive' as const },
-            ...(patientInfo.dateOfBirth ? { dateOfBirth: new Date(patientInfo.dateOfBirth) } : {}),
+            firstName: {
+              equals: patientInfo.firstName,
+              mode: "insensitive" as const,
+            },
+            lastName: {
+              equals: patientInfo.lastName,
+              mode: "insensitive" as const,
+            },
+            ...(patientInfo.dateOfBirth
+              ? { dateOfBirth: new Date(patientInfo.dateOfBirth) }
+              : {}),
           },
         ],
       },
@@ -302,19 +345,19 @@ export async function POST(request: NextRequest) {
     if (existingPatient) {
       throw new ApiError(
         `Patiënt "${patientInfo.firstName} ${patientInfo.lastName}" bestaat al (${existingPatient.patientNumber})`,
-        409
+        409,
       );
     }
 
     // Generate patient number
     const lastPatient = await prisma.patient.findFirst({
       where: { practiceId: user.practiceId },
-      orderBy: { patientNumber: 'desc' },
+      orderBy: { patientNumber: "desc" },
     });
     const nextNumber = lastPatient
-      ? parseInt(lastPatient.patientNumber.split('-')[2]) + 1
+      ? parseInt(lastPatient.patientNumber.split("-")[2]) + 1
       : 1;
-    const patientNumber = `P-${new Date().getFullYear()}-${String(nextNumber).padStart(4, '0')}`;
+    const patientNumber = `P-${new Date().getFullYear()}-${String(nextNumber).padStart(4, "0")}`;
 
     // Create patient
     const patient = await prisma.patient.create({
@@ -323,7 +366,9 @@ export async function POST(request: NextRequest) {
         patientNumber,
         firstName: patientInfo.firstName,
         lastName: patientInfo.lastName,
-        dateOfBirth: patientInfo.dateOfBirth ? new Date(patientInfo.dateOfBirth) : new Date(),
+        dateOfBirth: patientInfo.dateOfBirth
+          ? new Date(patientInfo.dateOfBirth)
+          : new Date(),
         gender: patientInfo.gender || null,
         phone: patientInfo.phone || null,
         email: patientInfo.email || null,
@@ -342,28 +387,30 @@ export async function POST(request: NextRequest) {
 
     // Initialize 32 adult teeth
     const adultTeeth = [
-      11, 12, 13, 14, 15, 16, 17, 18,
-      21, 22, 23, 24, 25, 26, 27, 28,
-      31, 32, 33, 34, 35, 36, 37, 38,
-      41, 42, 43, 44, 45, 46, 47, 48,
+      11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32,
+      33, 34, 35, 36, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48,
     ];
     await prisma.tooth.createMany({
-      data: adultTeeth.map(toothNumber => ({
+      data: adultTeeth.map((toothNumber) => ({
         patientId: patient.id,
         practiceId: user.practiceId,
         toothNumber,
-        status: 'PRESENT',
+        status: "PRESENT",
         isPrimary: false,
       })),
     });
 
     // Load teeth for lookup
-    const teeth = await prisma.tooth.findMany({ where: { patientId: patient.id } });
-    const toothMap = new Map(teeth.map(t => [t.toothNumber, t.id]));
+    const teeth = await prisma.tooth.findMany({
+      where: { patientId: patient.id },
+    });
+    const toothMap = new Map(teeth.map((t) => [t.toothNumber, t.id]));
 
     // Load NZA codes
-    const nzaCodes = await prisma.nzaCode.findMany({ where: { isActive: true } });
-    const codeMap = new Map(nzaCodes.map(c => [c.code.toUpperCase(), c]));
+    const nzaCodes = await prisma.nzaCode.findMany({
+      where: { isActive: true },
+    });
+    const codeMap = new Map(nzaCodes.map((c) => [c.code.toUpperCase(), c]));
 
     // Resolve NZA code with multiple matching strategies
     function resolveNzaCode(rawCode: string) {
@@ -377,16 +424,16 @@ export async function POST(request: NextRequest) {
         if (nza) return nza;
       }
       // Strip leading zeros: C002 → C2, then pad: C2 → C02
-      const stripped = upper.replace(/^([A-Z]+)0+(\d+)$/, '$1$2');
+      const stripped = upper.replace(/^([A-Z]+)0+(\d+)$/, "$1$2");
       if (stripped !== upper) {
         nza = codeMap.get(stripped);
         if (nza) return nza;
-        const padded = stripped.replace(/^([A-Z]+)(\d)$/, '$10$2');
+        const padded = stripped.replace(/^([A-Z]+)(\d)$/, "$10$2");
         nza = codeMap.get(padded);
         if (nza) return nza;
       }
       // Pad single digit: C2 → C02
-      const padded = upper.replace(/^([A-Z]+)(\d)$/, '$10$2');
+      const padded = upper.replace(/^([A-Z]+)(\d)$/, "$10$2");
       if (padded !== upper) {
         nza = codeMap.get(padded);
         if (nza) return nza;
@@ -403,7 +450,7 @@ export async function POST(request: NextRequest) {
       const performedAt = new Date(t.date);
 
       if (nza) {
-        const toothId = toothNum ? (toothMap.get(toothNum) || null) : null;
+        const toothId = toothNum ? toothMap.get(toothNum) || null : null;
         let description = t.description || nza.descriptionNl;
         if (t.surface) description += ` [${t.surface}]`;
 
@@ -415,17 +462,19 @@ export async function POST(request: NextRequest) {
             nzaCodeId: nza.id,
             toothId,
             description,
-            status: 'COMPLETED',
+            status: "COMPLETED",
             performedAt,
             quantity: 1,
             unitPrice: t.patientCost || Number(nza.maxTariff),
             totalPrice: t.patientCost || Number(nza.maxTariff),
-            notes: `Geïmporteerd (code: ${t.code}${t.practitioner ? ', mw: ' + t.practitioner : ''})`,
+            notes: `Geïmporteerd (code: ${t.code}${t.practitioner ? ", mw: " + t.practitioner : ""})`,
           },
         });
         importedTreatments++;
       } else {
-        treatmentNotes.push(`${t.date} | ${t.code} | El ${t.toothNumber || '-'} | ${t.description} | €${t.patientCost.toFixed(2)}`);
+        treatmentNotes.push(
+          `${t.date} | ${t.code} | El ${t.toothNumber || "-"} | ${t.description} | €${t.patientCost.toFixed(2)}`,
+        );
       }
     }
 
@@ -455,7 +504,7 @@ export async function POST(request: NextRequest) {
           total: inv.totalAmount,
           insuranceAmount: 0,
           patientAmount: inv.totalAmount,
-          status: 'PAID',
+          status: "PAID",
           paidAmount: inv.totalAmount,
           notes: `Geïmporteerd (origineel: F/${inv.invoiceNumber})`,
         },
@@ -470,8 +519,8 @@ export async function POST(request: NextRequest) {
           practiceId: user.practiceId,
           patientId: patient.id,
           authorId: user.id,
-          noteType: 'PROGRESS',
-          content: `Geïmporteerde behandelingen (niet-gekoppelde codes):\n\n${treatmentNotes.join('\n')}`,
+          noteType: "PROGRESS",
+          content: `Geïmporteerde behandelingen (niet-gekoppelde codes):\n\n${treatmentNotes.join("\n")}`,
           isConfidential: false,
         },
       });
@@ -483,35 +532,40 @@ export async function POST(request: NextRequest) {
         practiceId: user.practiceId,
         patientId: patient.id,
         authorId: user.id,
-        noteType: 'PROGRESS',
+        noteType: "PROGRESS",
         content: [
           `Import samenvatting uit oud systeem:`,
           `- ${importedTreatments} behandelingen geïmporteerd`,
           `- ${treatmentNotes.length} behandelingen niet-gekoppeld`,
           `- ${invoicesCreated} facturen geïmporteerd`,
           `- Oorspronkelijk patiëntnummer: ${patientInfo.patientNumber}`,
-          patientInfo.email ? `- Email: ${patientInfo.email}` : '',
-        ].filter(Boolean).join('\n'),
+          patientInfo.email ? `- Email: ${patientInfo.email}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
         isConfidential: false,
       },
     });
 
-    return Response.json({
-      success: true,
-      patient: {
-        id: patient.id,
-        patientNumber: patient.patientNumber,
-        firstName: patient.firstName,
-        lastName: patient.lastName,
-        email: patient.email,
+    return NextResponse.json(
+      {
+        success: true,
+        patient: {
+          id: patient.id,
+          patientNumber: patient.patientNumber,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          email: patient.email,
+        },
+        stats: {
+          treatmentsImported: importedTreatments,
+          treatmentsUnmatched: treatmentNotes.length,
+          totalTreatments: treatments.length,
+          invoicesCreated,
+        },
       },
-      stats: {
-        treatmentsImported: importedTreatments,
-        treatmentsUnmatched: treatmentNotes.length,
-        totalTreatments: treatments.length,
-        invoicesCreated,
-      },
-    }, { status: 201 });
+      { status: 201 },
+    );
   } catch (error) {
     return handleError(error);
   }
