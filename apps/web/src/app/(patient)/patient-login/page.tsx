@@ -1,40 +1,40 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Mail, KeyRound } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Mail, KeyRound } from "lucide-react";
 
 export default function PatientLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [bsnLastFour, setBsnLastFour] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [bsnLastFour, setBsnLastFour] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const res = await fetch(`/api/auth/patient-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, bsnLastFour }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || 'Inloggen mislukt');
+        throw new Error(data.message || "Inloggen mislukt");
       }
 
       const data = await res.json();
-      localStorage.setItem('patient_token', data.access_token);
-      localStorage.setItem('patient_refresh_token', data.refresh_token);
-      localStorage.setItem('patient_data', JSON.stringify(data.patient));
-      router.push('/portal');
+      localStorage.setItem("patient_token", data.access_token);
+      localStorage.setItem("patient_refresh_token", data.refresh_token);
+      localStorage.setItem("patient_data", JSON.stringify(data.patient));
+      router.push("/portal");
     } catch (err: any) {
-      setError(err.message || 'Er is iets misgegaan');
+      setError(err.message || "Er is iets misgegaan");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,9 @@ export default function PatientLoginPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-[#e8945a] to-[#d4864a] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#e8945a]/20 mx-auto mb-5">
             <span className="text-2xl font-bold text-white">DF</span>
           </div>
-          <h1 className="text-3xl font-bold text-white/95 mb-2 tracking-tight">Pati&euml;ntenportaal</h1>
+          <h1 className="text-3xl font-bold text-white/95 mb-2 tracking-tight">
+            Pati&euml;ntenportaal
+          </h1>
           <p className="text-lg text-white/45">Welkom bij DentFlow</p>
         </div>
 
@@ -97,7 +99,7 @@ export default function PatientLoginPage() {
                   type="text"
                   value={bsnLastFour}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
                     setBsnLastFour(val);
                   }}
                   required
@@ -120,7 +122,7 @@ export default function PatientLoginPage() {
                   Bezig met inloggen...
                 </span>
               ) : (
-                'Inloggen'
+                "Inloggen"
               )}
             </button>
           </form>
@@ -132,6 +134,21 @@ export default function PatientLoginPage() {
             >
               Nog geen account? Registreren
             </a>
+
+            {/* Demo Credentials */}
+            <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-4 space-y-2">
+              <p className="text-xs text-white/40 font-medium">Testgegevens:</p>
+              <div className="space-y-1">
+                <p className="text-xs text-white/30">
+                  <span className="text-white/50">Email:</span>{" "}
+                  peter.jansen@email.nl
+                </p>
+                <p className="text-xs text-white/30">
+                  <span className="text-white/50">BSN laatste 4:</span> 6782
+                </p>
+              </div>
+            </div>
+
             <p className="text-xs text-white/30">
               Problemen met inloggen? Neem contact op met uw tandartspraktijk.
             </p>
