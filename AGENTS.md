@@ -28,15 +28,23 @@ pnpm db:generate && pnpm db:push
 
 # Restart dev server (kill old, clear cache, restart):
 kill $(lsof -ti :3000) 2>/dev/null; rm -rf apps/web/.next; pnpm --filter @dentflow/web dev
+
+# Code formatting
+pnpm format                               # Format with Prettier (if configured)
 ```
 
 ### Testing
 
 No test framework is configured. Manual testing required:
 
-1. Use provided login credentials from HANDOFF.md
-2. Test patient portal at `/patient-login` and `/portal`
-3. Test dentist portal at `/login`
+1. **Patient Portal**: Use credentials displayed on `/patient-login` page
+   - Email: `peter.jansen@email.nl`, BSN last 4: `6782`
+   - Test at `/patient-login` and `/portal`
+
+2. **Dentist Portal**: Use credentials displayed on `/login` page
+   - Dentist: `faraz@tandarts-amsterdam.nl` / `Sharifi1997`
+   - Admin: `admin@dentflow.nl` / `Welcome123`
+   - Test at `/login` and `/dashboard`
 
 ## Code Style Guidelines
 
@@ -60,6 +68,15 @@ import { type Patient } from "@dentflow/shared-types";
 import { Button } from "@/components/ui/button";
 import { Odontogram } from "@/components/odontogram/odontogram";
 ```
+
+### ESLint Rules
+
+The project uses Next.js ESLint configuration. Common rules:
+
+- Use `@next/next/no-img-element` when using `<img>` tags (instead of Next.js `<Image>`)
+- Proper TypeScript typing for all functions and components
+- Follow React hooks rules and best practices
+- Use proper imports and no unused variables
 
 ### TypeScript Rules
 
@@ -197,6 +214,38 @@ const HeavyComponent = dynamic(() => import('./heavy-component'), {
 - Use `dynamic()` for large charts, PDF generators, image viewers
 - Avoid importing entire libraries for single functions
 
+## Project Architecture
+
+### Monorepo Structure
+
+```
+DentFlow/
+├── apps/web/                 # Next.js 15 application
+│   ├── src/app/(dashboard)/ # Dentist portal (NEVER MODIFY during patient work)
+│   ├── src/app/(patient)/  # Patient portal
+│   └── src/app/api/         # API routes
+├── packages/
+│   ├── database/             # Prisma schema and client
+│   ├── shared-types/        # Shared TypeScript types
+│   └── crypto/              # Encryption utilities
+└── AGENTS.md               # This file
+```
+
+### Technology Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript 5.3, Tailwind CSS
+- **Database**: PostgreSQL via Prisma ORM
+- **Authentication**: JWT tokens (separate for staff/patients)
+- **Styling**: Tailwind CSS with custom CSS variables
+- **Package Manager**: pnpm with Turborepo
+
+### Key Configuration Files
+
+- `package.json`: Main monorepo scripts and pnpm config
+- `turbo.json`: Build system configuration
+- `tsconfig.json`: TypeScript strict mode enabled
+- `globals.css`: CSS variables for light/dark themes
+
 ## Portal Sync Rules (CRITICAL)
 
 When working on patient portal:
@@ -207,3 +256,64 @@ When working on patient portal:
 4. **Auth separation**: Dentist uses `access_token` via `authFetch`, Patient uses `patient_token`
 
 See `apps/web/PORTAL-SYNC.md` for full documentation.
+
+## Security & Compliance
+
+### Authentication Patterns
+
+```typescript
+// Dentist portal authentication
+import { authFetch } from "@/lib/auth-fetch";
+
+// Patient portal authentication
+const token = localStorage.getItem("patient_token");
+const response = await fetch("/api/endpoint", {
+  headers: { Authorization: `Bearer ${token}` },
+});
+```
+
+### Data Protection
+
+- **BSN handling**: Store encrypted in production, plain text in development
+- **Medical data**: All patient data access must be logged
+- **Audit trail**: Maintain audit logs for sensitive operations
+
+### Authentication Best Practices
+
+- Never expose tokens in client-side code
+- Use HTTPS for all API communications
+- Implement proper token refresh mechanisms
+- Validate all user inputs server-side
+
+## Debugging & Development
+
+### Browser DevTools
+
+1. **Network Tab**: Monitor API calls and authentication headers
+2. **Console**: Check for authentication errors
+3. **Application Tab**: Verify token storage in localStorage
+
+### Common Issues
+
+- **Build errors**: Usually TypeScript type mismatches or missing imports
+- **Database connection**: Check DATABASE_URL in .env.local
+- **Authentication failures**: Verify token format and API headers
+
+### Environment Setup
+
+1. Copy `.env.example` to `.env.local`
+2. Fill in required environment variables
+3. Run `pnpm install` to install dependencies
+4. Start development server with `pnpm dev`
+
+## Final Checklist Before Completion
+
+- [ ] Code follows import organization guidelines
+- [ ] All TypeScript types are properly defined
+- [ ] Build succeeds: `pnpm --filter @dentflow/web build`
+- [ ] Type check passes: `pnpm type-check`
+- [ ] ESLint passes: `pnpm lint`
+- [ ] Database migrations applied (if schema changed)
+- [ ] Manual testing completed for all user flows
+- [ ] All user-facing text is in Dutch
+- [ ] Portal sync rules followed (no cross-portal modifications)
