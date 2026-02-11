@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   User,
   Mail,
@@ -19,7 +19,9 @@ import {
   CreditCard,
   FileText,
   BadgeCheck,
-} from 'lucide-react';
+  Bell,
+  Check,
+} from "lucide-react";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -27,16 +29,73 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    email: '',
-    phone: '',
-    addressStreet: '',
-    addressCity: '',
-    addressPostal: '',
+    email: "",
+    phone: "",
+    addressStreet: "",
+    addressCity: "",
+    addressPostal: "",
   });
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
+
+  // Email preferences state
+  const [emailPrefs, setEmailPrefs] = useState({
+    appointmentConfirmation: true,
+    appointmentReminder: true,
+    invoiceNotification: true,
+    messageNotification: true,
+  });
+  const [prefsLoading, setPrefsLoading] = useState(true);
+  const [prefsSaving, setPrefsSaving] = useState(false);
+  const [prefsMessage, setPrefsMessage] = useState("");
+
+  // Load email preferences
+  useEffect(() => {
+    const token = localStorage.getItem("patient_token");
+    fetch(`/api/patient-portal/email-preferences`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        setEmailPrefs({
+          appointmentConfirmation: data.appointmentConfirmation !== false,
+          appointmentReminder: data.appointmentReminder !== false,
+          invoiceNotification: data.invoiceNotification !== false,
+          messageNotification: data.messageNotification !== false,
+        });
+      })
+      .catch(() => {})
+      .finally(() => setPrefsLoading(false));
+  }, []);
+
+  const handleSavePrefs = async () => {
+    setPrefsSaving(true);
+    setPrefsMessage("");
+    const token = localStorage.getItem("patient_token");
+    try {
+      const res = await fetch(`/api/patient-portal/email-preferences`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(emailPrefs),
+      });
+      if (res.ok) {
+        setPrefsMessage("E-mailvoorkeuren opgeslagen");
+        setTimeout(() => setPrefsMessage(""), 3000);
+      } else {
+        const err = await res.json();
+        setPrefsMessage(err.message || "Opslaan mislukt");
+      }
+    } catch {
+      setPrefsMessage("Er is iets misgegaan");
+    } finally {
+      setPrefsSaving(false);
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('patient_token');
+    const token = localStorage.getItem("patient_token");
     fetch(`/api/patient-portal/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -44,11 +103,11 @@ export default function ProfilePage() {
       .then((data) => {
         setProfile(data);
         setForm({
-          email: data.email || '',
-          phone: data.phone || '',
-          addressStreet: data.addressStreet || '',
-          addressCity: data.addressCity || '',
-          addressPostal: data.addressPostal || '',
+          email: data.email || "",
+          phone: data.phone || "",
+          addressStreet: data.addressStreet || "",
+          addressCity: data.addressCity || "",
+          addressPostal: data.addressPostal || "",
         });
       })
       .catch(() => {})
@@ -57,14 +116,14 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     setSaving(true);
-    setMessage('');
-    const token = localStorage.getItem('patient_token');
+    setMessage("");
+    const token = localStorage.getItem("patient_token");
     try {
       const res = await fetch(`/api/patient-portal/profile`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(form),
       });
@@ -72,29 +131,29 @@ export default function ProfilePage() {
         const updated = await res.json();
         setProfile({ ...profile, ...updated });
         setEditing(false);
-        setMessage('Gegevens succesvol bijgewerkt');
-        setTimeout(() => setMessage(''), 3000);
+        setMessage("Gegevens succesvol bijgewerkt");
+        setTimeout(() => setMessage(""), 3000);
       } else {
         const err = await res.json();
-        setMessage(err.message || 'Opslaan mislukt');
+        setMessage(err.message || "Opslaan mislukt");
       }
     } catch {
-      setMessage('Er is iets misgegaan');
+      setMessage("Er is iets misgegaan");
     } finally {
       setSaving(false);
     }
   };
 
   const maskBsn = (bsn: string | null | undefined) => {
-    if (!bsn) return '-';
+    if (!bsn) return "-";
     if (bsn.length <= 3) return bsn;
-    return '***' + bsn.slice(-3);
+    return "***" + bsn.slice(-3);
   };
 
   const genderLabel = (g: string | null | undefined) => {
-    if (g === 'M') return 'Man';
-    if (g === 'F') return 'Vrouw';
-    return g || '-';
+    if (g === "M") return "Man";
+    if (g === "F") return "Vrouw";
+    return g || "-";
   };
 
   if (loading) {
@@ -106,20 +165,27 @@ export default function ProfilePage() {
     );
   }
 
-  const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || '-';
-  const fullAddress = [profile?.addressStreet, profile?.addressPostal, profile?.addressCity]
+  const fullName =
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || "-";
+  const fullAddress = [
+    profile?.addressStreet,
+    profile?.addressPostal,
+    profile?.addressCity,
+  ]
     .filter(Boolean)
-    .join(', ');
+    .join(", ");
 
   const inputClasses =
-    'w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/90 text-sm outline-none focus:border-[#e8945a]/60 focus:shadow-[0_0_0_3px_rgba(232,148,90,0.1)] transition-all placeholder:text-white/20';
+    "w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/90 text-sm outline-none focus:border-[#e8945a]/60 focus:shadow-[0_0_0_3px_rgba(232,148,90,0.1)] transition-all placeholder:text-white/20";
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white/95 mb-1">Mijn Profiel</h1>
+          <h1 className="text-3xl font-bold text-white/95 mb-1">
+            Mijn Profiel
+          </h1>
           <p className="text-base text-white/50">
             Uw persoonlijke en medische informatie
           </p>
@@ -138,11 +204,11 @@ export default function ProfilePage() {
               onClick={() => {
                 setEditing(false);
                 setForm({
-                  email: profile?.email || '',
-                  phone: profile?.phone || '',
-                  addressStreet: profile?.addressStreet || '',
-                  addressCity: profile?.addressCity || '',
-                  addressPostal: profile?.addressPostal || '',
+                  email: profile?.email || "",
+                  phone: profile?.phone || "",
+                  addressStreet: profile?.addressStreet || "",
+                  addressCity: profile?.addressCity || "",
+                  addressPostal: profile?.addressPostal || "",
                 });
               }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-white/[0.1] text-white/50 text-sm font-medium hover:bg-white/[0.04] transition-all"
@@ -156,7 +222,7 @@ export default function ProfilePage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4803f] text-white text-sm font-medium shadow-lg shadow-[#e8945a]/20 hover:shadow-[#e8945a]/30 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              {saving ? 'Opslaan...' : 'Opslaan'}
+              {saving ? "Opslaan..." : "Opslaan"}
             </button>
           </div>
         )}
@@ -166,9 +232,9 @@ export default function ProfilePage() {
       {message && (
         <div
           className={`p-4 rounded-2xl text-sm font-medium ${
-            message.includes('succes')
-              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300'
-              : 'bg-red-500/10 border border-red-500/20 text-red-300'
+            message.includes("succes")
+              ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+              : "bg-red-500/10 border border-red-500/20 text-red-300"
           }`}
         >
           {message}
@@ -207,7 +273,7 @@ export default function ProfilePage() {
                 label="Geboortedatum"
                 value={
                   profile?.dateOfBirth
-                    ? new Date(profile.dateOfBirth).toLocaleDateString('nl-NL')
+                    ? new Date(profile.dateOfBirth).toLocaleDateString("nl-NL")
                     : null
                 }
               />
@@ -374,7 +440,7 @@ export default function ProfilePage() {
                 </span>
               </div>
               <span className="text-lg font-semibold text-white/90">
-                {profile?.bloodType || '-'}
+                {profile?.bloodType || "-"}
               </span>
             </div>
 
@@ -429,6 +495,184 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ── Email Preferences (spans 2 cols) ── */}
+        <div className="md:col-span-2 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-7">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#e8945a]/10 flex items-center justify-center">
+                <Bell className="w-5 h-5 text-[#e8945a]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white/90">
+                  E-mailvoorkeuren
+                </h2>
+                <p className="text-sm text-white/40">
+                  Beheer welke e-mails u wilt ontvangen
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleSavePrefs}
+              disabled={prefsSaving || prefsLoading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4803f] text-white text-sm font-medium shadow-lg shadow-[#e8945a]/20 hover:shadow-[#e8945a]/30 transition-all disabled:opacity-50"
+            >
+              {prefsSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Opslaan...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Opslaan
+                </>
+              )}
+            </button>
+          </div>
+
+          {prefsMessage && (
+            <div
+              className={`p-4 rounded-2xl text-sm font-medium mb-6 ${
+                prefsMessage.includes("opgeslagen") ||
+                prefsMessage.includes("succes")
+                  ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                  : "bg-red-500/10 border border-red-500/20 text-red-300"
+              }`}
+            >
+              {prefsMessage}
+            </div>
+          )}
+
+          {prefsLoading ? (
+            <div className="flex items-center gap-3 text-white/40 py-8 justify-center">
+              <div className="w-5 h-5 border-2 border-white/20 border-t-[#e8945a] rounded-full animate-spin" />
+              Laden...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Appointment Confirmation */}
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={emailPrefs.appointmentConfirmation}
+                    onChange={(e) =>
+                      setEmailPrefs({
+                        ...emailPrefs,
+                        appointmentConfirmation: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-6 h-6 rounded-lg border-2 border-white/20 peer-checked:bg-[#e8945a] peer-checked:border-[#e8945a] transition-all flex items-center justify-center">
+                    {emailPrefs.appointmentConfirmation && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white/90">
+                    Afspraakbevestigingen
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">
+                    Ontvang een e-mail wanneer een afspraak is gepland
+                  </p>
+                </div>
+              </label>
+
+              {/* Appointment Reminder */}
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={emailPrefs.appointmentReminder}
+                    onChange={(e) =>
+                      setEmailPrefs({
+                        ...emailPrefs,
+                        appointmentReminder: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-6 h-6 rounded-lg border-2 border-white/20 peer-checked:bg-[#e8945a] peer-checked:border-[#e8945a] transition-all flex items-center justify-center">
+                    {emailPrefs.appointmentReminder && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white/90">
+                    Afspraakherinneringen
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">
+                    Ontvang een herinnering 24 uur voor uw afspraak
+                  </p>
+                </div>
+              </label>
+
+              {/* Invoice Notification */}
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={emailPrefs.invoiceNotification}
+                    onChange={(e) =>
+                      setEmailPrefs({
+                        ...emailPrefs,
+                        invoiceNotification: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-6 h-6 rounded-lg border-2 border-white/20 peer-checked:bg-[#e8945a] peer-checked:border-[#e8945a] transition-all flex items-center justify-center">
+                    {emailPrefs.invoiceNotification && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white/90">
+                    Factuurmeldingen
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">
+                    Ontvang een e-mail bij nieuwe facturen
+                  </p>
+                </div>
+              </label>
+
+              {/* Message Notification */}
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] cursor-pointer hover:bg-white/[0.05] transition-all">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={emailPrefs.messageNotification}
+                    onChange={(e) =>
+                      setEmailPrefs({
+                        ...emailPrefs,
+                        messageNotification: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-6 h-6 rounded-lg border-2 border-white/20 peer-checked:bg-[#e8945a] peer-checked:border-[#e8945a] transition-all flex items-center justify-center">
+                    {emailPrefs.messageNotification && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white/90">
+                    Berichtnotificaties
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">
+                    Ontvang een e-mail bij nieuwe berichten van uw tandarts
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -452,9 +696,7 @@ function InfoField({
           {label}
         </span>
       </div>
-      <p className="text-sm font-medium text-white/90 pl-6">
-        {value || '-'}
-      </p>
+      <p className="text-sm font-medium text-white/90 pl-6">{value || "-"}</p>
     </div>
   );
 }

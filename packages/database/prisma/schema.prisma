@@ -17,86 +17,88 @@ datasource db {
 // ============================================================
 
 model Practice {
-  id              String   @id @default(uuid())
-  name            String
-  slug            String   @unique
-  agbCode         String?  @map("agb_code") // AGB-code for VECOZO
-  kvkNumber       String?  @map("kvk_number") // KvK registration
-  avgCode         String?  @map("avg_code") // AVG (privacy) registration code
-  addressStreet   String?  @map("address_street")
-  addressCity     String?  @map("address_city")
-  addressPostal   String?  @map("address_postal")
-  phone           String?
-  email           String?
-  vecozoCertRef   String?  @map("vecozo_cert_ref")
-  billingConfig   Json?    @default("{}") @map("billing_config")
-  settings        Json?    @default("{}")
-  isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  agbCode       String?  @map("agb_code") // AGB-code for VECOZO
+  kvkNumber     String?  @map("kvk_number") // KvK registration
+  avgCode       String?  @map("avg_code") // AVG (privacy) registration code
+  addressStreet String?  @map("address_street")
+  addressCity   String?  @map("address_city")
+  addressPostal String?  @map("address_postal")
+  phone         String?
+  email         String?
+  vecozoCertRef String?  @map("vecozo_cert_ref")
+  billingConfig Json?    @default("{}") @map("billing_config")
+  settings      Json?    @default("{}")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
-  users           User[]
-  patients        Patient[]
-  teeth           Tooth[]
-  toothSurfaces   ToothSurface[]
-  treatmentPlans  TreatmentPlan[]
-  treatments      Treatment[]
-  clinicalNotes   ClinicalNote[]
-  appointments    Appointment[]
+  users                 User[]
+  patients              Patient[]
+  teeth                 Tooth[]
+  toothSurfaces         ToothSurface[]
+  treatmentPlans        TreatmentPlan[]
+  treatments            Treatment[]
+  clinicalNotes         ClinicalNote[]
+  appointments          Appointment[]
   practitionerSchedules PractitionerSchedule[]
-  scheduleExceptions ScheduleException[]
-  invoices        Invoice[]
-  invoiceLines    InvoiceLine[]
-  payments        Payment[]
-  insuranceClaims InsuranceClaim[]
-  consentForms    ConsentForm[]
-  documents       Document[]
-  auditLogs       AuditLog[]
-  notifications   Notification[]
-  credentials     Credential[]
-  periodontalCharts PeriodontalChart[]
-  patientImages     PatientImage[]
-  anamneses         Anamnesis[]
-  prescriptions     Prescription[]
+  scheduleExceptions    ScheduleException[]
+  invoices              Invoice[]
+  invoiceLines          InvoiceLine[]
+  payments              Payment[]
+  insuranceClaims       InsuranceClaim[]
+  consentForms          ConsentForm[]
+  documents             Document[]
+  auditLogs             AuditLog[]
+  notifications         Notification[]
+  credentials           Credential[]
+  periodontalCharts     PeriodontalChart[]
+  patientImages         PatientImage[]
+  anamneses             Anamnesis[]
+  messages              Message[]
+  prescriptions         Prescription[]
 
   @@map("practices")
 }
 
 model User {
-  id              String   @id @default(uuid())
-  keycloakId      String?  @unique @map("keycloak_id")
-  practiceId      String   @map("practice_id")
-  email           String   @unique
-  passwordHash    String   @map("password_hash")
-  firstName       String?  @map("first_name")
-  lastName        String?  @map("last_name")
-  role            UserRole
-  bigNumber       String?  @map("big_number") // BIG registration
-  agbCode         String?  @map("agb_code") // Personal AGB code
-  specialization  String?
-  phone           String?
-  isActive        Boolean  @default(true) @map("is_active")
-  lastLoginAt     DateTime? @map("last_login_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id             String    @id @default(uuid())
+  keycloakId     String?   @unique @map("keycloak_id")
+  practiceId     String    @map("practice_id")
+  email          String    @unique
+  passwordHash   String    @map("password_hash")
+  firstName      String?   @map("first_name")
+  lastName       String?   @map("last_name")
+  role           UserRole
+  bigNumber      String?   @map("big_number") // BIG registration
+  agbCode        String?   @map("agb_code") // Personal AGB code
+  specialization String?
+  phone          String?
+  isActive       Boolean   @default(true) @map("is_active")
+  lastLoginAt    DateTime? @map("last_login_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  practice        Practice @relation(fields: [practiceId], references: [id])
-  patients        Patient[]
-  toothSurfacesRecorded ToothSurface[] @relation("RecordedBy")
-  treatmentPlansCreated TreatmentPlan[] @relation("CreatedBy")
-  treatmentsPerformed Treatment[] @relation("PerformedBy")
-  clinicalNotes   ClinicalNote[] @relation("Author")
-  appointmentsAsPractitioner Appointment[] @relation("Practitioner")
-  practitionerSchedules PractitionerSchedule[]
-  scheduleExceptions ScheduleException[]
-  documentsUploaded Document[] @relation("UploadedBy")
-  auditLogs       AuditLog[]
-  notifications   Notification[]
-  periodontalChartsAuthored PeriodontalChart[] @relation("PeriodontalChartAuthor")
-  patientImagesUploaded     PatientImage[]     @relation("PatientImageUploader")
-  prescriptionsWritten      Prescription[]     @relation("Prescriber")
+  practice                   Practice               @relation(fields: [practiceId], references: [id])
+  patients                   Patient[]
+  toothSurfacesRecorded      ToothSurface[]         @relation("RecordedBy")
+  treatmentPlansCreated      TreatmentPlan[]        @relation("CreatedBy")
+  treatmentsPerformed        Treatment[]            @relation("PerformedBy")
+  clinicalNotes              ClinicalNote[]         @relation("Author")
+  appointmentsAsPractitioner Appointment[]          @relation("Practitioner")
+  practitionerSchedules      PractitionerSchedule[]
+  scheduleExceptions         ScheduleException[]
+  documentsUploaded          Document[]             @relation("UploadedBy")
+  auditLogs                  AuditLog[]
+  notifications              Notification[]
+  periodontalChartsAuthored  PeriodontalChart[]     @relation("PeriodontalChartAuthor")
+  patientImagesUploaded      PatientImage[]         @relation("PatientImageUploader")
+  prescriptionsWritten       Prescription[]         @relation("Prescriber")
+  messagesSent               Message[]              @relation("MessageSender")
 
   @@map("users")
 }
@@ -115,63 +117,67 @@ enum UserRole {
 // ============================================================
 
 model Patient {
-  id                  String   @id @default(uuid())
-  practiceId          String   @map("practice_id")
-  userId              String?  @map("user_id")
-  patientNumber       String   @map("patient_number")
+  id            String  @id @default(uuid())
+  practiceId    String  @map("practice_id")
+  userId        String? @map("user_id")
+  patientNumber String  @map("patient_number")
 
   // BSN handling (MVP: plain text, Prod: encrypted)
-  bsn                 String?
-  bsnEncrypted        Bytes?   @map("bsn_encrypted")
-  bsnHash             Bytes?   @map("bsn_hash")
-  bsnKeyVersion       Int      @default(1) @map("bsn_key_version")
+  bsn           String?
+  bsnEncrypted  Bytes?  @map("bsn_encrypted")
+  bsnHash       Bytes?  @map("bsn_hash")
+  bsnKeyVersion Int     @default(1) @map("bsn_key_version")
 
-  firstName           String   @map("first_name")
-  lastName            String   @map("last_name")
-  dateOfBirth         DateTime @map("date_of_birth")
-  gender              String?
-  email               String?
-  phone               String?
-  addressStreet       String?  @map("address_street")
-  addressCity         String?  @map("address_city")
-  addressPostal       String?  @map("address_postal")
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  dateOfBirth   DateTime @map("date_of_birth")
+  gender        String?
+  email         String?
+  phone         String?
+  addressStreet String?  @map("address_street")
+  addressCity   String?  @map("address_city")
+  addressPostal String?  @map("address_postal")
 
   // Insurance
-  insuranceCompany    String?  @map("insurance_company")
-  insuranceNumber     String?  @map("insurance_number")
-  insuranceType       String?  @map("insurance_type")
+  insuranceCompany    String?   @map("insurance_company")
+  insuranceNumber     String?   @map("insurance_number")
+  insuranceType       String?   @map("insurance_type")
   insuranceVerifiedAt DateTime? @map("insurance_verified_at")
 
   // Clinical
-  medicalAlerts       String[] @map("medical_alerts")
-  medications         String[]
-  bloodType           String?  @map("blood_type")
-  referralSource      String?  @map("referral_source")
+  medicalAlerts  String[] @map("medical_alerts")
+  medications    String[]
+  bloodType      String?  @map("blood_type")
+  referralSource String?  @map("referral_source")
 
   // Compliance
-  gdprConsentAt       DateTime? @map("gdpr_consent_at")
-  dataRetentionUntil  DateTime? @map("data_retention_until")
-  isActive            Boolean  @default(true) @map("is_active")
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  gdprConsentAt      DateTime? @map("gdpr_consent_at")
+  dataRetentionUntil DateTime? @map("data_retention_until")
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  // Email Preferences
+  emailPreferences  Json?    @default("{}") @map("email_preferences")
 
   // Relations
-  practice            Practice @relation(fields: [practiceId], references: [id])
-  user                User?    @relation(fields: [userId], references: [id])
-  teeth               Tooth[]
-  treatmentPlans      TreatmentPlan[]
-  treatments          Treatment[]
-  clinicalNotes       ClinicalNote[]
-  appointments        Appointment[]
-  invoices            Invoice[]
-  insuranceClaims     InsuranceClaim[]
-  consentForms        ConsentForm[]
-  documents           Document[]
-  notifications       Notification[]
-  periodontalCharts   PeriodontalChart[]
-  patientImages       PatientImage[]
-  anamneses           Anamnesis[]
-  prescriptions       Prescription[]
+  practice          Practice           @relation(fields: [practiceId], references: [id])
+  user              User?              @relation(fields: [userId], references: [id])
+  teeth             Tooth[]
+  treatmentPlans    TreatmentPlan[]
+  treatments        Treatment[]
+  clinicalNotes     ClinicalNote[]
+  appointments      Appointment[]
+  invoices          Invoice[]
+  insuranceClaims   InsuranceClaim[]
+  consentForms      ConsentForm[]
+  documents         Document[]
+  notifications     Notification[]
+  periodontalCharts PeriodontalChart[]
+  patientImages     PatientImage[]
+  anamneses         Anamnesis[]
+  prescriptions     Prescription[]
+  messages          Message[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -182,21 +188,21 @@ model Patient {
 // ============================================================
 
 model Tooth {
-  id          String     @id @default(uuid())
-  practiceId  String     @map("practice_id")
-  patientId   String     @map("patient_id")
-  toothNumber Int        @map("tooth_number") // FDI: 11-48 (permanent), 51-85 (primary)
+  id          String      @id @default(uuid())
+  practiceId  String      @map("practice_id")
+  patientId   String      @map("patient_id")
+  toothNumber Int         @map("tooth_number") // FDI: 11-48 (permanent), 51-85 (primary)
   status      ToothStatus @default(PRESENT)
-  isPrimary   Boolean    @default(false) @map("is_primary")
+  isPrimary   Boolean     @default(false) @map("is_primary")
   notes       String?
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  practice    Practice   @relation(fields: [practiceId], references: [id])
-  patient     Patient    @relation(fields: [patientId], references: [id])
-  surfaces    ToothSurface[]
-  treatments  Treatment[]
+  practice   Practice       @relation(fields: [practiceId], references: [id])
+  patient    Patient        @relation(fields: [patientId], references: [id])
+  surfaces   ToothSurface[]
+  treatments Treatment[]
 
   @@unique([patientId, toothNumber])
   @@map("teeth")
@@ -211,21 +217,21 @@ enum ToothStatus {
 }
 
 model ToothSurface {
-  id          String    @id @default(uuid())
-  practiceId  String    @map("practice_id")
-  toothId     String    @map("tooth_id")
-  surface     String    // M, D, O, B/V, L/P
+  id          String           @id @default(uuid())
+  practiceId  String           @map("practice_id")
+  toothId     String           @map("tooth_id")
+  surface     String // M, D, O, B/V, L/P
   condition   SurfaceCondition
-  material    String?   // COMPOSITE, AMALGAM, CERAMIC, GOLD
-  treatmentId String?   @map("treatment_id")
-  recordedAt  DateTime  @default(now()) @map("recorded_at")
-  recordedBy  String    @map("recorded_by")
+  material    String? // COMPOSITE, AMALGAM, CERAMIC, GOLD
+  treatmentId String?          @map("treatment_id")
+  recordedAt  DateTime         @default(now()) @map("recorded_at")
+  recordedBy  String           @map("recorded_by")
 
   // Relations
-  practice    Practice  @relation(fields: [practiceId], references: [id])
-  tooth       Tooth     @relation(fields: [toothId], references: [id])
-  treatment   Treatment? @relation(fields: [treatmentId], references: [id])
-  recorder    User      @relation("RecordedBy", fields: [recordedBy], references: [id])
+  practice  Practice   @relation(fields: [practiceId], references: [id])
+  tooth     Tooth      @relation(fields: [toothId], references: [id])
+  treatment Treatment? @relation(fields: [treatmentId], references: [id])
+  recorder  User       @relation("RecordedBy", fields: [recordedBy], references: [id])
 
   @@map("tooth_surfaces")
 }
@@ -243,27 +249,27 @@ enum SurfaceCondition {
 // ============================================================
 
 model TreatmentPlan {
-  id                String           @id @default(uuid())
-  practiceId        String           @map("practice_id")
-  patientId         String           @map("patient_id")
-  createdBy         String           @map("created_by")
+  id                String              @id @default(uuid())
+  practiceId        String              @map("practice_id")
+  patientId         String              @map("patient_id")
+  createdBy         String              @map("created_by")
   title             String
   description       String?
   status            TreatmentPlanStatus @default(DRAFT)
-  proposedAt        DateTime?        @map("proposed_at")
-  acceptedAt        DateTime?        @map("accepted_at")
-  totalEstimate     Decimal?         @map("total_estimate") @db.Decimal(10, 2)
-  insuranceEstimate Decimal?         @map("insurance_estimate") @db.Decimal(10, 2)
-  patientEstimate   Decimal?         @map("patient_estimate") @db.Decimal(10, 2)
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  proposedAt        DateTime?           @map("proposed_at")
+  acceptedAt        DateTime?           @map("accepted_at")
+  totalEstimate     Decimal?            @map("total_estimate") @db.Decimal(10, 2)
+  insuranceEstimate Decimal?            @map("insurance_estimate") @db.Decimal(10, 2)
+  patientEstimate   Decimal?            @map("patient_estimate") @db.Decimal(10, 2)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
 
   // Relations
-  practice          Practice         @relation(fields: [practiceId], references: [id])
-  patient           Patient          @relation(fields: [patientId], references: [id])
-  creator           User             @relation("CreatedBy", fields: [createdBy], references: [id])
-  treatments        Treatment[]
-  consentForms      ConsentForm[]
+  practice     Practice      @relation(fields: [practiceId], references: [id])
+  patient      Patient       @relation(fields: [patientId], references: [id])
+  creator      User          @relation("CreatedBy", fields: [createdBy], references: [id])
+  treatments   Treatment[]
+  consentForms ConsentForm[]
 
   @@map("treatment_plans")
 }
@@ -278,36 +284,36 @@ enum TreatmentPlanStatus {
 }
 
 model Treatment {
-  id                String    @id @default(uuid())
-  practiceId        String    @map("practice_id")
-  patientId         String    @map("patient_id")
-  treatmentPlanId   String?   @map("treatment_plan_id")
-  appointmentId     String?   @map("appointment_id")
-  performedBy       String    @map("performed_by")
-  toothId           String?   @map("tooth_id")
-  nzaCodeId         String?   @map("nza_code_id")
+  id              String  @id @default(uuid())
+  practiceId      String  @map("practice_id")
+  patientId       String  @map("patient_id")
+  treatmentPlanId String? @map("treatment_plan_id")
+  appointmentId   String? @map("appointment_id")
+  performedBy     String  @map("performed_by")
+  toothId         String? @map("tooth_id")
+  nzaCodeId       String? @map("nza_code_id")
 
-  description       String
-  status            TreatmentStatus @default(PLANNED)
-  performedAt       DateTime? @map("performed_at")
-  durationMinutes   Int?      @map("duration_minutes")
-  quantity          Int       @default(1)
-  unitPrice         Decimal?  @map("unit_price") @db.Decimal(10, 2)
-  totalPrice        Decimal?  @map("total_price") @db.Decimal(10, 2)
-  notes             String?
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  description     String
+  status          TreatmentStatus @default(PLANNED)
+  performedAt     DateTime?       @map("performed_at")
+  durationMinutes Int?            @map("duration_minutes")
+  quantity        Int             @default(1)
+  unitPrice       Decimal?        @map("unit_price") @db.Decimal(10, 2)
+  totalPrice      Decimal?        @map("total_price") @db.Decimal(10, 2)
+  notes           String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
   // Relations
-  practice          Practice  @relation(fields: [practiceId], references: [id])
-  patient           Patient   @relation(fields: [patientId], references: [id])
-  treatmentPlan     TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id])
-  appointment       Appointment? @relation(fields: [appointmentId], references: [id])
-  performer         User      @relation("PerformedBy", fields: [performedBy], references: [id])
-  tooth             Tooth?    @relation(fields: [toothId], references: [id])
-  nzaCode           NzaCode?  @relation(fields: [nzaCodeId], references: [id])
-  toothSurfaces     ToothSurface[]
-  invoiceLines      InvoiceLine[]
+  practice      Practice       @relation(fields: [practiceId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  treatmentPlan TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id])
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id])
+  performer     User           @relation("PerformedBy", fields: [performedBy], references: [id])
+  tooth         Tooth?         @relation(fields: [toothId], references: [id])
+  nzaCode       NzaCode?       @relation(fields: [nzaCodeId], references: [id])
+  toothSurfaces ToothSurface[]
+  invoiceLines  InvoiceLine[]
 
   @@map("treatments")
 }
@@ -320,21 +326,21 @@ enum TreatmentStatus {
 }
 
 model ClinicalNote {
-  id              String    @id @default(uuid())
-  practiceId      String    @map("practice_id")
-  patientId       String    @map("patient_id")
-  appointmentId   String?   @map("appointment_id")
-  authorId        String    @map("author_id")
-  noteType        NoteType  @default(PROGRESS) @map("note_type")
-  content         String
-  isConfidential  Boolean   @default(false) @map("is_confidential")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  practiceId     String   @map("practice_id")
+  patientId      String   @map("patient_id")
+  appointmentId  String?  @map("appointment_id")
+  authorId       String   @map("author_id")
+  noteType       NoteType @default(PROGRESS) @map("note_type")
+  content        String
+  isConfidential Boolean  @default(false) @map("is_confidential")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   // Relations
-  practice        Practice  @relation(fields: [practiceId], references: [id])
-  patient         Patient   @relation(fields: [patientId], references: [id])
-  appointment     Appointment? @relation(fields: [appointmentId], references: [id])
-  author          User      @relation("Author", fields: [authorId], references: [id])
+  practice    Practice     @relation(fields: [practiceId], references: [id])
+  patient     Patient      @relation(fields: [patientId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  author      User         @relation("Author", fields: [authorId], references: [id])
 
   @@map("clinical_notes")
 }
@@ -351,41 +357,41 @@ enum NoteType {
 // ============================================================
 
 model Appointment {
-  id                  String            @id @default(uuid())
-  practiceId          String            @map("practice_id")
-  patientId           String            @map("patient_id")
-  practitionerId      String            @map("practitioner_id")
+  id             String @id @default(uuid())
+  practiceId     String @map("practice_id")
+  patientId      String @map("patient_id")
+  practitionerId String @map("practitioner_id")
 
-  startTime           DateTime          @map("start_time")
-  endTime             DateTime          @map("end_time")
-  durationMinutes     Int               @map("duration_minutes")
+  startTime       DateTime @map("start_time")
+  endTime         DateTime @map("end_time")
+  durationMinutes Int      @map("duration_minutes")
 
-  appointmentType     AppointmentType   @map("appointment_type")
-  status              AppointmentStatus @default(SCHEDULED)
-  room                String?
-  notes               String?
-  patientNotes        String?           @map("patient_notes")
+  appointmentType AppointmentType   @map("appointment_type")
+  status          AppointmentStatus @default(SCHEDULED)
+  room            String?
+  notes           String?
+  patientNotes    String?           @map("patient_notes")
 
-  reminderSentAt      DateTime?         @map("reminder_sent_at")
-  confirmationSentAt  DateTime?         @map("confirmation_sent_at")
-  cancelledAt         DateTime?         @map("cancelled_at")
-  cancelReason        String?           @map("cancel_reason")
+  reminderSentAt     DateTime? @map("reminder_sent_at")
+  confirmationSentAt DateTime? @map("confirmation_sent_at")
+  cancelledAt        DateTime? @map("cancelled_at")
+  cancelReason       String?   @map("cancel_reason")
 
-  recurringRule       Json?             @map("recurring_rule")
-  parentId            String?           @map("parent_id")
+  recurringRule Json?   @map("recurring_rule")
+  parentId      String? @map("parent_id")
 
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  practice            Practice          @relation(fields: [practiceId], references: [id])
-  patient             Patient           @relation(fields: [patientId], references: [id])
-  practitioner        User              @relation("Practitioner", fields: [practitionerId], references: [id])
-  treatments          Treatment[]
-  clinicalNotes       ClinicalNote[]
-  parent              Appointment?      @relation("RecurringAppointments", fields: [parentId], references: [id])
-  children            Appointment[]     @relation("RecurringAppointments")
-  prescriptions       Prescription[]
+  practice      Practice       @relation(fields: [practiceId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  practitioner  User           @relation("Practitioner", fields: [practitionerId], references: [id])
+  treatments    Treatment[]
+  clinicalNotes ClinicalNote[]
+  parent        Appointment?   @relation("RecurringAppointments", fields: [parentId], references: [id])
+  children      Appointment[]  @relation("RecurringAppointments")
+  prescriptions Prescription[]
 
   @@map("appointments")
 }
@@ -409,39 +415,39 @@ enum AppointmentStatus {
 }
 
 model PractitionerSchedule {
-  id              String    @id @default(uuid())
-  practiceId      String    @map("practice_id")
-  practitionerId  String    @map("practitioner_id")
-  dayOfWeek       Int       @map("day_of_week") // 0=Monday, 6=Sunday
-  startTime       String    @map("start_time") // HH:mm format
-  endTime         String    @map("end_time") // HH:mm format
-  slotDuration    Int       @default(15) @map("slot_duration")
-  isActive        Boolean   @default(true) @map("is_active")
-  validFrom       DateTime  @default(now()) @map("valid_from")
-  validUntil      DateTime? @map("valid_until")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id             String    @id @default(uuid())
+  practiceId     String    @map("practice_id")
+  practitionerId String    @map("practitioner_id")
+  dayOfWeek      Int       @map("day_of_week") // 0=Monday, 6=Sunday
+  startTime      String    @map("start_time") // HH:mm format
+  endTime        String    @map("end_time") // HH:mm format
+  slotDuration   Int       @default(15) @map("slot_duration")
+  isActive       Boolean   @default(true) @map("is_active")
+  validFrom      DateTime  @default(now()) @map("valid_from")
+  validUntil     DateTime? @map("valid_until")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   // Relations
-  practice        Practice  @relation(fields: [practiceId], references: [id])
-  practitioner    User      @relation(fields: [practitionerId], references: [id])
+  practice     Practice @relation(fields: [practiceId], references: [id])
+  practitioner User     @relation(fields: [practitionerId], references: [id])
 
   @@map("practitioner_schedules")
 }
 
 model ScheduleException {
-  id              String         @id @default(uuid())
-  practiceId      String         @map("practice_id")
-  practitionerId  String         @map("practitioner_id")
-  exceptionDate   DateTime       @map("exception_date")
-  exceptionType   ExceptionType  @map("exception_type")
-  startTime       String?        @map("start_time")
-  endTime         String?        @map("end_time")
-  reason          String?
-  createdAt       DateTime       @default(now()) @map("created_at")
+  id             String        @id @default(uuid())
+  practiceId     String        @map("practice_id")
+  practitionerId String        @map("practitioner_id")
+  exceptionDate  DateTime      @map("exception_date")
+  exceptionType  ExceptionType @map("exception_type")
+  startTime      String?       @map("start_time")
+  endTime        String?       @map("end_time")
+  reason         String?
+  createdAt      DateTime      @default(now()) @map("created_at")
 
   // Relations
-  practice        Practice       @relation(fields: [practiceId], references: [id])
-  practitioner    User           @relation(fields: [practitionerId], references: [id])
+  practice     Practice @relation(fields: [practiceId], references: [id])
+  practitioner User     @relation(fields: [practitionerId], references: [id])
 
   @@map("schedule_exceptions")
 }
@@ -458,23 +464,23 @@ enum ExceptionType {
 // ============================================================
 
 model NzaCode {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   code            String
   category        String
-  descriptionNl   String    @map("description_nl")
-  descriptionEn   String?   @map("description_en")
-  maxTariff       Decimal   @map("max_tariff") @db.Decimal(10, 2)
-  unit            String    @default("per_treatment")
-  requiresTooth   Boolean   @default(false) @map("requires_tooth")
-  requiresSurface Boolean   @default(false) @map("requires_surface")
-  validFrom       DateTime  @map("valid_from")
-  validUntil      DateTime  @map("valid_until")
-  isActive        Boolean   @default(true) @map("is_active")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  descriptionNl   String   @map("description_nl")
+  descriptionEn   String?  @map("description_en")
+  maxTariff       Decimal  @map("max_tariff") @db.Decimal(10, 2)
+  unit            String   @default("per_treatment")
+  requiresTooth   Boolean  @default(false) @map("requires_tooth")
+  requiresSurface Boolean  @default(false) @map("requires_surface")
+  validFrom       DateTime @map("valid_from")
+  validUntil      DateTime @map("valid_until")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
-  treatments      Treatment[]
-  invoiceLines    InvoiceLine[]
+  treatments   Treatment[]
+  invoiceLines InvoiceLine[]
 
   @@unique([code, validFrom])
   @@map("nza_codes")
@@ -502,8 +508,8 @@ model Invoice {
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  practice        Practice      @relation(fields: [practiceId], references: [id])
-  patient         Patient       @relation(fields: [patientId], references: [id])
+  practice        Practice         @relation(fields: [practiceId], references: [id])
+  patient         Patient          @relation(fields: [patientId], references: [id])
   lines           InvoiceLine[]
   payments        Payment[]
   insuranceClaims InsuranceClaim[]
@@ -523,48 +529,48 @@ enum InvoiceStatus {
 }
 
 model InvoiceLine {
-  id          String    @id @default(uuid())
-  practiceId  String    @map("practice_id")
-  invoiceId   String    @map("invoice_id")
-  treatmentId String?   @map("treatment_id")
-  nzaCodeId   String?   @map("nza_code_id")
+  id          String   @id @default(uuid())
+  practiceId  String   @map("practice_id")
+  invoiceId   String   @map("invoice_id")
+  treatmentId String?  @map("treatment_id")
+  nzaCodeId   String?  @map("nza_code_id")
   description String
-  nzaCode     String?   @map("nza_code")
-  toothNumber Int?      @map("tooth_number")
+  nzaCode     String?  @map("nza_code")
+  toothNumber Int?     @map("tooth_number")
   surface     String?
-  quantity    Int       @default(1)
-  unitPrice   Decimal   @map("unit_price") @db.Decimal(10, 2)
-  lineTotal   Decimal   @map("line_total") @db.Decimal(10, 2)
-  sortOrder   Int       @default(0) @map("sort_order")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
+  lineTotal   Decimal  @map("line_total") @db.Decimal(10, 2)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   // Relations
-  practice    Practice  @relation(fields: [practiceId], references: [id])
-  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
-  treatment   Treatment? @relation(fields: [treatmentId], references: [id])
-  nzaCodeRef  NzaCode?  @relation(fields: [nzaCodeId], references: [id])
+  practice   Practice   @relation(fields: [practiceId], references: [id])
+  invoice    Invoice    @relation(fields: [invoiceId], references: [id])
+  treatment  Treatment? @relation(fields: [treatmentId], references: [id])
+  nzaCodeRef NzaCode?   @relation(fields: [nzaCodeId], references: [id])
 
   @@map("invoice_lines")
 }
 
 model Payment {
-  id                String         @id @default(uuid())
-  practiceId        String         @map("practice_id")
-  invoiceId         String         @map("invoice_id")
-  amount            Decimal        @db.Decimal(10, 2)
+  id                String        @id @default(uuid())
+  practiceId        String        @map("practice_id")
+  invoiceId         String        @map("invoice_id")
+  amount            Decimal       @db.Decimal(10, 2)
   method            PaymentMethod
-  status            PaymentStatus  @default(PENDING)
-  molliePaymentId   String?        @map("mollie_payment_id")
-  mollieStatus      String?        @map("mollie_status")
-  mollieCheckoutUrl String?        @map("mollie_checkout_url")
-  paidAt            DateTime?      @map("paid_at")
-  refundedAt        DateTime?      @map("refunded_at")
-  createdAt         DateTime       @default(now()) @map("created_at")
-  updatedAt         DateTime       @updatedAt @map("updated_at")
+  status            PaymentStatus @default(PENDING)
+  molliePaymentId   String?       @map("mollie_payment_id")
+  mollieStatus      String?       @map("mollie_status")
+  mollieCheckoutUrl String?       @map("mollie_checkout_url")
+  paidAt            DateTime?     @map("paid_at")
+  refundedAt        DateTime?     @map("refunded_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  practice          Practice       @relation(fields: [practiceId], references: [id])
-  invoice           Invoice        @relation(fields: [invoiceId], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id])
 
   @@map("payments")
 }
@@ -590,27 +596,27 @@ enum PaymentStatus {
 // ============================================================
 
 model InsuranceClaim {
-  id              String         @id @default(uuid())
-  practiceId      String         @map("practice_id")
-  patientId       String         @map("patient_id")
-  invoiceId       String         @map("invoice_id")
-  uzoviCode       String         @map("uzovi_code")
-  claimNumber     String?        @map("claim_number")
-  claimData       Json           @map("claim_data")
-  status          ClaimStatus    @default(DRAFT)
-  submittedAt     DateTime?      @map("submitted_at")
-  responseAt      DateTime?      @map("response_at")
-  responseData    Json?          @map("response_data")
-  rejectionReason String?        @map("rejection_reason")
-  amountClaimed   Decimal?       @map("amount_claimed") @db.Decimal(10, 2)
-  amountApproved  Decimal?       @map("amount_approved") @db.Decimal(10, 2)
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  id              String      @id @default(uuid())
+  practiceId      String      @map("practice_id")
+  patientId       String      @map("patient_id")
+  invoiceId       String      @map("invoice_id")
+  uzoviCode       String      @map("uzovi_code")
+  claimNumber     String?     @map("claim_number")
+  claimData       Json        @map("claim_data")
+  status          ClaimStatus @default(DRAFT)
+  submittedAt     DateTime?   @map("submitted_at")
+  responseAt      DateTime?   @map("response_at")
+  responseData    Json?       @map("response_data")
+  rejectionReason String?     @map("rejection_reason")
+  amountClaimed   Decimal?    @map("amount_claimed") @db.Decimal(10, 2)
+  amountApproved  Decimal?    @map("amount_approved") @db.Decimal(10, 2)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  practice        Practice       @relation(fields: [practiceId], references: [id])
-  patient         Patient        @relation(fields: [patientId], references: [id])
-  invoice         Invoice        @relation(fields: [invoiceId], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id])
 
   @@map("insurance_claims")
 }
@@ -630,57 +636,57 @@ enum ClaimStatus {
 // ============================================================
 
 model ConsentForm {
-  id                String    @id @default(uuid())
-  practiceId        String    @map("practice_id")
-  patientId         String    @map("patient_id")
-  consentType       String    @map("consent_type")
-  treatmentType     String    @default("GENERAL") @map("treatment_type")
-  title             String    @default("")
-  content           String    @default("") @db.Text
-  treatmentPlanId   String?   @map("treatment_plan_id")
-  description       String
-  signedAt          DateTime? @map("signed_at")
-  signatureData     String?   @map("signature_data") @db.Text
-  signedByName      String?   @map("signed_by_name")
-  signedIp          String?   @map("signed_ip")
-  documentUrl       String?   @map("document_url")
-  emailSentAt       DateTime? @map("email_sent_at")
-  emailAddress      String?   @map("email_address")
-  status            String    @default("PENDING") // PENDING, SIGNED, REVOKED
-  expiresAt         DateTime? @map("expires_at")
-  revokedAt         DateTime? @map("revoked_at")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id              String    @id @default(uuid())
+  practiceId      String    @map("practice_id")
+  patientId       String    @map("patient_id")
+  consentType     String    @map("consent_type")
+  treatmentType   String    @default("GENERAL") @map("treatment_type")
+  title           String    @default("")
+  content         String    @default("") @db.Text
+  treatmentPlanId String?   @map("treatment_plan_id")
+  description     String
+  signedAt        DateTime? @map("signed_at")
+  signatureData   String?   @map("signature_data") @db.Text
+  signedByName    String?   @map("signed_by_name")
+  signedIp        String?   @map("signed_ip")
+  documentUrl     String?   @map("document_url")
+  emailSentAt     DateTime? @map("email_sent_at")
+  emailAddress    String?   @map("email_address")
+  status          String    @default("PENDING") // PENDING, SIGNED, REVOKED
+  expiresAt       DateTime? @map("expires_at")
+  revokedAt       DateTime? @map("revoked_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  practice          Practice  @relation(fields: [practiceId], references: [id])
-  patient           Patient   @relation(fields: [patientId], references: [id])
-  treatmentPlan     TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id])
+  practice      Practice       @relation(fields: [practiceId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  treatmentPlan TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id])
 
   @@map("consent_forms")
 }
 
 model Document {
-  id              String    @id @default(uuid())
-  practiceId      String    @map("practice_id")
-  patientId       String?   @map("patient_id")
-  uploadedBy      String?   @map("uploaded_by")
-  documentType    String    @map("document_type")
-  title           String
-  description     String?
-  s3Bucket        String?   @map("s3_bucket")
-  s3Key           String?   @map("s3_key")
-  fileSize        BigInt?   @map("file_size")
-  mimeType        String?   @map("mime_type")
-  toothNumber     Int?      @map("tooth_number")
-  imageType       String?   @map("image_type")
-  isArchived      Boolean   @default(false) @map("is_archived")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id           String   @id @default(uuid())
+  practiceId   String   @map("practice_id")
+  patientId    String?  @map("patient_id")
+  uploadedBy   String?  @map("uploaded_by")
+  documentType String   @map("document_type")
+  title        String
+  description  String?
+  s3Bucket     String?  @map("s3_bucket")
+  s3Key        String?  @map("s3_key")
+  fileSize     BigInt?  @map("file_size")
+  mimeType     String?  @map("mime_type")
+  toothNumber  Int?     @map("tooth_number")
+  imageType    String?  @map("image_type")
+  isArchived   Boolean  @default(false) @map("is_archived")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
-  practice        Practice  @relation(fields: [practiceId], references: [id])
-  patient         Patient?  @relation(fields: [patientId], references: [id])
-  uploader        User?     @relation("UploadedBy", fields: [uploadedBy], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient? @relation(fields: [patientId], references: [id])
+  uploader User?    @relation("UploadedBy", fields: [uploadedBy], references: [id])
 
   @@map("documents")
 }
@@ -690,24 +696,24 @@ model Document {
 // ============================================================
 
 model AuditLog {
-  id                  String    @id @default(uuid())
-  practiceId          String?   @map("practice_id")
-  userId              String?   @map("user_id")
-  action              String
-  resourceType        String    @map("resource_type")
-  resourceId          String?   @map("resource_id")
-  oldValues           Json?     @map("old_values")
-  newValues           Json?     @map("new_values")
-  ipAddress           String?   @map("ip_address")
-  userAgent           String?   @map("user_agent")
-  sessionId           String?   @map("session_id")
-  bsnAccessed         Boolean   @default(false) @map("bsn_accessed")
-  bsnAccessReason     String?   @map("bsn_access_reason")
-  createdAt           DateTime  @default(now()) @map("created_at")
+  id              String   @id @default(uuid())
+  practiceId      String?  @map("practice_id")
+  userId          String?  @map("user_id")
+  action          String
+  resourceType    String   @map("resource_type")
+  resourceId      String?  @map("resource_id")
+  oldValues       Json?    @map("old_values")
+  newValues       Json?    @map("new_values")
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  sessionId       String?  @map("session_id")
+  bsnAccessed     Boolean  @default(false) @map("bsn_accessed")
+  bsnAccessReason String?  @map("bsn_access_reason")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
-  practice            Practice? @relation(fields: [practiceId], references: [id])
-  user                User?     @relation(fields: [userId], references: [id])
+  practice Practice? @relation(fields: [practiceId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
 }
@@ -717,26 +723,26 @@ model AuditLog {
 // ============================================================
 
 model Notification {
-  id              String            @id @default(uuid())
-  practiceId      String            @map("practice_id")
-  userId          String?           @map("user_id")
-  patientId       String?           @map("patient_id")
-  channel         NotificationChannel
-  template        String
-  subject         String?
-  content         String?
-  status          NotificationStatus @default(PENDING)
-  sentAt          DateTime?         @map("sent_at")
-  readAt          DateTime?         @map("read_at")
-  externalId      String?           @map("external_id")
-  errorMessage    String?           @map("error_message")
-  metadata        Json?             @default("{}")
-  createdAt       DateTime          @default(now()) @map("created_at")
+  id           String              @id @default(uuid())
+  practiceId   String              @map("practice_id")
+  userId       String?             @map("user_id")
+  patientId    String?             @map("patient_id")
+  channel      NotificationChannel
+  template     String
+  subject      String?
+  content      String?
+  status       NotificationStatus  @default(PENDING)
+  sentAt       DateTime?           @map("sent_at")
+  readAt       DateTime?           @map("read_at")
+  externalId   String?             @map("external_id")
+  errorMessage String?             @map("error_message")
+  metadata     Json?               @default("{}")
+  createdAt    DateTime            @default(now()) @map("created_at")
 
   // Relations
-  practice        Practice          @relation(fields: [practiceId], references: [id])
-  user            User?             @relation(fields: [userId], references: [id])
-  patient         Patient?          @relation(fields: [patientId], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+  patient  Patient? @relation(fields: [patientId], references: [id])
 
   @@map("notifications")
 }
@@ -761,35 +767,35 @@ enum NotificationStatus {
 // ============================================================
 
 model Credential {
-  id              String         @id @default(uuid())
-  practiceId      String         @map("practice_id")
-  name            String                            // Display name (e.g., "Mollie Production")
-  type            CredentialType                    // MOLLIE, TWILIO, AWS, VECOZO, etc.
-  environment     String         @default("production") // production, test, sandbox
-  
+  id          String         @id @default(uuid())
+  practiceId  String         @map("practice_id")
+  name        String // Display name (e.g., "Mollie Production")
+  type        CredentialType // MOLLIE, TWILIO, AWS, VECOZO, etc.
+  environment String         @default("production") // production, test, sandbox
+
   // Encrypted values (in production, use proper encryption)
-  apiKey          String?        @map("api_key")
-  apiSecret       String?        @map("api_secret")
-  accessToken     String?        @map("access_token")
-  refreshToken    String?        @map("refresh_token")
-  
+  apiKey       String? @map("api_key")
+  apiSecret    String? @map("api_secret")
+  accessToken  String? @map("access_token")
+  refreshToken String? @map("refresh_token")
+
   // Configuration
-  config          Json?                             // Additional config (region, endpoints, etc.)
-  
+  config Json? // Additional config (region, endpoints, etc.)
+
   // Metadata
-  isActive        Boolean        @default(true)     @map("is_active")
-  isTestMode      Boolean        @default(false)    @map("is_test_mode")
-  lastUsedAt      DateTime?                         @map("last_used_at")
-  expiresAt       DateTime?                         @map("expires_at")
-  
+  isActive   Boolean   @default(true) @map("is_active")
+  isTestMode Boolean   @default(false) @map("is_test_mode")
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+
   // Audit
-  createdBy       String?                           @map("created_by")
-  createdAt       DateTime       @default(now())    @map("created_at")
-  updatedAt       DateTime       @updatedAt          @map("updated_at")
-  
+  createdBy String?  @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // Relations
-  practice        Practice       @relation(fields: [practiceId], references: [id])
-  
+  practice Practice @relation(fields: [practiceId], references: [id])
+
   @@index([practiceId, type])
   @@index([practiceId, environment])
   @@map("credentials")
@@ -811,32 +817,32 @@ enum CredentialType {
 // ============================================================
 
 model Prescription {
-  id              String             @id @default(uuid())
-  practiceId      String             @map("practice_id")
-  patientId       String             @map("patient_id")
-  appointmentId   String?            @map("appointment_id")
-  prescribedBy    String             @map("prescribed_by")
+  id            String  @id @default(uuid())
+  practiceId    String  @map("practice_id")
+  patientId     String  @map("patient_id")
+  appointmentId String? @map("appointment_id")
+  prescribedBy  String  @map("prescribed_by")
 
-  medicationName  String             @map("medication_name")
-  genericName     String?            @map("generic_name")
-  dosage          String             // e.g., "500mg"
-  frequency       String             // e.g., "3x per dag"
-  duration        String?            // e.g., "7 dagen"
-  quantity        Int?               // e.g., 21 tablets
-  route           String             @default("oraal") // oraal, topicaal, spoeling
-  instructions    String?            // e.g., "Innemen na de maaltijd"
+  medicationName String  @map("medication_name")
+  genericName    String? @map("generic_name")
+  dosage         String // e.g., "500mg"
+  frequency      String // e.g., "3x per dag"
+  duration       String? // e.g., "7 dagen"
+  quantity       Int? // e.g., 21 tablets
+  route          String  @default("oraal") // oraal, topicaal, spoeling
+  instructions   String? // e.g., "Innemen na de maaltijd"
 
-  status          PrescriptionStatus @default(ACTIVE)
-  prescribedAt    DateTime           @default(now()) @map("prescribed_at")
-  discontinuedAt  DateTime?          @map("discontinued_at")
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
+  status         PrescriptionStatus @default(ACTIVE)
+  prescribedAt   DateTime           @default(now()) @map("prescribed_at")
+  discontinuedAt DateTime?          @map("discontinued_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
 
   // Relations
-  practice        Practice           @relation(fields: [practiceId], references: [id])
-  patient         Patient            @relation(fields: [patientId], references: [id])
-  appointment     Appointment?       @relation(fields: [appointmentId], references: [id])
-  prescriber      User               @relation("Prescriber", fields: [prescribedBy], references: [id])
+  practice    Practice     @relation(fields: [practiceId], references: [id])
+  patient     Patient      @relation(fields: [patientId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  prescriber  User         @relation("Prescriber", fields: [prescribedBy], references: [id])
 
   @@map("prescriptions")
 }
@@ -861,9 +867,9 @@ model PeriodontalChart {
   chartData     Json     @map("chart_data")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  practice      Practice @relation(fields: [practiceId], references: [id])
-  patient       Patient  @relation(fields: [patientId], references: [id])
-  author        User     @relation("PeriodontalChartAuthor", fields: [authorId], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  author   User     @relation("PeriodontalChartAuthor", fields: [authorId], references: [id])
 
   @@map("periodontal_charts")
 }
@@ -873,21 +879,21 @@ model PeriodontalChart {
 // ============================================================
 
 model PatientImage {
-  id          String   @id @default(uuid())
-  practiceId  String   @map("practice_id")
-  patientId   String   @map("patient_id")
-  uploadedBy  String   @map("uploaded_by")
-  fileName    String   @map("file_name")
-  filePath    String   @map("file_path")
-  fileSize    Int      @map("file_size")
-  mimeType    String   @map("mime_type")
-  imageType   String   @default("XRAY") @map("image_type") // XRAY, INTRAORAL, EXTRAORAL, OTHER
-  notes       String?
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  practiceId String   @map("practice_id")
+  patientId  String   @map("patient_id")
+  uploadedBy String   @map("uploaded_by")
+  fileName   String   @map("file_name")
+  filePath   String   @map("file_path")
+  fileSize   Int      @map("file_size")
+  mimeType   String   @map("mime_type")
+  imageType  String   @default("XRAY") @map("image_type") // XRAY, INTRAORAL, EXTRAORAL, OTHER
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  practice    Practice @relation(fields: [practiceId], references: [id])
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  uploader    User     @relation("PatientImageUploader", fields: [uploadedBy], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  uploader User     @relation("PatientImageUploader", fields: [uploadedBy], references: [id])
 
   @@map("patient_images")
 }
@@ -897,17 +903,48 @@ model PatientImage {
 // ============================================================
 
 model Anamnesis {
-  id          String   @id @default(uuid())
-  practiceId  String   @map("practice_id")
-  patientId   String   @map("patient_id")
-  version     Int      @default(1)
-  data        Json     // All questionnaire answers
+  id          String    @id @default(uuid())
+  practiceId  String    @map("practice_id")
+  patientId   String    @map("patient_id")
+  version     Int       @default(1)
+  data        Json // All questionnaire answers
   completedAt DateTime? @map("completed_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  practice    Practice @relation(fields: [practiceId], references: [id])
-  patient     Patient  @relation(fields: [patientId], references: [id])
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
 
   @@map("anamneses")
+}
+
+// ============================================================
+// MESSAGES (Patient-Practice Communication)
+// ============================================================
+
+model Message {
+  id         String     @id @default(uuid())
+  practiceId String     @map("practice_id")
+  patientId  String     @map("patient_id")
+  senderId   String?    @map("sender_id") // User ID if sent by staff, null if from patient
+  senderType SenderType @map("sender_type") // PATIENT or STAFF
+  content    String
+  isRead     Boolean    @default(false) @map("is_read")
+  readAt     DateTime?  @map("read_at")
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  sender   User?    @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([patientId, createdAt])
+  @@index([practiceId, patientId])
+  @@index([isRead])
+  @@map("messages")
+}
+
+enum SenderType {
+  PATIENT
+  STAFF
 }

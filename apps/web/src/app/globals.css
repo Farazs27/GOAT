@@ -50,6 +50,34 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Premium Apple-style Glassmorphism - Patient Portal */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-bg-hover: rgba(255, 255, 255, 0.06);
+    --glass-bg-active: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-border-hover: rgba(255, 255, 255, 0.12);
+    --glass-border-strong: rgba(255, 255, 255, 0.15);
+    --glass-highlight: rgba(255, 255, 255, 0.05);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.35);
+
+    /* Orange accent system */
+    --accent-primary: #e8945a;
+    --accent-primary-hover: #f0a06a;
+    --accent-glow: rgba(232, 148, 90, 0.3);
+    --accent-glow-strong: rgba(232, 148, 90, 0.5);
+
+    /* Shadow system */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
+
+    /* Animation timing */
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
   }
 
   .dark {
@@ -106,9 +134,21 @@
     background: var(--bg-primary);
     color: var(--text-primary);
   }
+
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus visible outlines for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
+  /* Legacy components - keep for backward compatibility */
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -177,15 +217,29 @@
     border: 1px solid var(--border-color);
     background: var(--bg-card);
   }
-  .text-primary { color: var(--text-primary); }
-  .text-secondary { color: var(--text-secondary); }
-  .text-tertiary { color: var(--text-tertiary); }
-  .text-muted { color: var(--text-muted); }
-  .bg-page { background: var(--bg-primary); }
-  .bg-card { background: var(--bg-card); }
-  .border-default { border-color: var(--border-color); }
+  .text-primary {
+    color: var(--text-primary);
+  }
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+  .text-tertiary {
+    color: var(--text-tertiary);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .bg-page {
+    background: var(--bg-primary);
+  }
+  .bg-card {
+    background: var(--bg-card);
+  }
+  .border-default {
+    border-color: var(--border-color);
+  }
 
-  /* Backward-compatible glass classes — now adapt to light/dark via CSS vars */
+  /* Backward-compatible glass classes */
   .glass-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -229,43 +283,452 @@
     background: var(--bg-card);
     border: 1px solid var(--border-color);
   }
+
+  /* ========================================
+     PREMIUM APPLE-STYLE GLASSMORPHISM
+     Patient Portal Design System
+     ======================================== */
+
+  /* Glass layer variants */
+  .glass-sm {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .glass-md {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-lg {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Premium card component */
+  .glass-card-premium {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1.5rem;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.3s var(--ease-smooth);
+  }
+
+  .glass-card-premium:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* Interactive element states */
+  .interactive-glass {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s var(--ease-smooth);
+  }
+
+  .interactive-glass:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .interactive-glass:active {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(232, 148, 90, 0.3);
+    transform: scale(0.98);
+  }
+
+  /* Accent glow effects */
+  .accent-glow {
+    box-shadow: 0 0 40px rgba(232, 148, 90, 0.15);
+  }
+
+  .accent-glow-hover:hover {
+    box-shadow: 0 0 60px rgba(232, 148, 90, 0.2);
+  }
+
+  /* Button press effect */
+  .btn-press {
+    transition: transform 0.15s var(--ease-bounce);
+  }
+
+  .btn-press:active {
+    transform: scale(0.96);
+  }
+
+  /* Card lift effect */
+  .card-lift {
+    transition:
+      transform 0.3s var(--ease-smooth),
+      box-shadow 0.3s var(--ease-smooth);
+  }
+
+  .card-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Focus ring with glow */
+  .focus-glow:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgba(232, 148, 90, 0.5),
+      0 0 20px rgba(232, 148, 90, 0.2);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #e8945a 0%, #f0a06a 50%, #e8945a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Shimmer loading effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Slide in animation */
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideInUp 0.5s var(--ease-out) forwards;
+  }
+
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s var(--ease-out) forwards;
+  }
+
+  /* Stagger children animation */
+  .stagger-children > * {
+    opacity: 0;
+    animation: slideInUp 0.5s var(--ease-out) forwards;
+  }
+
+  .stagger-children > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger-children > *:nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .stagger-children > *:nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .stagger-children > *:nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .stagger-children > *:nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .stagger-children > *:nth-child(6) {
+    animation-delay: 250ms;
+  }
 }
 
-/* Patient portal specific styles — dark glassmorphism with warm orange/amber accents */
+/* ========================================
+   PATIENT PORTAL SPECIFIC STYLES
+   ======================================== */
+
+/* Background gradient with warm mesh */
+.patient-gradient-bg {
+  background:
+    radial-gradient(
+      ellipse at 20% 20%,
+      rgba(232, 148, 90, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 80%,
+      rgba(232, 148, 90, 0.02) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(255, 255, 255, 0.01) 0%,
+      transparent 70%
+    ),
+    linear-gradient(160deg, #0a0a0a 0%, #121010 40%, #0f0e0e 70%, #0a0a0a 100%);
+  min-height: 100vh;
+}
+
+/* Legacy patient glass classes - enhanced */
 .patient-glass {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
+
 .patient-glass-card {
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s var(--ease-smooth);
 }
+
 .patient-glass-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
 }
-.patient-gradient-bg {
-  background: linear-gradient(160deg, #0f0f0f 0%, #1a1510 40%, #151010 70%, #0f0f0f 100%);
-}
-.patient-accent-glow {
-  box-shadow: 0 0 60px rgba(232, 148, 90, 0.06);
-}
+
 .patient-stat-card {
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1.5rem;
-  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: all 0.3s var(--ease-smooth);
 }
+
 .patient-stat-card:hover {
   background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.patient-accent-glow {
+  box-shadow: 0 0 60px rgba(232, 148, 90, 0.08);
+}
+
+/* Input styling for patient portal */
+.patient-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.875rem 1.125rem;
+  font-size: 0.9375rem;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.patient-input:hover {
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+.patient-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(232, 148, 90, 0.4);
+  box-shadow:
+    0 0 0 3px rgba(232, 148, 90, 0.1),
+    0 0 20px rgba(232, 148, 90, 0.1);
+}
+
+.patient-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Premium button styles */
+.patient-btn-primary {
+  background: linear-gradient(135deg, #e8945a 0%, #d4864a 100%);
+  border: none;
+  border-radius: 1rem;
+  color: white;
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  box-shadow:
+    0 4px 16px rgba(232, 148, 90, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.patient-btn-primary:hover {
+  background: linear-gradient(135deg, #f0a06a 0%, #e8945a 100%);
+  box-shadow:
+    0 6px 20px rgba(232, 148, 90, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.patient-btn-primary:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow:
+    0 2px 8px rgba(232, 148, 90, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.patient-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  padding: 0.875rem 1.5rem;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.patient-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.patient-btn-secondary:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Status badges with glass effect */
+.patient-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+/* Tab styling */
+.patient-tab {
+  position: relative;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.patient-tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.patient-tab[data-active="true"] {
+  color: #e8945a;
+}
+
+.patient-tab[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0.5rem;
+  right: 0.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #e8945a, transparent);
+  border-radius: 2px;
+}
+
+/* Progress bar with gradient */
+.patient-progress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.patient-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #e8945a, #f0a06a, #e8945a);
+  background-size: 200% 100%;
+  border-radius: 2px;
+  transition: width 0.5s var(--ease-smooth);
+  animation: shimmer 2s infinite;
+}
+
+/* Noise texture overlay (subtle) */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(232, 148, 90, 0.3);
+  color: white;
+}
