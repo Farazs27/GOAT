@@ -55,13 +55,19 @@ export async function exchangeCodeForTokens(code: string) {
 }
 
 export async function getGmailClient(practiceId: string) {
-  const credential = await prisma.credential.findFirst({
-    where: {
-      practiceId,
-      type: "GMAIL",
-      isActive: true,
-    },
-  });
+  // Use raw query to avoid type issues with GMAIL enum
+  const credentials = await prisma.$queryRaw`
+    SELECT * FROM credentials 
+    WHERE practice_id = ${practiceId} 
+    AND type = 'GMAIL' 
+    AND is_active = true 
+    LIMIT 1
+  `;
+
+  const credential =
+    Array.isArray(credentials) && credentials.length > 0
+      ? credentials[0]
+      : null;
 
   if (!credential) {
     throw new Error("Gmail not connected for this practice");
@@ -70,55 +76,44 @@ export async function getGmailClient(practiceId: string) {
   const oauth2Client = getOAuth2Client();
 
   oauth2Client.setCredentials({
-    access_token: credential.accessToken,
-    refresh_token: credential.refreshToken,
-    expiry_date: credential.expiresAt?.getTime(),
-  });
-
-  // Set up token refresh handler
-  oauth2Client.on("tokens", async (tokens) => {
-    if (tokens.access_token) {
-      await prisma.credential.update({
-        where: { id: credential.id },
-        data: {
-          accessToken: tokens.access_token,
-          expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
-          ...(tokens.refresh_token && { refreshToken: tokens.refresh_token }),
-          lastUsedAt: new Date(),
-        },
-      });
-    }
+    access_token: credential.access_token,
+    refresh_token: credential.refresh_token,
+    expiry_date: credential.expires_at?.getTime(),
   });
 
   // Check if token needs refresh
-  const expiryDate = credential.expiresAt;
+  const expiryDate = credential.expires_at;
   if (expiryDate && expiryDate < new Date()) {
-    const { credentials } = await oauth2Client.refreshAccessToken();
+    const { credentials: newCreds } = await oauth2Client.refreshAccessToken();
 
-    await prisma.credential.update({
-      where: { id: credential.id },
-      data: {
-        accessToken: credentials.access_token!,
-        refreshToken: credentials.refresh_token || credential.refreshToken,
-        expiresAt: credentials.expiry_date
-          ? new Date(credentials.expiry_date)
-          : null,
-        lastUsedAt: new Date(),
-      },
-    });
+    // Update credentials in database using raw query
+    await prisma.$executeRaw`
+      UPDATE credentials 
+      SET access_token = ${newCreds.access_token},
+          refresh_token = ${newCreds.refresh_token || credential.refresh_token},
+          expires_at = ${newCreds.expiry_date ? new Date(newCreds.expiry_date) : null},
+          last_used_at = ${new Date()}
+      WHERE id = ${credential.id}
+    `;
   }
 
   return google.gmail({ version: "v1", auth: oauth2Client });
 }
 
 export async function getUserInfo(practiceId: string) {
-  const credential = await prisma.credential.findFirst({
-    where: {
-      practiceId,
-      type: "GMAIL",
-      isActive: true,
-    },
-  });
+  // Use raw query to avoid type issues
+  const credentials = await prisma.$queryRaw`
+    SELECT * FROM credentials 
+    WHERE practice_id = ${practiceId} 
+    AND type = 'GMAIL' 
+    AND is_active = true 
+    LIMIT 1
+  `;
+
+  const credential =
+    Array.isArray(credentials) && credentials.length > 0
+      ? credentials[0]
+      : null;
 
   if (!credential) {
     return null;
@@ -127,8 +122,8 @@ export async function getUserInfo(practiceId: string) {
   const oauth2Client = getOAuth2Client();
 
   oauth2Client.setCredentials({
-    access_token: credential.accessToken,
-    refresh_token: credential.refreshToken,
+    access_token: credential.access_token,
+    refresh_token: credential.refresh_token,
   });
 
   const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
@@ -142,30 +137,33 @@ export async function getUserInfo(practiceId: string) {
 }
 
 export async function isGmailConnected(practiceId: string): Promise<boolean> {
-  const credential = await prisma.credential.findFirst({
-    where: {
-      practiceId,
-      type: "GMAIL",
-      isActive: true,
-    },
-  });
+  try {
+    // Use raw query to avoid type issues
+    const credentials = await prisma.$queryRaw`
+      SELECT * FROM credentials 
+      WHERE practice_id = ${practiceId} 
+      AND type = 'GMAIL' 
+      AND is_active = true 
+      LIMIT 1
+    `;
 
-  return !!credential && !!credential.accessToken;
+    const credential =
+      Array.isArray(credentials) && credentials.length > 0
+        ? credentials[0]
+        : null;
+
+    return !!credential && !!credential.access_token;
+  } catch {
+    return false;
+  }
 }
 
 export async function disconnectGmail(practiceId: string): Promise<void> {
-  const credential = await prisma.credential.findFirst({
-    where: {
-      practiceId,
-      type: "GMAIL",
-      isActive: true,
-    },
-  });
-
-  if (credential) {
-    await prisma.credential.update({
-      where: { id: credential.id },
-      data: { isActive: false },
-    });
-  }
+  // Use raw query to avoid type issues
+  await prisma.$executeRaw`
+    UPDATE credentials 
+    SET is_active = false 
+    WHERE practice_id = ${practiceId} 
+    AND type = 'GMAIL'
+  `;
 }

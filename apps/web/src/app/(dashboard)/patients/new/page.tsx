@@ -25,9 +25,12 @@ import {
   Signature,
   AlertCircle,
   Calendar,
+  Camera,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { authFetch } from "@/lib/auth-fetch";
+import CameraCapture from "@/components/CameraCapture";
 
 // =============================================================================
 // TYPES & INTERFACES
@@ -258,6 +261,7 @@ const medischeConditieOpties = [
 
 const steps = [
   { id: "personal", label: "Persoonsgegevens", icon: User },
+  { id: "photos", label: "Foto's", icon: Camera },
   { id: "anamnesis", label: "Anamnese", icon: Stethoscope },
   { id: "consent", label: "Toestemmingen", icon: FileText },
   { id: "review", label: "Controle", icon: Check },
@@ -663,6 +667,8 @@ export default function NewPatientIntakePage() {
   const [activeConsentIndex, setActiveConsentIndex] = useState<number | null>(
     null,
   );
+  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
+  const [showCamera, setShowCamera] = useState(false);
 
   const updatePatient = (field: keyof PatientData, value: string) => {
     setPatientData((prev) => ({ ...prev, [field]: value }));
@@ -687,6 +693,14 @@ export default function NewPatientIntakePage() {
         i === index ? { ...form, signed: false, signatureData: null } : form,
       ),
     );
+  };
+
+  const handlePhotoCapture = (imageData: string) => {
+    setCapturedPhotos((prev) => [...prev, imageData]);
+  };
+
+  const removePhoto = (index: number) => {
+    setCapturedPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const validateStep = () => {
@@ -784,6 +798,28 @@ export default function NewPatientIntakePage() {
             signedByName: `${patientData.firstName} ${patientData.lastName}`,
             status: "SIGNED",
           }),
+        });
+      }
+
+      // Upload captured photos
+      for (let i = 0; i < capturedPhotos.length; i++) {
+        const photo = capturedPhotos[i];
+        // Convert base64 to blob
+        const response = await fetch(photo);
+        const blob = await response.blob();
+        const file = new File([blob], `patient-photo-${i + 1}.jpg`, {
+          type: "image/jpeg",
+        });
+
+        const formData = new FormData();
+        formData.append("patientId", patient.id);
+        formData.append("imageType", "PROFILE");
+        formData.append("file", file);
+        formData.append("notes", i === 0 ? "Hoofdfoto" : `Foto ${i + 1}`);
+
+        await authFetch("/api/patient-images", {
+          method: "POST",
+          body: formData,
         });
       }
 
@@ -1135,8 +1171,95 @@ export default function NewPatientIntakePage() {
           </div>
         )}
 
-        {/* STEP 2: Anamnesis - Algemene Gezondheid */}
+        {/* STEP 2: Photos */}
         {currentStep === 1 && (
+          <div className="space-y-6">
+            <div className="glass-card rounded-2xl p-6 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                    Patiënt Foto's
+                  </h3>
+                  <p className="text-sm text-[var(--text-tertiary)]">
+                    Maak foto's van de patiënt voor het dossier
+                  </p>
+                </div>
+              </div>
+
+              {/* Camera capture button */}
+              <button
+                type="button"
+                onClick={() => setShowCamera(true)}
+                className="w-full py-6 px-6 bg-[var(--bg-card)] border-2 border-dashed border-[var(--border-color)] rounded-2xl text-[var(--text-secondary)] hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all duration-300 flex flex-col items-center gap-3"
+              >
+                <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-[var(--accent)]" />
+                </div>
+                <span className="text-base font-medium">
+                  Foto maken met iPad
+                </span>
+                <span className="text-sm text-[var(--text-tertiary)]">
+                  of upload een bestaande foto
+                </span>
+              </button>
+
+              {/* Display captured photos */}
+              {capturedPhotos.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-base font-medium text-[var(--text-primary)]">
+                    Gemaakte foto's ({capturedPhotos.length})
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {capturedPhotos.map((photo, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square rounded-xl overflow-hidden bg-[var(--bg-card)] border border-[var(--border-color)]">
+                          <img
+                            src={photo}
+                            alt={`Patiënt foto ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(index)}
+                          className="absolute top-2 right-2 p-2 bg-red-500/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">
+                          {index === 0 ? "Hoofdfoto" : `Foto ${index + 1}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Info text */}
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                <p className="text-sm text-blue-400">
+                  <strong>Tip:</strong> De eerste foto wordt gebruikt als
+                  profielfoto in het patiëntenportaal. U kunt meerdere foto's
+                  maken voor het complete patiëntendossier.
+                </p>
+              </div>
+            </div>
+
+            {/* Camera Modal */}
+            {showCamera && (
+              <CameraCapture
+                onCapture={handlePhotoCapture}
+                onClose={() => setShowCamera(false)}
+              />
+            )}
+          </div>
+        )}
+
+        {/* STEP 3: Anamnesis - Algemene Gezondheid */}
+        {currentStep === 2 && (
           <div className="space-y-6">
             {/* Algemene Gezondheid */}
             <div className="glass-card rounded-2xl p-6 space-y-6">
@@ -1641,8 +1764,8 @@ export default function NewPatientIntakePage() {
           </div>
         )}
 
-        {/* STEP 3: Consent Forms */}
-        {currentStep === 2 && (
+        {/* STEP 4: Consent Forms */}
+        {currentStep === 3 && (
           <div className="space-y-6">
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 pb-4 border-b border-white/10">
@@ -1731,8 +1854,8 @@ export default function NewPatientIntakePage() {
           </div>
         )}
 
-        {/* STEP 4: Review */}
-        {currentStep === 3 && (
+        {/* STEP 5: Review */}
+        {currentStep === 4 && (
           <div className="space-y-6">
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 pb-4 border-b border-white/10">
@@ -1840,6 +1963,34 @@ export default function NewPatientIntakePage() {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Photos Summary */}
+                <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+                  <h4 className="font-medium text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-[var(--accent)]" />
+                    Patiënt Foto's
+                  </h4>
+                  {capturedPhotos.length > 0 ? (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {capturedPhotos.map((photo, index) => (
+                        <div
+                          key={index}
+                          className="aspect-square rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border-color)]"
+                        >
+                          <img
+                            src={photo}
+                            alt={`Foto ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[var(--text-tertiary)]">
+                      Geen foto's gemaakt
+                    </p>
+                  )}
                 </div>
 
                 {/* Consent Summary */}
