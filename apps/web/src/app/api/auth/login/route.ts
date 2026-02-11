@@ -59,7 +59,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Login error:', error instanceof Error ? error.message : error);
-    return handleError(error);
+    const msg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' | ') : '';
+    console.error('Login error:', msg, stack);
+    return Response.json({ message: 'Interne serverfout', debug: msg, stack }, { status: 500 });
   }
 }
