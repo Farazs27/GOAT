@@ -2,198 +2,252 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
+import { Receipt, FileText, ChevronDown, ChevronUp, Eye, Calendar, Euro } from 'lucide-react';
 
 const statusLabels: Record<string, string> = {
-  DRAFT: 'Concept',
-  SENT: 'Verzonden',
-  PARTIALLY_PAID: 'Deels betaald',
-  PAID: 'Betaald',
-  OVERDUE: 'Verlopen',
-  CANCELLED: 'Geannuleerd',
-  CREDITED: 'Gecrediteerd',
+    DRAFT: 'Concept',
+    SENT: 'Verzonden',
+    PARTIALLY_PAID: 'Deels betaald',
+    PAID: 'Betaald',
+    OVERDUE: 'Verlopen',
+    CANCELLED: 'Geannuleerd',
+    CREDITED: 'Gecrediteerd',
 };
 
-const statusColors: Record<string, string> = {
-  DRAFT: 'bg-white/10 text-white/50',
-  SENT: 'bg-blue-500/15 text-blue-300',
-  PARTIALLY_PAID: 'bg-amber-500/15 text-amber-300',
-  PAID: 'bg-emerald-500/15 text-emerald-300',
-  OVERDUE: 'bg-red-500/15 text-red-300',
-  CANCELLED: 'bg-white/10 text-white/40',
-  CREDITED: 'bg-purple-500/15 text-purple-300',
+const statusClasses: Record<string, string> = {
+    DRAFT: 'bg-white/[0.06] text-white/50 border-white/[0.08]',
+    SENT: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    PARTIALLY_PAID: 'bg-[#e8945a]/10 text-[#e8945a] border-[#e8945a]/20',
+    PAID: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    OVERDUE: 'bg-red-500/10 text-red-400 border-red-500/20',
+    CANCELLED: 'bg-white/[0.06] text-white/40 border-white/[0.08]',
+    CREDITED: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
 };
 
 function formatCurrency(val: number | string) {
-  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(Number(val));
+    return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(Number(val));
+}
+
+function InvoiceStatusBadge({ status }: { status: string }) {
+    return (
+        <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-medium border ${statusClasses[status] || statusClasses.DRAFT}`}>
+            {statusLabels[status] || status}
+        </span>
+    );
 }
 
 export default function DocumentsPage() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'invoices' | 'documents'>('invoices');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState<'invoices' | 'documents'>('invoices');
+    const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('patient_token');
-    if (!token) return;
-    fetch(`/api/patient-portal/documents`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('patient_token');
+        if (!token) return;
+        fetch(`/api/patient-portal/documents`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((r) => r.json())
+            .then(setData)
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-white/95 mb-2">Documenten</h1>
-        <p className="text-lg text-white/50">Uw facturen en documenten</p>
-      </div>
+    const tabs = [
+        { key: 'invoices' as const, label: 'Facturen', icon: Receipt },
+        { key: 'documents' as const, label: 'Documenten', icon: FileText },
+    ];
 
-      {/* Tabs */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setTab('invoices')}
-          className={`px-6 py-3 rounded-2xl text-base font-medium transition-all ${
-            tab === 'invoices'
-              ? 'bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-300 border border-teal-500/20'
-              : 'text-white/50 hover:text-white/70 hover:bg-white/5 border border-transparent'
-          }`}
-        >
-          Facturen
-        </button>
-        <button
-          onClick={() => setTab('documents')}
-          className={`px-6 py-3 rounded-2xl text-base font-medium transition-all ${
-            tab === 'documents'
-              ? 'bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-300 border border-teal-500/20'
-              : 'text-white/50 hover:text-white/70 hover:bg-white/5 border border-transparent'
-          }`}
-        >
-          Documenten
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="flex items-center gap-3 text-white/40 py-8">
-          <div className="w-5 h-5 border-2 border-white/20 border-t-teal-400 rounded-full animate-spin" />
-          Laden...
-        </div>
-      ) : tab === 'invoices' ? (
-        <div className="space-y-4">
-          {data?.invoices?.length > 0 ? (
-            data.invoices.map((inv: any) => (
-              <div
-                key={inv.id}
-                className="patient-glass-card rounded-3xl p-6 transition-all duration-300 hover:scale-[1.01]"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold text-white/90">{inv.invoiceNumber}</h3>
-                      <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusColors[inv.status] || 'bg-white/10 text-white/50'}`}>
-                        {statusLabels[inv.status] || inv.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-white/40">
-                      {new Date(inv.invoiceDate || inv.createdAt).toLocaleDateString('nl-NL', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <p className="text-xs text-white/40">Totaal</p>
-                      <p className="text-xl font-bold text-white/90">{formatCurrency(inv.total)}</p>
-                    </div>
-                    {inv.patientAmount != null && (
-                      <div className="text-right">
-                        <p className="text-xs text-white/40">Eigen bijdrage</p>
-                        <p className="text-base font-semibold text-teal-300">{formatCurrency(inv.patientAmount)}</p>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}
-                      className="px-4 py-2.5 rounded-2xl border border-white/10 text-sm text-white/60 hover:bg-white/5 hover:text-white/80 transition-all"
-                    >
-                      {expandedId === inv.id ? 'Sluiten' : 'Bekijken'}
-                    </button>
-                  </div>
+    return (
+        <div className="max-w-3xl mx-auto space-y-8">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#e8945a]/10 border border-[#e8945a]/20 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-[#e8945a]" />
                 </div>
-                {expandedId === inv.id && (
-                  <div className="mt-4 pt-4 border-t border-white/8 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-white/40">Factuurnummer</span>
-                      <span className="text-white/70">{inv.invoiceNumber}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-white/40">Status</span>
-                      <span className="text-white/70">{statusLabels[inv.status] || inv.status}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-white/40">Totaalbedrag</span>
-                      <span className="text-white/70">{formatCurrency(inv.total)}</span>
-                    </div>
-                    {inv.patientAmount != null && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-white/40">Eigen bijdrage</span>
-                        <span className="text-teal-300 font-medium">{formatCurrency(inv.patientAmount)}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="patient-glass-card rounded-3xl p-8 text-center">
-              <p className="text-base text-white/40">Geen facturen gevonden</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {data?.documents?.length > 0 ? (
-            data.documents.map((doc: any) => (
-              <div
-                key={doc.id}
-                className="patient-glass-card rounded-3xl p-6 transition-all duration-300 hover:scale-[1.01]"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-white/90">{doc.title}</h3>
-                      <p className="text-sm text-white/40">
-                        {doc.documentType} — {new Date(doc.createdAt).toLocaleDateString('nl-NL')}
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href="/portal/consent"
-                    className="px-4 py-2.5 rounded-2xl border border-white/10 text-sm text-white/60 hover:bg-white/5 transition-all"
-                  >
-                    Bekijken
-                  </Link>
+                <div>
+                    <h1 className="text-2xl font-semibold text-white/90">Documenten</h1>
+                    <p className="text-sm text-white/40">Uw facturen en documenten</p>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="patient-glass-card rounded-3xl p-8 text-center">
-              <p className="text-base text-white/40">Geen documenten gevonden</p>
             </div>
-          )}
+
+            {/* Tab switcher */}
+            <div className="flex border-b border-white/[0.08]">
+                {tabs.map((t) => {
+                    const Icon = t.icon;
+                    const isActive = tab === t.key;
+                    return (
+                        <button
+                            key={t.key}
+                            onClick={() => setTab(t.key)}
+                            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative ${
+                                isActive
+                                    ? 'text-[#e8945a]'
+                                    : 'text-white/40 hover:text-white/60'
+                            }`}
+                        >
+                            <Icon className="w-4 h-4" />
+                            {t.label}
+                            {isActive && (
+                                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e8945a] rounded-full" />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Content */}
+            {loading ? (
+                <div className="flex items-center justify-center py-16">
+                    <div className="w-8 h-8 border-2 border-[#e8945a] border-t-transparent rounded-full animate-spin" />
+                </div>
+            ) : tab === 'invoices' ? (
+                <div className="space-y-3">
+                    {data?.invoices?.length > 0 ? (
+                        data.invoices.map((inv: any) => {
+                            const isExpanded = expandedId === inv.id;
+                            return (
+                                <div
+                                    key={inv.id}
+                                    className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl overflow-hidden transition-all duration-300 shadow-lg"
+                                >
+                                    {/* Invoice header */}
+                                    <div className="p-6">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                                                    <Receipt className="w-5 h-5 text-white/40" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                        <h3 className="text-base font-semibold text-white/90">{inv.invoiceNumber}</h3>
+                                                        <InvoiceStatusBadge status={inv.status} />
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 mt-1 text-white/35">
+                                                        <Calendar className="w-3.5 h-3.5" />
+                                                        <p className="text-xs">
+                                                            {new Date(inv.invoiceDate || inv.createdAt).toLocaleDateString('nl-NL', {
+                                                                day: 'numeric',
+                                                                month: 'long',
+                                                                year: 'numeric',
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-5">
+                                                <div className="text-right">
+                                                    <p className="text-xs text-white/35 mb-0.5">Totaal</p>
+                                                    <p className="text-2xl font-bold text-[#e8945a]">{formatCurrency(inv.total)}</p>
+                                                </div>
+                                                {inv.patientAmount != null && (
+                                                    <div className="text-right pl-4 border-l border-white/[0.08]">
+                                                        <p className="text-xs text-white/35 mb-0.5">Eigen bijdrage</p>
+                                                        <p className="text-lg font-semibold text-white/70">{formatCurrency(inv.patientAmount)}</p>
+                                                    </div>
+                                                )}
+                                                <button
+                                                    onClick={() => setExpandedId(isExpanded ? null : inv.id)}
+                                                    className="w-10 h-10 rounded-2xl border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.04] hover:text-[#e8945a] transition-all flex-shrink-0"
+                                                >
+                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded details */}
+                                    {isExpanded && (
+                                        <div className="px-6 pb-6 pt-0">
+                                            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b border-white/[0.06]">
+                                                            <th className="text-left px-4 py-3 text-white/35 font-medium text-xs uppercase tracking-wider">Omschrijving</th>
+                                                            <th className="text-right px-4 py-3 text-white/35 font-medium text-xs uppercase tracking-wider">Bedrag</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr className="border-b border-white/[0.04]">
+                                                            <td className="px-4 py-3 text-white/60">Factuurnummer</td>
+                                                            <td className="px-4 py-3 text-right text-white/80 font-medium">{inv.invoiceNumber}</td>
+                                                        </tr>
+                                                        <tr className="border-b border-white/[0.04]">
+                                                            <td className="px-4 py-3 text-white/60">Status</td>
+                                                            <td className="px-4 py-3 text-right"><InvoiceStatusBadge status={inv.status} /></td>
+                                                        </tr>
+                                                        <tr className="border-b border-white/[0.04]">
+                                                            <td className="px-4 py-3 text-white/60">Totaalbedrag</td>
+                                                            <td className="px-4 py-3 text-right text-[#e8945a] font-semibold">{formatCurrency(inv.total)}</td>
+                                                        </tr>
+                                                        {inv.patientAmount != null && (
+                                                            <tr>
+                                                                <td className="px-4 py-3 text-white/60">Eigen bijdrage</td>
+                                                                <td className="px-4 py-3 text-right text-white/80 font-medium">{formatCurrency(inv.patientAmount)}</td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="text-center py-16 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl">
+                            <Receipt className="w-12 h-12 mx-auto text-white/10 mb-3" />
+                            <p className="text-sm text-white/30">Geen facturen gevonden</p>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {data?.documents?.length > 0 ? (
+                        data.documents.map((doc: any) => (
+                            <div
+                                key={doc.id}
+                                className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 transition-all duration-300 hover:bg-white/[0.06] shadow-lg"
+                            >
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+                                            <FileText className="w-5 h-5 text-white/40" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-semibold text-white/90">{doc.title}</h3>
+                                            <div className="flex items-center gap-1.5 mt-1 text-white/35">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                <p className="text-xs">
+                                                    {doc.documentType} &mdash; {new Date(doc.createdAt).toLocaleDateString('nl-NL', {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                    })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        href="/portal/consent"
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-white/[0.08] text-sm text-white/50 hover:bg-[#e8945a]/10 hover:text-[#e8945a] hover:border-[#e8945a]/20 transition-all"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        Bekijken
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-16 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl">
+                            <FileText className="w-12 h-12 mx-auto text-white/10 mb-3" />
+                            <p className="text-sm text-white/30">Geen documenten gevonden</p>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }

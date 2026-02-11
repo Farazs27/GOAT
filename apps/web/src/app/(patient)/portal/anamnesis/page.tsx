@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-
+import { Check, Save, ChevronLeft, ChevronRight, Send, ClipboardCheck, AlertCircle } from 'lucide-react';
 
 interface AnamnesisData {
   // Section 1: Algemene gezondheid
@@ -77,11 +77,13 @@ const medischeConditieOpties = [
   { id: 'overig', label: 'Overig' },
 ];
 
+const stepLabels = ['Algemeen', 'Voorgeschiedenis', 'Tandheelkundig', 'Overig', 'Overzicht'];
+
 const stepTitles = [
   'Algemene gezondheid',
   'Medische voorgeschiedenis',
   'Tandheelkundige voorgeschiedenis',
-  'Overig',
+  'Overige opmerkingen',
   'Controleren & Versturen',
 ];
 
@@ -96,15 +98,15 @@ function YesNoToggle({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-white/90 text-lg font-medium">{label}</p>
+      <p className="text-white/90 text-base font-medium">{label}</p>
       <div className="flex gap-3">
         <button
           type="button"
           onClick={() => onChange(true)}
-          className={`flex-1 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 ${
+          className={`flex-1 py-3.5 rounded-2xl text-base font-semibold transition-all duration-200 ${
             value === true
-              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
-              : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10'
+              ? 'bg-[#e8945a] text-white shadow-lg shadow-[#e8945a]/30'
+              : 'bg-white/[0.05] text-white/50 border border-white/[0.1] hover:bg-white/[0.08]'
           }`}
         >
           Ja
@@ -112,10 +114,10 @@ function YesNoToggle({
         <button
           type="button"
           onClick={() => onChange(false)}
-          className={`flex-1 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 ${
+          className={`flex-1 py-3.5 rounded-2xl text-base font-semibold transition-all duration-200 ${
             value === false
-              ? 'bg-white/15 text-white shadow-lg shadow-white/5 border border-white/20'
-              : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10'
+              ? 'bg-white/[0.12] text-white shadow-lg border border-white/[0.15]'
+              : 'bg-white/[0.05] text-white/50 border border-white/[0.1] hover:bg-white/[0.08]'
           }`}
         >
           Nee
@@ -137,7 +139,7 @@ function TextInput({
   multiline?: boolean;
 }) {
   const cls =
-    'w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-lg text-white/90 placeholder-white/30 outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30 transition-all';
+    'w-full bg-white/[0.05] border border-white/[0.1] rounded-2xl px-5 py-4 text-base text-white/90 placeholder-white/30 outline-none focus:border-[#e8945a]/50 focus:ring-1 focus:ring-[#e8945a]/30 transition-all';
   if (multiline) {
     return (
       <textarea
@@ -166,6 +168,7 @@ export default function AnamnesisPage() {
   const [existingId, setExistingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
 
@@ -193,6 +196,7 @@ export default function AnamnesisPage() {
 
   const update = (partial: Partial<AnamnesisData>) => {
     setData((prev) => ({ ...prev, ...partial }));
+    setSaved(false);
   };
 
   // Auto-save draft
@@ -215,6 +219,7 @@ export default function AnamnesisPage() {
         const result = await res.json();
         if (result.id) setExistingId(result.id);
       }
+      setSaved(true);
     } catch {
       // silent
     }
@@ -257,12 +262,13 @@ export default function AnamnesisPage() {
         ? prev.medischeCondities.filter((c) => c !== id)
         : [...prev.medischeCondities, id],
     }));
+    setSaved(false);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-teal-400 rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-white/20 border-t-[#e8945a] rounded-full animate-spin" />
       </div>
     );
   }
@@ -271,10 +277,8 @@ export default function AnamnesisPage() {
   if (submitted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-        <div className="w-24 h-24 rounded-full bg-teal-500/20 border border-teal-500/30 flex items-center justify-center animate-bounce">
-          <svg className="w-12 h-12 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-          </svg>
+        <div className="w-24 h-24 rounded-full bg-[#e8945a]/20 border border-[#e8945a]/30 flex items-center justify-center">
+          <Check className="w-12 h-12 text-[#e8945a]" strokeWidth={2} />
         </div>
         <h1 className="text-3xl font-bold text-white/95">Anamnese Verstuurd</h1>
         <p className="text-lg text-white/50 max-w-md">
@@ -282,7 +286,7 @@ export default function AnamnesisPage() {
         </p>
         <a
           href="/portal"
-          className="mt-4 bg-teal-500 hover:bg-teal-400 text-white rounded-2xl py-4 px-8 text-lg font-semibold transition-all"
+          className="mt-4 bg-gradient-to-r from-[#e8945a] to-[#d4783e] hover:from-[#f0a06a] hover:to-[#e8945a] text-white rounded-2xl py-4 px-8 text-lg font-semibold transition-all shadow-lg shadow-[#e8945a]/20"
         >
           Terug naar Welkom
         </a>
@@ -298,16 +302,14 @@ export default function AnamnesisPage() {
           <h1 className="text-3xl lg:text-4xl font-bold text-white/95 mb-2">Anamnese</h1>
           <p className="text-lg text-white/50">Uw medische vragenlijst is reeds ingevuld.</p>
         </div>
-        <div className="patient-glass-card rounded-2xl p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
+        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#e8945a]/15 flex items-center justify-center border border-[#e8945a]/20">
+              <Check className="w-7 h-7 text-[#e8945a]" />
             </div>
             <div>
-              <p className="text-white/90 font-semibold">Ingevuld</p>
-              <p className="text-sm text-white/40">U kunt een nieuwe versie invullen als uw situatie is veranderd.</p>
+              <p className="text-white/90 text-lg font-semibold">U heeft de anamnese al ingevuld</p>
+              <p className="text-sm text-white/40 mt-0.5">U kunt een nieuwe versie invullen als uw situatie is veranderd.</p>
             </div>
           </div>
           <button
@@ -316,15 +318,15 @@ export default function AnamnesisPage() {
               setExistingId(null);
               setData(defaultData);
             }}
-            className="bg-teal-500 hover:bg-teal-400 text-white rounded-2xl py-4 px-8 text-lg font-semibold transition-all"
+            className="bg-gradient-to-r from-[#e8945a] to-[#d4783e] hover:from-[#f0a06a] hover:to-[#e8945a] text-white rounded-2xl py-4 px-8 text-lg font-semibold transition-all shadow-lg shadow-[#e8945a]/20"
           >
             Nieuwe Anamnese Invullen
           </button>
         </div>
 
         {/* Show current data read-only */}
-        <div className="patient-glass-card rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-white/90 mb-4">Huidige Anamnese</h2>
+        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8">
+          <h2 className="text-xl font-semibold text-white/90 mb-6">Huidige Anamnese</h2>
           <AnamnesisReadonly data={data} />
         </div>
       </div>
@@ -336,30 +338,75 @@ export default function AnamnesisPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl lg:text-4xl font-bold text-white/95 mb-2">Anamnese</h1>
-        <p className="text-lg text-white/50">Medische vragenlijst — stap {step + 1} van {stepTitles.length}</p>
+        <p className="text-base text-white/50">Medische vragenlijst — stap {step + 1} van {stepLabels.length}</p>
       </div>
 
-      {/* Progress bar */}
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          {stepTitles.map((title, i) => (
-            <button
-              key={i}
-              onClick={() => setStep(i)}
-              className={`flex-1 h-2 rounded-full transition-all duration-300 ${
-                i <= step ? 'bg-teal-500' : 'bg-white/10'
-              }`}
-            />
+      {/* Progress steps */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          {stepLabels.map((label, i) => (
+            <div key={i} className="flex items-center flex-1">
+              <button
+                onClick={() => setStep(i)}
+                className="flex flex-col items-center w-full group"
+              >
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    i < step
+                      ? 'bg-[#e8945a] text-white shadow-lg shadow-[#e8945a]/30'
+                      : i === step
+                      ? 'bg-transparent border-2 border-[#e8945a] text-[#e8945a]'
+                      : 'bg-white/[0.06] border border-white/[0.1] text-white/30'
+                  }`}
+                >
+                  {i < step ? <Check className="w-5 h-5" /> : i + 1}
+                </div>
+                <span
+                  className={`text-xs mt-2 font-medium transition-colors hidden sm:block ${
+                    i <= step ? 'text-[#e8945a]' : 'text-white/30'
+                  }`}
+                >
+                  {label}
+                </span>
+              </button>
+              {i < stepLabels.length - 1 && (
+                <div
+                  className={`h-0.5 flex-1 mx-1 rounded-full transition-all duration-300 ${
+                    i < step ? 'bg-[#e8945a]' : 'bg-white/[0.08]'
+                  }`}
+                />
+              )}
+            </div>
           ))}
         </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-teal-400 font-medium">{stepTitles[step]}</span>
-          {saving && <span className="text-sm text-white/30">Opslaan...</span>}
+
+        {/* Save indicator */}
+        <div className="flex justify-end h-5">
+          {saving && (
+            <span className="text-xs text-white/30 flex items-center gap-1.5">
+              <Save className="w-3.5 h-3.5 animate-pulse" />
+              Opslaan...
+            </span>
+          )}
+          {saved && !saving && (
+            <span className="text-xs text-[#e8945a]/70 flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5" />
+              Opgeslagen
+            </span>
+          )}
         </div>
+      </div>
+
+      {/* Step title */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#e8945a]/15 flex items-center justify-center border border-[#e8945a]/20">
+          <ClipboardCheck className="w-5 h-5 text-[#e8945a]" />
+        </div>
+        <h2 className="text-xl font-semibold text-white/90">{stepTitles[step]}</h2>
       </div>
 
       {/* Step content */}
-      <div className="patient-glass-card rounded-2xl p-6 lg:p-8 space-y-8 transition-all">
+      <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 lg:p-8 space-y-8">
         {step === 0 && (
           <>
             <YesNoToggle
@@ -437,34 +484,34 @@ export default function AnamnesisPage() {
 
         {step === 1 && (
           <>
-            <p className="text-white/90 text-lg font-medium">
-              Heeft u of heeft u gehad een van de volgende aandoeningen?
-            </p>
-            <p className="text-white/40 text-base">Tik op de aandoeningen die van toepassing zijn</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <p className="text-white/90 text-base font-medium">
+                Heeft u of heeft u gehad een van de volgende aandoeningen?
+              </p>
+              <p className="text-white/40 text-sm">Tik op de aandoeningen die van toepassing zijn</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {medischeConditieOpties.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => toggleConditie(opt.id)}
-                  className={`py-4 px-5 rounded-2xl text-left text-lg font-medium transition-all duration-200 ${
+                  className={`py-4 px-4 rounded-2xl text-left text-sm font-medium transition-all duration-200 ${
                     data.medischeCondities.includes(opt.id)
-                      ? 'bg-teal-500/20 text-teal-300 border-2 border-teal-500/40 shadow-lg shadow-teal-500/10'
-                      : 'bg-white/5 text-white/60 border-2 border-transparent hover:bg-white/10 hover:text-white/80'
+                      ? 'bg-[#e8945a]/15 text-[#e8945a] border-2 border-[#e8945a]/40 shadow-lg shadow-[#e8945a]/10'
+                      : 'bg-white/[0.04] text-white/60 border-2 border-transparent hover:bg-white/[0.08] hover:text-white/80'
                   }`}
                 >
                   <span className="flex items-center gap-3">
                     <span
                       className={`w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all ${
                         data.medischeCondities.includes(opt.id)
-                          ? 'bg-teal-500 text-white'
-                          : 'bg-white/10 border border-white/20'
+                          ? 'bg-[#e8945a] text-white'
+                          : 'bg-white/[0.08] border border-white/[0.15]'
                       }`}
                     >
                       {data.medischeCondities.includes(opt.id) && (
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
+                        <Check className="w-4 h-4" strokeWidth={3} />
                       )}
                     </span>
                     {opt.label}
@@ -485,12 +532,12 @@ export default function AnamnesisPage() {
         {step === 2 && (
           <>
             <div className="space-y-3">
-              <p className="text-white/90 text-lg font-medium">Wanneer was uw laatste tandartsbezoek?</p>
+              <p className="text-white/90 text-base font-medium">Wanneer was uw laatste tandartsbezoek?</p>
               <input
                 type="date"
                 value={data.laatsteTandartsbezoek}
                 onChange={(e) => update({ laatsteTandartsbezoek: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-lg text-white/90 outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30 transition-all [color-scheme:dark]"
+                className="w-full bg-white/[0.05] border border-white/[0.1] rounded-2xl px-5 py-4 text-base text-white/90 outline-none focus:border-[#e8945a]/50 focus:ring-1 focus:ring-[#e8945a]/30 transition-all [color-scheme:dark]"
               />
             </div>
 
@@ -543,8 +590,8 @@ export default function AnamnesisPage() {
         {step === 3 && (
           <>
             <div className="space-y-3">
-              <p className="text-white/90 text-lg font-medium">Overige opmerkingen</p>
-              <p className="text-white/40">Heeft u nog iets dat u wilt melden aan uw tandarts?</p>
+              <p className="text-white/90 text-base font-medium">Overige opmerkingen</p>
+              <p className="text-white/40 text-sm">Heeft u nog iets dat u wilt melden aan uw tandarts?</p>
               <TextInput
                 value={data.overigeOpmerkingen}
                 onChange={(v) => update({ overigeOpmerkingen: v })}
@@ -557,7 +604,10 @@ export default function AnamnesisPage() {
 
         {step === 4 && (
           <>
-            <h2 className="text-xl font-semibold text-white/90">Controleer uw antwoorden</h2>
+            <div className="flex items-center gap-3 mb-2">
+              <AlertCircle className="w-5 h-5 text-[#e8945a]" />
+              <p className="text-white/50 text-sm">Controleer uw antwoorden voordat u verstuurt</p>
+            </div>
             <AnamnesisReadonly data={data} />
           </>
         )}
@@ -568,27 +618,30 @@ export default function AnamnesisPage() {
         {step > 0 ? (
           <button
             onClick={() => setStep(step - 1)}
-            className="py-4 px-8 rounded-2xl text-lg font-semibold bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 transition-all"
+            className="flex items-center gap-2 py-4 px-6 rounded-2xl text-base font-semibold bg-white/[0.04] border border-white/[0.1] text-white/70 hover:bg-white/[0.08] transition-all backdrop-blur-xl"
           >
+            <ChevronLeft className="w-5 h-5" />
             Vorige
           </button>
         ) : (
           <div />
         )}
 
-        {step < stepTitles.length - 1 ? (
+        {step < stepLabels.length - 1 ? (
           <button
             onClick={() => setStep(step + 1)}
-            className="bg-teal-500 hover:bg-teal-400 text-white rounded-2xl py-4 px-8 text-lg font-semibold transition-all shadow-lg shadow-teal-500/20"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#e8945a] to-[#d4783e] hover:from-[#f0a06a] hover:to-[#e8945a] text-white rounded-2xl py-4 px-8 text-base font-semibold transition-all shadow-lg shadow-[#e8945a]/20"
           >
             Volgende
+            <ChevronRight className="w-5 h-5" />
           </button>
         ) : (
           <button
             onClick={submitAnamnesis}
             disabled={saving}
-            className="bg-teal-500 hover:bg-teal-400 text-white rounded-2xl py-4 px-8 text-lg font-semibold transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#e8945a] to-[#d4783e] hover:from-[#f0a06a] hover:to-[#e8945a] text-white rounded-2xl py-4 px-10 text-lg font-semibold transition-all shadow-lg shadow-[#e8945a]/20 disabled:opacity-50"
           >
+            <Send className="w-5 h-5" />
             {saving ? 'Versturen...' : 'Versturen'}
           </button>
         )}
@@ -608,9 +661,9 @@ function AnamnesisReadonly({ data }: { data: AnamnesisData }) {
   return (
     <div className="space-y-6 text-base">
       {/* Section 1 */}
-      <div>
-        <h3 className="text-lg font-semibold text-teal-400 mb-3">Algemene gezondheid</h3>
-        <div className="space-y-2">
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+        <h3 className="text-base font-semibold text-[#e8945a] mb-4">Algemene gezondheid</h3>
+        <div className="space-y-1">
           <ReviewRow label="Onder behandeling arts" value={yesNo(data.onderBehandeling)} detail={data.onderBehandelingToelichting} />
           <ReviewRow label="Medicijnen" value={yesNo(data.gebruiktMedicijnen)} detail={data.medicijnenToelichting} />
           <ReviewRow label="Allergieen" value={yesNo(data.allergisch)} detail={data.allergischToelichting} />
@@ -621,28 +674,28 @@ function AnamnesisReadonly({ data }: { data: AnamnesisData }) {
       </div>
 
       {/* Section 2 */}
-      <div>
-        <h3 className="text-lg font-semibold text-teal-400 mb-3">Medische voorgeschiedenis</h3>
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+        <h3 className="text-base font-semibold text-[#e8945a] mb-4">Medische voorgeschiedenis</h3>
         {data.medischeCondities.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {data.medischeCondities.map((id) => (
-              <span key={id} className="px-3 py-1.5 rounded-xl bg-teal-500/15 text-teal-300 text-sm border border-teal-500/20">
+              <span key={id} className="px-3 py-1.5 rounded-xl bg-[#e8945a]/10 text-[#e8945a] text-sm border border-[#e8945a]/20">
                 {conditieLabel(id)}
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-white/40">Geen aandoeningen aangevinkt</p>
+          <p className="text-white/40 text-sm">Geen aandoeningen aangevinkt</p>
         )}
         {data.medischeConditiesOverig && (
-          <p className="text-white/60 mt-2">Overig: {data.medischeConditiesOverig}</p>
+          <p className="text-white/60 mt-2 text-sm">Overig: {data.medischeConditiesOverig}</p>
         )}
       </div>
 
       {/* Section 3 */}
-      <div>
-        <h3 className="text-lg font-semibold text-teal-400 mb-3">Tandheelkundige voorgeschiedenis</h3>
-        <div className="space-y-2">
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+        <h3 className="text-base font-semibold text-[#e8945a] mb-4">Tandheelkundige voorgeschiedenis</h3>
+        <div className="space-y-1">
           <ReviewRow label="Laatste tandartsbezoek" value={data.laatsteTandartsbezoek || 'Niet ingevuld'} />
           <ReviewRow label="Klachten" value={yesNo(data.heeftKlachten)} detail={data.klachtenToelichting} />
           <ReviewRow label="Tandvleesbloeding" value={yesNo(data.tandvleesBloeding)} />
@@ -654,9 +707,9 @@ function AnamnesisReadonly({ data }: { data: AnamnesisData }) {
 
       {/* Section 4 */}
       {data.overigeOpmerkingen && (
-        <div>
-          <h3 className="text-lg font-semibold text-teal-400 mb-3">Overige opmerkingen</h3>
-          <p className="text-white/70">{data.overigeOpmerkingen}</p>
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5">
+          <h3 className="text-base font-semibold text-[#e8945a] mb-4">Overige opmerkingen</h3>
+          <p className="text-white/70 text-sm">{data.overigeOpmerkingen}</p>
         </div>
       )}
     </div>
@@ -665,10 +718,10 @@ function AnamnesisReadonly({ data }: { data: AnamnesisData }) {
 
 function ReviewRow({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 py-2 border-b border-white/5">
-      <span className="text-white/40 sm:w-56 flex-shrink-0">{label}</span>
-      <span className="text-white/80 font-medium">{value}</span>
-      {detail && <span className="text-white/50 text-sm ml-2">({detail})</span>}
+    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 py-2.5 border-b border-white/[0.05] last:border-b-0">
+      <span className="text-white/40 text-sm sm:w-52 flex-shrink-0">{label}</span>
+      <span className="text-white/80 text-sm font-medium">{value}</span>
+      {detail && <span className="text-white/50 text-xs ml-2">({detail})</span>}
     </div>
   );
 }

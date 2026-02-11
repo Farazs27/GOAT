@@ -1,5 +1,20 @@
 # Portal Sync Documentation
 
+# ⚠️ CRITICAL: DO NOT MODIFY DENTIST PORTAL
+
+The following directories and files MUST NOT be modified during patient portal development:
+- `apps/web/src/app/(dashboard)/` — ALL dentist portal pages
+- `apps/web/src/app/api/` (existing routes) — DO NOT alter existing API routes
+- `apps/web/src/components/` (existing components) — DO NOT modify shared components
+
+Patient portal work should ONLY touch:
+- `apps/web/src/app/(patient)/` — patient portal pages
+- `apps/web/src/app/api/portal/` — patient-specific API routes (NEW only)
+- `apps/web/src/app/api/auth/patient-login/` — patient auth (existing, can modify)
+- New components in `apps/web/src/components/patient/` (create new dir)
+
+---
+
 ## Section 1: Dentist Portal — Completed Features
 
 The dentist portal (`app/(dashboard)/`) includes the following completed features:

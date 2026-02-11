@@ -71,6 +71,13 @@ Major domains: auth, users, practices, patients (with nested clinical data: odon
 - Staff: `admin@dentflow.nl` / `Welcome123` (PRACTICE_ADMIN)
 - Patient: use patient email + last 4 digits of BSN
 
+## ⚠️ Patient Portal Development Rules
+- NEVER modify files in `app/(dashboard)/` during patient portal work
+- NEVER modify existing API routes — create new ones under `api/portal/`
+- NEVER modify existing shared components — create patient-specific wrappers
+- Patient auth uses `patient_token` in localStorage, NOT `access_token`
+- See `apps/web/PORTAL-SYNC.md` for full details
+
 ## Portal Sync Rules
 
 When developing the patient portal, these rules are mandatory:

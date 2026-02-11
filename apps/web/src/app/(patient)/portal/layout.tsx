@@ -9,7 +9,7 @@ const navItems = [
     label: 'Welkom',
     href: '/portal',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
       </svg>
     ),
@@ -18,7 +18,7 @@ const navItems = [
     label: 'Mijn Afspraken',
     href: '/portal/appointments',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
       </svg>
     ),
@@ -27,7 +27,7 @@ const navItems = [
     label: 'Mijn Gegevens',
     href: '/portal/profile',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
       </svg>
     ),
@@ -36,7 +36,7 @@ const navItems = [
     label: 'Anamnese',
     href: '/portal/anamnesis',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
       </svg>
     ),
@@ -45,7 +45,7 @@ const navItems = [
     label: 'Toestemmingen',
     href: '/portal/consent',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
       </svg>
     ),
@@ -54,7 +54,7 @@ const navItems = [
     label: 'Documenten',
     href: '/portal/documents',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
       </svg>
     ),
@@ -63,7 +63,7 @@ const navItems = [
     label: 'Berichten',
     href: '/portal/messages',
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
       </svg>
     ),
@@ -106,39 +106,35 @@ export default function PatientPortalLayout({ children }: { children: ReactNode 
 
   return (
     <div className="min-h-screen patient-gradient-bg relative overflow-hidden">
-      {/* Decorative glass orbs */}
-      <div className="fixed top-20 left-10 w-64 h-64 rounded-full bg-teal-500/5 blur-3xl pointer-events-none patient-float-slow" />
-      <div className="fixed bottom-20 right-10 w-96 h-96 rounded-full bg-purple-500/5 blur-3xl pointer-events-none patient-float-medium" />
-      <div className="fixed top-1/2 left-1/3 w-48 h-48 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none patient-float-fast" />
-      <div className="fixed top-1/4 right-1/4 w-56 h-56 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none patient-float-slow" />
-      <div className="fixed bottom-1/4 left-1/2 w-40 h-40 rounded-full bg-teal-400/5 blur-3xl pointer-events-none patient-float-medium" />
-
       <div className="flex min-h-screen relative z-10">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex w-72 flex-col fixed h-screen z-20 patient-glass border-r border-white/8">
+        <aside className="hidden lg:flex w-72 flex-col fixed h-screen z-20 patient-glass border-r border-white/[0.06]">
           {/* Logo */}
-          <div className="p-7 border-b border-white/8">
+          <div className="p-7 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-teal-500/20">
-                <span className="text-base font-bold text-white">DF</span>
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #e8945a, #d4864a)' }}>
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                </svg>
               </div>
               <div>
-                <span className="font-semibold text-lg text-white/90 block">DentFlow</span>
-                <span className="text-xs text-white/40">Patiëntenportaal</span>
+                <span className="font-bold text-lg tracking-tight" style={{ color: 'rgba(255,255,255,0.9)' }}>DentFlow</span>
+                <span className="text-xs block" style={{ color: 'rgba(255,255,255,0.3)' }}>Patientenportaal</span>
               </div>
             </div>
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 p-5 space-y-1.5">
+          <nav className="flex-1 p-5 space-y-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-base font-medium transition-all duration-200 ${isActive(item.href)
-                    ? 'bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-300 border border-teal-500/20 shadow-lg shadow-teal-500/5'
-                    : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+                className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-medium transition-all duration-200 ${isActive(item.href)
+                    ? 'border-l-[3px] border-l-amber-500 ml-0 pl-3.5 text-amber-400'
+                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04] border-l-[3px] border-l-transparent'
                   }`}
+                style={isActive(item.href) ? { background: 'rgba(232,148,90,0.08)' } : undefined}
               >
                 {item.icon}
                 {item.label}
@@ -147,21 +143,24 @@ export default function PatientPortalLayout({ children }: { children: ReactNode 
           </nav>
 
           {/* User section */}
-          <div className="p-5 border-t border-white/8">
-            <div className="flex items-center gap-3 mb-4 px-2">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
-                <span className="text-sm font-bold text-white">{initials}</span>
+          <div className="p-5 border-t border-white/[0.06]">
+            <div className="flex items-center gap-3.5 mb-4 px-2">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-[2px]" style={{ background: 'linear-gradient(135deg, #e8945a, #d4864a)' }}>
+                <div className="w-full h-full rounded-[14px] flex items-center justify-center" style={{ background: '#1a1a1a' }}>
+                  <span className="text-sm font-bold" style={{ color: '#e8945a' }}>{initials}</span>
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-base font-medium text-white/90 truncate">
+                <p className="text-[15px] font-semibold truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
                   {patientData?.firstName} {patientData?.lastName}
                 </p>
-                <p className="text-xs text-white/40 truncate">{patientData?.email}</p>
+                <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>{patientData?.email}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-base text-white/40 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[15px] transition-all duration-200 hover:bg-red-500/[0.08]"
+              style={{ color: 'rgba(255,255,255,0.3)' }}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
@@ -172,19 +171,21 @@ export default function PatientPortalLayout({ children }: { children: ReactNode 
         </aside>
 
         {/* Mobile header */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-30 patient-glass border-b border-white/8">
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-30 patient-glass border-b border-white/[0.06]">
           <div className="flex items-center justify-between px-5 py-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center">
-                <span className="text-sm font-bold text-white">DF</span>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #e8945a, #d4864a)' }}>
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                </svg>
               </div>
-              <span className="font-semibold text-white/90">DentFlow</span>
+              <span className="font-bold" style={{ color: 'rgba(255,255,255,0.9)' }}>DentFlow</span>
             </div>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl transition-colors hover:bg-white/[0.06]"
             >
-              <svg className="w-6 h-6 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-6 h-6" style={{ color: 'rgba(255,255,255,0.5)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
             </button>
@@ -192,16 +193,17 @@ export default function PatientPortalLayout({ children }: { children: ReactNode 
 
           {/* Mobile nav dropdown */}
           {sidebarOpen && (
-            <div className="px-4 pb-4 space-y-1 border-t border-white/8 pt-3">
+            <div className="px-4 pb-4 space-y-1 border-t border-white/[0.06] pt-3">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all ${isActive(item.href)
-                      ? 'bg-teal-500/15 text-teal-300'
-                      : 'text-white/50 hover:text-white/80'
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-all ${isActive(item.href)
+                      ? 'text-amber-400'
+                      : 'text-white/40 hover:text-white/70'
                     }`}
+                  style={isActive(item.href) ? { background: 'rgba(232,148,90,0.08)' } : undefined}
                 >
                   {item.icon}
                   {item.label}
@@ -209,7 +211,7 @@ export default function PatientPortalLayout({ children }: { children: ReactNode 
               ))}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base text-white/40 hover:text-red-300"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] text-white/30 hover:text-red-300"
               >
                 Uitloggen
               </button>

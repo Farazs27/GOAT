@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-
+import { ChevronLeft, ChevronRight, Check, User, Phone, Shield, HeartPulse, ClipboardCheck } from 'lucide-react';
 
 const STEPS = [
-  'Persoonlijk',
-  'Contact',
-  'Verzekering',
-  'Medisch',
-  'Bevestiging',
+  { label: 'Persoonlijk', icon: User },
+  { label: 'Contact', icon: Phone },
+  { label: 'Verzekering', icon: Shield },
+  { label: 'Medisch', icon: HeartPulse },
+  { label: 'Bevestiging', icon: ClipboardCheck },
 ];
 
 const DUTCH_INSURERS = [
@@ -173,40 +173,39 @@ export default function PatientRegisterPage() {
   // --- Success Screen ---
   if (success) {
     return (
-      <div className="min-h-screen patient-gradient-bg flex items-center justify-center px-4 relative overflow-hidden">
-        <Orbs />
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="fixed inset-0 bg-gradient-to-br from-[#e8945a]/[0.03] via-transparent to-[#e8945a]/[0.02] pointer-events-none" />
         <div className="w-full max-w-lg relative z-10 text-center">
-          <div className="patient-glass-card rounded-3xl p-10">
-            <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-teal-500/30">
-              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-10 shadow-2xl">
+            {/* Animated checkmark */}
+            <div className="w-20 h-20 bg-gradient-to-br from-[#e8945a] to-[#d4864a] rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-[#e8945a]/30 animate-bounce">
+              <Check className="w-10 h-10 text-white" strokeWidth={2.5} />
             </div>
 
-            <h1 className="text-3xl font-bold text-white/95 mb-2">
+            <h1 className="text-3xl font-bold text-white/95 mb-2 tracking-tight">
               Welkom bij {success.practiceName}!
             </h1>
-            <p className="text-lg text-white/60 mb-8">
+            <p className="text-lg text-white/50 mb-8">
               Uw registratie is succesvol afgerond.
             </p>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-              <p className="text-sm text-white/50 mb-2">Uw patiëntnummer</p>
-              <p className="text-2xl font-mono font-bold text-teal-400 tracking-wider">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-6 mb-6">
+              <p className="text-sm text-white/40 mb-2">Uw pati&euml;ntnummer</p>
+              <p className="text-3xl font-mono font-bold text-[#e8945a] tracking-wider">
                 {success.patientNumber}
               </p>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 text-left">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-6 mb-8 text-left">
               <p className="text-base text-white/80 mb-1 font-medium">Hoe kunt u inloggen?</p>
-              <p className="text-base text-white/50">
+              <p className="text-sm text-white/45">
                 U kunt inloggen met uw e-mailadres en de laatste 4 cijfers van uw BSN.
               </p>
             </div>
 
             <Link
               href="/patient-login"
-              className="inline-block w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-semibold text-lg shadow-lg shadow-teal-500/20 transition-all duration-300 text-center"
+              className="inline-block w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] hover:from-[#f0a06a] hover:to-[#e0926a] text-white font-semibold text-lg shadow-lg shadow-[#e8945a]/20 transition-all duration-300 text-center"
             >
               Ga naar inloggen
             </Link>
@@ -218,48 +217,46 @@ export default function PatientRegisterPage() {
 
   // --- Registration Form ---
   return (
-    <div className="min-h-screen patient-gradient-bg flex items-center justify-center px-4 py-8 relative overflow-hidden">
-      <Orbs />
+    <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#e8945a]/[0.03] via-transparent to-[#e8945a]/[0.02] pointer-events-none" />
       <div className="w-full max-w-2xl relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-teal-500/20 mx-auto mb-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-[#e8945a] to-[#d4864a] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#e8945a]/20 mx-auto mb-4">
             <span className="text-xl font-bold text-white">DF</span>
           </div>
-          <h1 className="text-2xl font-bold text-white/95 mb-1">Patiënt registratie</h1>
-          <p className="text-base text-white/50">Meld u aan bij DentFlow</p>
+          <h1 className="text-2xl font-bold text-white/95 mb-1 tracking-tight">Pati&euml;nt registratie</h1>
+          <p className="text-base text-white/45">Meld u aan bij DentFlow</p>
         </div>
 
         {/* Step indicator */}
         <div className="flex items-center justify-center mb-8 px-4">
-          {STEPS.map((label, i) => (
-            <div key={label} className="flex items-center">
+          {STEPS.map((s, i) => (
+            <div key={s.label} className="flex items-center">
               <div className="flex flex-col items-center">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
                     i < step
-                      ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
+                      ? 'bg-[#e8945a] text-white shadow-lg shadow-[#e8945a]/30'
                       : i === step
-                        ? 'bg-teal-500/20 border-2 border-teal-400 text-teal-400'
-                        : 'bg-white/5 border border-white/10 text-white/30'
+                        ? 'bg-[#e8945a]/15 border-2 border-[#e8945a] text-[#e8945a]'
+                        : 'bg-white/[0.04] border border-white/[0.08] text-white/25'
                   }`}
                 >
                   {i < step ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Check className="w-5 h-5" strokeWidth={2.5} />
                   ) : (
                     i + 1
                   )}
                 </div>
-                <span className={`text-xs mt-1.5 whitespace-nowrap ${i <= step ? 'text-white/70' : 'text-white/30'}`}>
-                  {label}
+                <span className={`text-xs mt-1.5 whitespace-nowrap ${i <= step ? 'text-white/60' : 'text-white/25'}`}>
+                  {s.label}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
                 <div
-                  className={`w-8 sm:w-12 h-0.5 mx-1 mb-5 transition-all duration-300 ${
-                    i < step ? 'bg-teal-500' : 'bg-white/10'
+                  className={`w-8 sm:w-12 h-0.5 mx-1 mb-5 transition-all duration-300 rounded-full ${
+                    i < step ? 'bg-[#e8945a]' : 'bg-white/[0.08]'
                   }`}
                 />
               )}
@@ -269,13 +266,14 @@ export default function PatientRegisterPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-base text-center">
+          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center flex items-center justify-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
             {error}
           </div>
         )}
 
         {/* Card */}
-        <div className="patient-glass-card rounded-3xl p-8">
+        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 shadow-2xl">
           {/* Step 0: Personal */}
           {step === 0 && (
             <div className="space-y-6">
@@ -304,7 +302,7 @@ export default function PatientRegisterPage() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-3">Geslacht</label>
+                <label className="block text-sm font-medium text-white/60 mb-3">Geslacht</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { value: 'M', label: 'Man' },
@@ -317,8 +315,8 @@ export default function PatientRegisterPage() {
                       onClick={() => update('gender', form.gender === opt.value ? '' : opt.value)}
                       className={`py-4 rounded-2xl text-base font-medium transition-all duration-200 ${
                         form.gender === opt.value
-                          ? 'bg-teal-500/20 border-2 border-teal-500 text-teal-400 shadow-lg shadow-teal-500/10'
-                          : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'
+                          ? 'bg-[#e8945a]/15 border-2 border-[#e8945a] text-[#e8945a] shadow-lg shadow-[#e8945a]/10'
+                          : 'bg-white/[0.04] border border-white/[0.08] text-white/50 hover:bg-white/[0.07]'
                       }`}
                     >
                       {opt.label}
@@ -328,7 +326,7 @@ export default function PatientRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">BSN *</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">BSN *</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -339,10 +337,10 @@ export default function PatientRegisterPage() {
                   }}
                   placeholder="123456789"
                   maxLength={9}
-                  className="w-full px-5 min-h-[56px] rounded-2xl bg-white/5 border border-white/10 text-white/90 text-lg placeholder:text-white/30 outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/10 transition-all tracking-[0.3em] text-center font-mono"
+                  className="w-full px-5 min-h-[56px] rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/90 text-lg placeholder:text-white/25 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/10 transition-all tracking-[0.3em] text-center font-mono"
                 />
                 {form.bsn.length > 0 && form.bsn.length !== 9 && (
-                  <p className="text-sm text-amber-400/70 mt-2">BSN moet 9 cijfers bevatten ({form.bsn.length}/9)</p>
+                  <p className="text-sm text-[#e8945a]/70 mt-2">BSN moet 9 cijfers bevatten ({form.bsn.length}/9)</p>
                 )}
               </div>
             </div>
@@ -396,16 +394,16 @@ export default function PatientRegisterPage() {
               <StepTitle title="Verzekering" subtitle="Uw zorgverzekeringsgegevens" />
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Zorgverzekeraar</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">Zorgverzekeraar</label>
                 <select
                   value={form.insuranceCompany}
                   onChange={(e) => update('insuranceCompany', e.target.value)}
-                  className="w-full px-5 min-h-[56px] rounded-2xl bg-white/5 border border-white/10 text-white/90 text-lg outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/10 transition-all appearance-none"
+                  className="w-full px-5 min-h-[56px] rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/90 text-lg outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/10 transition-all appearance-none"
                   style={{ backgroundImage: 'none' }}
                 >
-                  <option value="" className="bg-gray-900">Selecteer verzekeraar...</option>
+                  <option value="" className="bg-[#141416]">Selecteer verzekeraar...</option>
                   {DUTCH_INSURERS.map((ins) => (
-                    <option key={ins} value={ins} className="bg-gray-900">{ins}</option>
+                    <option key={ins} value={ins} className="bg-[#141416]">{ins}</option>
                   ))}
                 </select>
               </div>
@@ -422,38 +420,49 @@ export default function PatientRegisterPage() {
           {/* Step 3: Medical */}
           {step === 3 && (
             <div className="space-y-6">
-              <StepTitle title="Medische gegevens" subtitle="Optioneel — u kunt dit ook later invullen" />
+              <StepTitle title="Medische gegevens" subtitle="Optioneel -- u kunt dit ook later invullen" />
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-3">
+                <label className="block text-sm font-medium text-white/60 mb-3">
                   Medische waarschuwingen
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {MEDICAL_ALERT_OPTIONS.map((alert) => (
                     <button
                       key={alert}
                       type="button"
                       onClick={() => toggleAlert(alert)}
-                      className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                      className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-left ${
                         form.medicalAlerts.includes(alert)
-                          ? 'bg-teal-500/20 border border-teal-500 text-teal-400'
-                          : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'
+                          ? 'bg-[#e8945a]/15 border border-[#e8945a] text-[#e8945a]'
+                          : 'bg-white/[0.04] border border-white/[0.08] text-white/50 hover:bg-white/[0.07]'
                       }`}
                     >
-                      {alert}
+                      <span className="flex items-center gap-2">
+                        <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                          form.medicalAlerts.includes(alert)
+                            ? 'border-[#e8945a] bg-[#e8945a]'
+                            : 'border-white/20'
+                        }`}>
+                          {form.medicalAlerts.includes(alert) && (
+                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                          )}
+                        </span>
+                        {alert}
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Medicijnen</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">Medicijnen</label>
                 <textarea
                   value={form.medications}
                   onChange={(e) => update('medications', e.target.value)}
                   placeholder="Typ uw medicijnen, gescheiden door komma's"
                   rows={4}
-                  className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/90 text-base placeholder:text-white/30 outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/10 transition-all resize-none"
+                  className="w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/90 text-base placeholder:text-white/25 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/10 transition-all resize-none"
                 />
               </div>
             </div>
@@ -493,14 +502,14 @@ export default function PatientRegisterPage() {
                 )}
               </div>
 
-              <label className="flex items-start gap-4 cursor-pointer p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors">
+              <label className="flex items-start gap-4 cursor-pointer p-5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-colors">
                 <input
                   type="checkbox"
                   checked={form.gdprConsent}
                   onChange={(e) => update('gdprConsent', e.target.checked)}
-                  className="mt-1 w-5 h-5 rounded border-white/20 bg-white/5 text-teal-500 focus:ring-teal-400/20 accent-teal-500"
+                  className="mt-1 w-5 h-5 rounded border-white/20 bg-white/5 accent-[#e8945a]"
                 />
-                <span className="text-base text-white/70 leading-relaxed">
+                <span className="text-base text-white/60 leading-relaxed">
                   Ik geef toestemming voor het verwerken van mijn persoonsgegevens en medische gegevens conform de AVG.
                 </span>
               </label>
@@ -513,11 +522,9 @@ export default function PatientRegisterPage() {
           {step > 0 ? (
             <button
               onClick={() => { setStep(step - 1); setError(''); }}
-              className="flex items-center gap-2 py-4 px-8 rounded-2xl bg-white/5 border border-white/10 text-white/70 text-lg font-medium hover:bg-white/10 transition-all"
+              className="flex items-center gap-2 py-4 px-8 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/60 text-lg font-medium hover:bg-white/[0.07] transition-all"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-5 h-5" />
               Vorige
             </button>
           ) : (
@@ -528,18 +535,16 @@ export default function PatientRegisterPage() {
             <button
               onClick={() => { setStep(step + 1); setError(''); }}
               disabled={!canProceed()}
-              className="flex items-center gap-2 py-4 px-8 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white text-lg font-semibold shadow-lg shadow-teal-500/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 py-4 px-8 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] hover:from-[#f0a06a] hover:to-[#e0926a] text-white text-lg font-semibold shadow-lg shadow-[#e8945a]/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Volgende
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="w-5 h-5" />
             </button>
           ) : (
             <button
               onClick={handleSubmit}
               disabled={!canProceed() || loading}
-              className="flex items-center gap-2 py-4 px-8 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white text-lg font-semibold shadow-lg shadow-teal-500/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 py-4 px-8 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] hover:from-[#f0a06a] hover:to-[#e0926a] text-white text-lg font-semibold shadow-lg shadow-[#e8945a]/20 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center gap-3">
@@ -557,7 +562,7 @@ export default function PatientRegisterPage() {
         <div className="text-center mt-8">
           <Link
             href="/patient-login"
-            className="text-sm text-white/40 hover:text-white/60 transition-colors"
+            className="text-sm text-white/30 hover:text-white/50 transition-colors"
           >
             Heeft u al een account? Inloggen
           </Link>
@@ -569,22 +574,11 @@ export default function PatientRegisterPage() {
 
 // --- Sub-components ---
 
-function Orbs() {
-  return (
-    <>
-      <div className="fixed top-20 left-10 w-64 h-64 rounded-full bg-teal-500/5 blur-3xl pointer-events-none patient-float-slow" />
-      <div className="fixed bottom-20 right-10 w-96 h-96 rounded-full bg-purple-500/5 blur-3xl pointer-events-none patient-float-medium" />
-      <div className="fixed top-1/2 left-1/3 w-48 h-48 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none patient-float-fast" />
-      <div className="fixed bottom-1/3 left-1/4 w-72 h-72 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none patient-float-medium" />
-    </>
-  );
-}
-
 function StepTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-2">
       <h2 className="text-xl font-semibold text-white/90">{title}</h2>
-      <p className="text-base text-white/50">{subtitle}</p>
+      <p className="text-base text-white/45">{subtitle}</p>
     </div>
   );
 }
@@ -604,13 +598,13 @@ function FieldInput({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-white/70 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-white/60 mb-2">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-5 min-h-[56px] rounded-2xl bg-white/5 border border-white/10 text-white/90 text-lg placeholder:text-white/30 outline-none focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/10 transition-all"
+        className="w-full px-5 min-h-[56px] rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white/90 text-lg placeholder:text-white/25 outline-none focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/10 transition-all"
       />
     </div>
   );
@@ -618,8 +612,8 @@ function FieldInput({
 
 function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-      <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-3">{title}</h3>
+    <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5">
+      <h3 className="text-sm font-semibold text-[#e8945a]/60 uppercase tracking-wider mb-3">{title}</h3>
       <div className="space-y-2">{children}</div>
     </div>
   );
@@ -628,8 +622,8 @@ function ReviewSection({ title, children }: { title: string; children: React.Rea
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-start">
-      <span className="text-base text-white/50">{label}</span>
-      <span className="text-base text-white/90 text-right max-w-[60%]">{value}</span>
+      <span className="text-base text-white/40">{label}</span>
+      <span className="text-base text-white/85 text-right max-w-[60%]">{value}</span>
     </div>
   );
 }
