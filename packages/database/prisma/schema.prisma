@@ -66,6 +66,7 @@ model Practice {
   emailMessages         EmailMessage[]
   whatsappConversations WhatsAppConversation[]
   whatsappMessages      WhatsAppMessage[]
+  customCodeCategories  CustomCodeCategory[]
 
   @@map("practices")
 }
@@ -515,12 +516,16 @@ model NzaCode {
   requiresSurface Boolean  @default(false) @map("requires_surface")
   validFrom       DateTime @map("valid_from")
   validUntil      DateTime @map("valid_until")
+  subcategory     String?  @map("subcategory")
+  toelichting     String?  @map("toelichting") @db.Text
+  points          Decimal? @map("points") @db.Decimal(10, 2)
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
-  treatments   Treatment[]
-  invoiceLines InvoiceLine[]
+  treatments          Treatment[]
+  invoiceLines        InvoiceLine[]
+  customCategoryCodes CustomCodeCategoryCode[]
 
   @@unique([code, validFrom])
   @@map("nza_codes")
@@ -1225,4 +1230,34 @@ model PatientCategory {
 
   @@unique([patientId, category])
   @@map("patient_categories")
+}
+
+// ============================================================
+// CUSTOM CODE CATEGORIES
+// ============================================================
+
+model CustomCodeCategory {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  practiceId  String   @map("practice_id")
+  practice    Practice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  codes CustomCodeCategoryCode[]
+
+  @@map("custom_code_categories")
+}
+
+model CustomCodeCategoryCode {
+  id         String              @id @default(uuid())
+  categoryId String              @map("category_id")
+  category   CustomCodeCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  nzaCodeId  String              @map("nza_code_id")
+  nzaCode    NzaCode             @relation(fields: [nzaCodeId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, nzaCodeId])
+  @@map("custom_code_category_codes")
 }

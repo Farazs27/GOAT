@@ -5,11 +5,15 @@ import { Calendar } from 'lucide-react';
 interface Props {
   total: number;
   remaining: number;
+  onClick?: () => void;
 }
 
-export function WidgetAppointmentsToday({ total, remaining }: Props) {
+export function WidgetAppointmentsToday({ total, remaining, onClick }: Props) {
   return (
-    <div className="glass-card rounded-2xl p-4 h-full">
+    <div
+      className="glass-card rounded-2xl p-4 h-full transition-all duration-200 hover:scale-[1.02] hover:border-white/[0.12] cursor-pointer"
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2.5 mb-3">

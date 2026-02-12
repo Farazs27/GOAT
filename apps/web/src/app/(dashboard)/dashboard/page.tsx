@@ -14,6 +14,7 @@ import { WidgetRecentPatients } from '@/components/dashboard/WidgetRecentPatient
 import { WidgetWithoutFollowup } from '@/components/dashboard/WidgetWithoutFollowup';
 import { AppointmentSlideout } from '@/components/dashboard/AppointmentSlideout';
 import { PatientSlideout } from '@/components/dashboard/PatientSlideout';
+import { WidgetDetailSlideout } from '@/components/dashboard/WidgetDetailSlideout';
 
 interface Appointment {
   id: string;
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   const [layout, setLayout] = useState<DashboardLayout>(DEFAULT_LAYOUT);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [activeWidget, setActiveWidget] = useState<'appointments-today' | 'nog-te-voltooien' | 'completed-today' | 'behandelplannen' | null>(null);
   const [loading, setLoading] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -110,16 +112,16 @@ export default function DashboardPage() {
 
   const widgetRenderers: Record<string, React.ReactNode> = {
     'appointments-today': (
-      <WidgetAppointmentsToday total={appointments.length} remaining={remaining} />
+      <WidgetAppointmentsToday total={appointments.length} remaining={remaining} onClick={() => setActiveWidget('appointments-today')} />
     ),
     'nog-te-voltooien': (
-      <WidgetNogTeVoltooien count={pendingPlansCount} />
+      <WidgetNogTeVoltooien count={pendingPlansCount} onClick={() => setActiveWidget('nog-te-voltooien')} />
     ),
     'completed-today': (
-      <WidgetCompletedToday completed={completedToday} total={appointments.length} />
+      <WidgetCompletedToday completed={completedToday} total={appointments.length} onClick={() => setActiveWidget('completed-today')} />
     ),
     'behandelplannen': (
-      <WidgetBehandelplannen count={activePlansCount} />
+      <WidgetBehandelplannen count={activePlansCount} onClick={() => setActiveWidget('behandelplannen')} />
     ),
     'in-progress-banner': (
       <WidgetInProgress appointment={inProgress} />
@@ -154,6 +156,14 @@ export default function DashboardPage() {
         <PatientSlideout
           patient={selectedPatient}
           onClose={() => setSelectedPatient(null)}
+        />
+      )}
+
+      {activeWidget && (
+        <WidgetDetailSlideout
+          type={activeWidget}
+          appointments={appointments}
+          onClose={() => setActiveWidget(null)}
         />
       )}
     </div>

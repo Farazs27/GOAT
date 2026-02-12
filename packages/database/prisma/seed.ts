@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { KNMT_PART1 } from '../../../apps/web/src/lib/knmt-codes-2026-part1';
+import { KNMT_PART2 } from '../../../apps/web/src/lib/knmt-codes-2026-part2';
 
 const prisma = new PrismaClient();
 
@@ -45,9 +47,58 @@ async function initializeTeeth(patientId: string, practiceId: string) {
   });
 }
 
-// NZa Codes 2026 — Complete tarievenlijst mondzorg
-const nzaCodes2026 = [
-  // ─── A: VERDOVING / ANESTHESIE ────────────────────────────
+// NZa Codes 2026 — Generated from KNMT Tarievenboekje 2026
+function getAllKnmtCodes() {
+  const allCategories = [...KNMT_PART1, ...KNMT_PART2];
+  const codes: Array<{
+    code: string;
+    category: string;
+    subcategory: string;
+    description: string;
+    tariff: number | null;
+    points: number | null;
+    toelichting: string | null;
+    requiresTooth: boolean;
+    requiresSurface: boolean;
+  }> = [];
+  for (const cat of allCategories) {
+    for (const sub of cat.subcategories) {
+      for (const c of sub.codes) {
+        codes.push({
+          code: c.code,
+          category: cat.name,
+          subcategory: sub.name,
+          description: c.description,
+          tariff: c.tariff ?? null,
+          points: c.points ?? null,
+          toelichting: c.toelichting ?? null,
+          requiresTooth: c.requiresTooth ?? false,
+          requiresSurface: c.requiresSurface ?? false,
+        });
+      }
+    }
+  }
+  return codes;
+}
+
+const knmtCodes = getAllKnmtCodes();
+const nzaCodes2026 = knmtCodes.map(k => ({
+  code: k.code,
+  category: k.category,
+  subcategory: k.subcategory,
+  descriptionNl: k.description,
+  maxTariff: k.tariff ?? 0,
+  points: k.points,
+  toelichting: k.toelichting,
+  unit: 'per_treatment' as const,
+  requiresTooth: k.requiresTooth,
+  requiresSurface: k.requiresSurface,
+  validFrom: new Date('2026-01-01'),
+  validUntil: new Date('2026-12-31'),
+  isActive: true,
+}));
+
+/* Old hardcoded array removed — now generated from KNMT data above
   { code: 'A01', category: 'VERDOVING', descriptionNl: 'Lokale verdoving (infiltratie)', maxTariff: 15.43, unit: 'per_injection', validFrom: '2026-01-01', validUntil: '2026-12-31' },
   { code: 'A02', category: 'VERDOVING', descriptionNl: 'Lokale verdoving additioneel', maxTariff: 7.72, unit: 'per_injection', validFrom: '2026-01-01', validUntil: '2026-12-31' },
   { code: 'A10', category: 'VERDOVING', descriptionNl: 'Oppervlakte-anesthesie', maxTariff: 9.88, unit: 'per_treatment', validFrom: '2026-01-01', validUntil: '2026-12-31' },
@@ -276,7 +327,7 @@ const nzaCodes2026 = [
   // ─── I: IMPLANTAAT (legacy codes for compatibility) ───────
   { code: 'I01', category: 'IMPLANTAAT', descriptionNl: 'Implantaat chirurgisch', maxTariff: 771.60, unit: 'per_implant', validFrom: '2026-01-01', validUntil: '2026-12-31' },
   { code: 'I10', category: 'IMPLANTAAT', descriptionNl: 'Implantaat kroon', maxTariff: 617.28, unit: 'per_tooth', requiresTooth: true, validFrom: '2026-01-01', validUntil: '2026-12-31' },
-];
+*/
 
 async function main() {
   console.log('Cleaning existing data...\n');
@@ -309,6 +360,8 @@ async function main() {
   await prisma.scheduleException.deleteMany();
   await prisma.practitionerSchedule.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.customCodeCategoryCode.deleteMany();
+  await prisma.customCodeCategory.deleteMany();
   await prisma.nzaCode.deleteMany();
   await prisma.practice.deleteMany();
 
@@ -319,7 +372,7 @@ async function main() {
   console.log('Seeding NZa codes...');
   for (const code of nzaCodes2026) {
     await prisma.nzaCode.upsert({
-      where: { code_validFrom: { code: code.code, validFrom: new Date(code.validFrom) } },
+      where: { code_validFrom: { code: code.code, validFrom: code.validFrom } },
       update: {},
       create: {
         code: code.code,
@@ -329,8 +382,11 @@ async function main() {
         unit: code.unit,
         requiresTooth: code.requiresTooth || false,
         requiresSurface: code.requiresSurface || false,
-        validFrom: new Date(code.validFrom),
-        validUntil: new Date(code.validUntil),
+        validFrom: code.validFrom,
+        validUntil: code.validUntil,
+        subcategory: code.subcategory || null,
+        toelichting: code.toelichting || null,
+        points: code.points || null,
       },
     });
   }

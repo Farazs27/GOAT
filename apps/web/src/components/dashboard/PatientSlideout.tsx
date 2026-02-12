@@ -119,6 +119,11 @@ export function PatientSlideout({ patient, onClose }: Props) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   const tabs: { key: PanelTab; label: string; icon: React.ReactNode }[] = [
     { key: 'overzicht', label: 'Overzicht', icon: <User className="h-4 w-4" /> },
     { key: 'afspraken', label: 'Afspraken', icon: <Calendar className="h-4 w-4" /> },

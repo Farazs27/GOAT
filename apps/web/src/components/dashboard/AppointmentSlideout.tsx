@@ -91,6 +91,11 @@ export function AppointmentSlideout({ appointment, onClose }: Props) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   const tabs: { key: PanelTab; label: string; icon: React.ReactNode }[] = [
     { key: 'details', label: 'Details', icon: <Calendar className="h-4 w-4" /> },
     { key: 'behandelingen', label: 'Behandelingen', icon: <Stethoscope className="h-4 w-4" /> },

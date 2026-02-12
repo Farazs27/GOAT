@@ -45,6 +45,8 @@ const PrescriptionForm = dynamic(() => import('@/components/prescriptions/prescr
 const PrescriptionList = dynamic(() => import('@/components/prescriptions/prescription-list'), { ssr: false });
 const MedicalHistoryPanel = dynamic(() => import('@/components/patient-history/medical-history-panel'), { ssr: false });
 const TreatmentHistoryDropdown = dynamic(() => import('@/components/treatments/treatment-history-dropdown'), { ssr: false });
+import { CodeBrowserPanel } from '@/components/declaratie/code-browser-panel';
+import { TechnicianBrowserPanel } from '@/components/declaratie/technician-browser-panel';
 
 interface PatientImage {
   id: string;
@@ -234,6 +236,7 @@ export default function AgendaPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
+  // codeBrowserOpen removed — panel is always inline
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
   const [pendingLoading, setPendingLoading] = useState<Record<string, boolean>>({});
   const [expandedPendingId, setExpandedPendingId] = useState<string | null>(null);
@@ -1191,7 +1194,7 @@ export default function AgendaPage() {
       {/* Slide-out appointment detail panel */}
       {selectedAppointment && (
         <>
-          <div className="fixed inset-0 z-50 glass-sidebar flex flex-col">
+          <div className="fixed inset-0 z-50 flex flex-col md:left-16 lg:left-[200px] xl:left-[220px] 2xl:left-[240px]" style={{ background: 'rgba(14, 12, 10, 0.97)', backdropFilter: 'blur(40px) saturate(150%)', WebkitBackdropFilter: 'blur(40px) saturate(150%)' }}>
             {/* Panel header */}
             <div className="p-4 border-b border-white/10 flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
@@ -2038,155 +2041,164 @@ export default function AgendaPage() {
                   )}
                 </div>
               ) : panelTab === 'declaratie' ? (
-                /* Declaratie tab */
-                <div className="space-y-4">
-                  {invoiceCreated ? (
-                    <div className="glass-light rounded-xl p-6 text-center">
-                      <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                        <Check className="h-6 w-6 text-emerald-400" />
-                      </div>
-                      <p className="text-sm font-medium text-white/90">Factuur aangemaakt</p>
-                      <p className="text-lg font-bold text-emerald-400 mt-1">{invoiceCreated}</p>
-                      <p className="text-xs text-white/40 mt-2">Bekijk in Facturatie overzicht</p>
-                      <button onClick={() => setInvoiceCreated(null)}
-                        className="mt-3 px-3 py-1.5 glass rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all">
-                        Nieuwe declaratie
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-white/40 uppercase tracking-wider">Verrichtingen</p>
-                        <button onClick={addDeclarationLine}
-                          className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                          + Regel toevoegen
+                /* Declaratie tab — two-column: code browser + declaration lines */
+                <div className="flex gap-3 h-[calc(100vh-320px)]">
+                  {/* Left: Code browser (always visible) */}
+                  <div className="w-[280px] flex-shrink-0">
+                    <CodeBrowserPanel
+                      onSelectCode={(selected) => {
+                        setDeclarationLines(prev => [...prev, {
+                          nzaCodeId: selected.nzaCodeId,
+                          code: selected.code,
+                          description: selected.description,
+                          toothNumber: '',
+                          unitPrice: String(selected.tariff),
+                          quantity: '1',
+                        }]);
+                      }}
+                    />
+                  </div>
+
+                  {/* Right: Declaration lines + totals + actions */}
+                  <div className="flex-1 overflow-y-auto space-y-4">
+                    {invoiceCreated ? (
+                      <div className="glass-light rounded-xl p-6 text-center">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                          <Check className="h-6 w-6 text-emerald-400" />
+                        </div>
+                        <p className="text-sm font-medium text-white/90">Factuur aangemaakt</p>
+                        <p className="text-lg font-bold text-emerald-400 mt-1">{invoiceCreated}</p>
+                        <p className="text-xs text-white/40 mt-2">Bekijk in Facturatie overzicht</p>
+                        <button onClick={() => setInvoiceCreated(null)}
+                          className="mt-3 px-3 py-1.5 glass rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all">
+                          Nieuwe declaratie
                         </button>
                       </div>
-
-                      {declarationLines.length === 0 ? (
-                        <div className="text-center py-8">
-                          <Receipt className="h-8 w-8 mx-auto mb-2 text-white/15" />
-                          <p className="text-sm text-white/30">Nog geen verrichtingen</p>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-white/40 uppercase tracking-wider">Verrichtingen</p>
                           <button onClick={addDeclarationLine}
-                            className="mt-2 px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-lg text-xs font-medium hover:bg-blue-500/30 transition-colors">
-                            Verrichting toevoegen
+                            className="text-xs text-white/30 hover:text-white/50 transition-colors">
+                            + Handmatig
                           </button>
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {declarationLines.map((line, i) => (
-                            <div key={i} className="glass-light rounded-xl p-3 space-y-2">
-                              <div className="flex items-start gap-2">
-                                {/* NZa code search */}
-                                <div className="relative w-24 flex-shrink-0">
-                                  <input
-                                    placeholder="Code"
-                                    value={line.code}
-                                    onChange={(e) => {
-                                      updateDeclarationLine(i, 'code', e.target.value);
-                                      setActiveNzaLine(i);
-                                      searchNzaCodes(e.target.value);
-                                    }}
-                                    onFocus={() => { setActiveNzaLine(i); searchNzaCodes(line.code); }}
-                                    onBlur={() => setTimeout(() => setActiveNzaLine(null), 200)}
-                                    className="w-full bg-white/5 rounded-lg px-2.5 py-1.5 text-xs font-mono text-blue-300 outline-none border border-white/10 focus:border-blue-500/30"
-                                  />
-                                  {activeNzaLine === i && nzaSearchResults.length > 0 && (
-                                    <div className="absolute z-50 mt-1 left-0 w-80 rounded-xl border border-white/10 max-h-64 overflow-y-auto shadow-2xl" style={{ background: '#1e2235' }}>
-                                      {nzaSearchResults.map((nza: any) => (
-                                        <button key={nza.id}
-                                          onMouseDown={(e) => e.preventDefault()}
-                                          onClick={() => selectNzaForLine(i, nza)}
-                                          className="w-full text-left px-3 py-1.5 hover:bg-blue-500/20 transition-colors flex items-center justify-between gap-2 border-b border-white/5 last:border-0">
-                                          <span className="font-mono text-[11px] text-blue-300 font-medium w-10 flex-shrink-0">{nza.code}</span>
-                                          <span className="text-[11px] text-white/60 truncate flex-1">{nza.descriptionNl}</span>
-                                          <span className="text-[10px] text-white/30 flex-shrink-0">€{Number(nza.maxTariff).toFixed(2)}</span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                {/* Description */}
-                                <input
-                                  placeholder="Omschrijving"
-                                  value={line.description}
-                                  onChange={(e) => updateDeclarationLine(i, 'description', e.target.value)}
-                                  className="flex-1 bg-white/5 rounded-lg px-2.5 py-1.5 text-xs text-white/70 outline-none border border-white/10 focus:border-blue-500/30"
-                                />
-                                <button onClick={() => removeDeclarationLine(i)}
-                                  className="p-1.5 text-white/20 hover:text-red-400 transition-colors flex-shrink-0">
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                              <div className="flex items-center gap-2 pl-0">
-                                <div className="w-16">
-                                  <input
-                                    placeholder="Elem."
-                                    value={line.toothNumber}
-                                    onChange={(e) => updateDeclarationLine(i, 'toothNumber', e.target.value)}
-                                    className="w-full bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10"
-                                  />
-                                </div>
-                                <div className="w-12">
-                                  <input
-                                    placeholder="Qty"
-                                    value={line.quantity}
-                                    onChange={(e) => updateDeclarationLine(i, 'quantity', e.target.value)}
-                                    className="w-full bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10 text-center"
-                                  />
-                                </div>
-                                <div className="w-20">
-                                  <input
-                                    placeholder="Prijs"
-                                    value={line.unitPrice}
-                                    onChange={(e) => updateDeclarationLine(i, 'unitPrice', e.target.value)}
-                                    className="w-full bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10 text-right"
-                                  />
-                                </div>
-                                <span className="text-xs text-white/40 w-20 text-right">
-                                  €{((parseFloat(line.unitPrice) || 0) * (parseInt(line.quantity) || 1)).toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
 
-                      {/* Running total */}
-                      {declarationLines.length > 0 && (
-                        <div className="glass-light rounded-xl p-3 flex items-center justify-between">
-                          <span className="text-xs text-white/40 uppercase tracking-wider">Totaal</span>
-                          <span className="text-lg font-bold text-white/90">
-                            €{declarationTotal.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Action buttons */}
-                      {declarationLines.length > 0 && (
-                        <div className="space-y-2">
-                          <button onClick={() => createInvoice(false)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all">
-                            <Receipt className="h-4 w-4" />
-                            Factuur aanmaken
-                          </button>
-                          <div className="flex gap-2">
-                            <button onClick={() => createInvoice(true)}
-                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 glass rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all">
-                              <FileText className="h-3.5 w-3.5" />
-                              Offerte maken
-                            </button>
-                            <button disabled
-                              title="Binnenkort beschikbaar"
-                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 glass rounded-xl text-xs text-white/20 cursor-not-allowed">
-                              <Mail className="h-3.5 w-3.5" />
-                              E-mail versturen
-                            </button>
+                        {declarationLines.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Receipt className="h-8 w-8 mx-auto mb-2 text-white/15" />
+                            <p className="text-sm text-white/30">Nog geen verrichtingen</p>
+                            <p className="text-xs text-white/20 mt-1">Klik op een code in het linkerpaneel om toe te voegen</p>
                           </div>
-                        </div>
-                      )}
-                    </>
-                  )}
+                        ) : (
+                          <div className="space-y-2">
+                            {declarationLines.map((line, i) => (
+                              <div key={i} className="glass-light rounded-xl p-3 space-y-2">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-24 flex-shrink-0">
+                                    <input
+                                      placeholder="Code"
+                                      value={line.code}
+                                      onChange={(e) => updateDeclarationLine(i, 'code', e.target.value)}
+                                      className="w-full bg-white/5 rounded-lg px-2.5 py-1.5 text-xs font-mono text-blue-300 outline-none border border-white/10 focus:border-blue-500/30"
+                                    />
+                                  </div>
+                                  <input
+                                    placeholder="Omschrijving"
+                                    value={line.description}
+                                    onChange={(e) => updateDeclarationLine(i, 'description', e.target.value)}
+                                    className="flex-1 bg-white/5 rounded-lg px-2.5 py-1.5 text-xs text-white/70 outline-none border border-white/10 focus:border-blue-500/30"
+                                  />
+                                  <button onClick={() => removeDeclarationLine(i)}
+                                    className="p-1.5 text-white/20 hover:text-red-400 transition-colors flex-shrink-0">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-2 pl-0">
+                                  <div className="w-16">
+                                    <input
+                                      placeholder="Elem."
+                                      value={line.toothNumber}
+                                      onChange={(e) => updateDeclarationLine(i, 'toothNumber', e.target.value)}
+                                      className="w-full bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10"
+                                    />
+                                  </div>
+                                  <div className="w-12">
+                                    <input
+                                      placeholder="Qty"
+                                      value={line.quantity}
+                                      onChange={(e) => updateDeclarationLine(i, 'quantity', e.target.value)}
+                                      className="w-full bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10 text-center"
+                                    />
+                                  </div>
+                                  <div className="w-20">
+                                    <input
+                                      placeholder="Prijs"
+                                      value={line.unitPrice}
+                                      onChange={(e) => updateDeclarationLine(i, 'unitPrice', e.target.value)}
+                                      className="w-full bg-white/5 rounded-lg px-2 py-1 text-[10px] text-white/50 outline-none border border-white/10 text-right"
+                                    />
+                                  </div>
+                                  <span className="text-xs text-white/40 w-20 text-right">
+                                    €{((parseFloat(line.unitPrice) || 0) * (parseInt(line.quantity) || 1)).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Running total */}
+                        {declarationLines.length > 0 && (
+                          <div className="glass-light rounded-xl p-3 flex items-center justify-between">
+                            <span className="text-xs text-white/40 uppercase tracking-wider">Totaal</span>
+                            <span className="text-lg font-bold text-white/90">
+                              €{declarationTotal.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        {declarationLines.length > 0 && (
+                          <div className="space-y-2">
+                            <button onClick={() => createInvoice(false)}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white shadow-lg shadow-blue-500/20 transition-all">
+                              <Receipt className="h-4 w-4" />
+                              Factuur aanmaken
+                            </button>
+                            <div className="flex gap-2">
+                              <button onClick={() => createInvoice(true)}
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 glass rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all">
+                                <FileText className="h-3.5 w-3.5" />
+                                Offerte maken
+                              </button>
+                              <button disabled
+                                title="Binnenkort beschikbaar"
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 glass rounded-xl text-xs text-white/20 cursor-not-allowed">
+                                <Mail className="h-3.5 w-3.5" />
+                                E-mail versturen
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Right: Technician browser */}
+                  <div className="w-[280px] flex-shrink-0">
+                    <TechnicianBrowserPanel
+                      onSelectItem={(selected) => {
+                        setDeclarationLines(prev => [...prev, {
+                          code: '',
+                          description: `[${selected.technician}] ${selected.description}`,
+                          toothNumber: '',
+                          unitPrice: String(selected.price),
+                          quantity: '1',
+                        }]);
+                      }}
+                    />
+                  </div>
                 </div>
               ) : panelTab === 'paro' ? (
                 /* Periodontogram tab */
@@ -2357,8 +2369,8 @@ export default function AgendaPage() {
                     <p className="text-xs text-white/40 uppercase tracking-wider font-medium">Declaratie</p>
                     <div className="flex items-center gap-2">
                       <button onClick={addDeclarationLine}
-                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                        + Regel
+                        className="text-xs text-white/30 hover:text-white/50 transition-colors">
+                        + Handmatig
                       </button>
                       <button onClick={() => setSplitView(false)}
                         className="p-1 text-white/30 hover:text-white/60 transition-colors">
@@ -2377,24 +2389,10 @@ export default function AgendaPage() {
                       {declarationLines.map((line, i) => (
                         <div key={i} className="glass-light rounded-xl p-3 space-y-2">
                           <div className="flex items-start gap-2">
-                            <div className="relative w-20 flex-shrink-0">
+                            <div className="w-20 flex-shrink-0">
                               <input placeholder="Code" value={line.code}
-                                onChange={(e) => { updateDeclarationLine(i, 'code', e.target.value); setActiveNzaLine(i); searchNzaCodes(e.target.value); }}
-                                onFocus={() => { setActiveNzaLine(i); searchNzaCodes(line.code); }}
-                                onBlur={() => setTimeout(() => setActiveNzaLine(null), 200)}
+                                onChange={(e) => updateDeclarationLine(i, 'code', e.target.value)}
                                 className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-xs font-mono text-blue-300 outline-none border border-white/10 focus:border-blue-500/30" />
-                              {activeNzaLine === i && nzaSearchResults.length > 0 && (
-                                <div className="absolute z-50 mt-1 left-0 w-80 rounded-xl border border-white/10 max-h-64 overflow-y-auto shadow-2xl" style={{ background: '#1e2235' }}>
-                                  {nzaSearchResults.map((nza: any) => (
-                                    <button key={nza.id} onMouseDown={(e) => e.preventDefault()} onClick={() => selectNzaForLine(i, nza)}
-                                      className="w-full text-left px-3 py-1.5 hover:bg-blue-500/20 transition-colors flex items-center justify-between gap-2 border-b border-white/5 last:border-0">
-                                      <span className="font-mono text-[11px] text-blue-300 font-medium w-10 flex-shrink-0">{nza.code}</span>
-                                      <span className="text-[11px] text-white/60 truncate flex-1">{nza.descriptionNl}</span>
-                                      <span className="text-[10px] text-white/30 flex-shrink-0">€{Number(nza.maxTariff).toFixed(2)}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                             <input placeholder="Omschrijving" value={line.description}
                               onChange={(e) => updateDeclarationLine(i, 'description', e.target.value)}

@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="ambient-blob ambient-blob-3" />
 
       {/* Desktop & iPad Sidebar */}
-      <aside className="w-16 lg:w-[260px] xl:w-[280px] 2xl:w-[300px] hidden md:flex flex-col fixed h-screen z-20 transition-all duration-300 glass-sidebar">
+      <aside className="w-16 lg:w-[200px] xl:w-[220px] 2xl:w-[240px] hidden md:flex flex-col fixed h-screen z-20 transition-all duration-300 glass-sidebar">
         {/* Logo Section */}
         <div className="p-4 lg:p-6 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
@@ -151,7 +151,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-h-screen md:ml-16 lg:ml-[260px] xl:ml-[280px] 2xl:ml-[300px] pt-16 md:pt-0 transition-all duration-300">
+      <main className="flex-1 flex flex-col min-h-screen md:ml-16 lg:ml-[200px] xl:ml-[220px] 2xl:ml-[240px] pt-16 md:pt-0 transition-all duration-300">
         {/* Desktop Header */}
         <header className="hidden md:flex h-16 lg:h-[72px] items-center justify-between px-6 lg:px-10 sticky top-0 z-10 border-b border-white/[0.04]" style={{ background: 'rgba(14, 12, 10, 0.6)', backdropFilter: 'blur(24px) saturate(140%)', WebkitBackdropFilter: 'blur(24px) saturate(140%)' }}>
           <h1 className="text-lg lg:text-xl font-semibold text-[var(--text-primary)] tracking-tight">
