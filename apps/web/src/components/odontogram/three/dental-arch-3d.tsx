@@ -37,6 +37,16 @@ const CONDITION_COLORS: Record<string, string> = {
   IMPLANT: '#8b5cf6',
 };
 
+// Colors for restoration type previews on 3D teeth
+const RESTORATION_COLORS: Record<string, string> = {
+  FILLING: '#60a5fa',
+  INLAY: '#c084fc',
+  ONLAY: '#a78bfa',
+  VENEER: '#67e8f9',
+  PARTIAL_CROWN: '#fbbf24',
+  CROWN_RESTORATION: '#f59e0b',
+};
+
 const MAXILLA: readonly number[] = [
   18, 17, 16, 15, 14, 13, 12, 11,
   21, 22, 23, 24, 25, 26, 27, 28,
@@ -79,6 +89,7 @@ function ArchToothModel({
   isSelected,
   hovered,
   dominantCondition,
+  pendingRestorationType,
   onClick,
   onPointerOver,
   onPointerOut,
@@ -89,6 +100,7 @@ function ArchToothModel({
   isSelected: boolean;
   hovered: boolean;
   dominantCondition?: string;
+  pendingRestorationType?: string;
   onClick: () => void;
   onPointerOver: () => void;
   onPointerOut: () => void;
@@ -100,7 +112,8 @@ function ArchToothModel({
     const clone = scene.clone(true);
     const statusTint = STATUS_TINTS[status];
     const conditionTint = dominantCondition ? CONDITION_COLORS[dominantCondition] : undefined;
-    const tintColor = conditionTint || statusTint;
+    const restorationTint = pendingRestorationType ? RESTORATION_COLORS[pendingRestorationType] : undefined;
+    const tintColor = restorationTint || conditionTint || statusTint;
     const maxAniso = gl.capabilities.getMaxAnisotropy();
 
     clone.traverse((child) => {
@@ -121,16 +134,23 @@ function ArchToothModel({
           mat.normalMap.anisotropy = maxAniso;
         }
 
-        // Status/condition tinting
+        // Status/condition/restoration tinting
         if (tintColor) {
-          mat.color.lerp(new THREE.Color(tintColor), conditionTint ? 0.45 : 0.35);
+          const lerpAmount = restorationTint ? 0.5 : conditionTint ? 0.45 : 0.35;
+          mat.color.lerp(new THREE.Color(tintColor), lerpAmount);
+        }
+
+        // Pending restoration emissive glow
+        if (restorationTint) {
+          mat.emissive = new THREE.Color(restorationTint);
+          mat.emissiveIntensity = 0.2;
         }
 
         // Selection/hover glow
         if (isSelected) {
           mat.emissive = new THREE.Color('#3b82f6');
           mat.emissiveIntensity = 0.4;
-        } else if (hovered) {
+        } else if (hovered && !restorationTint) {
           mat.emissive = new THREE.Color('#60a5fa');
           mat.emissiveIntensity = 0.15;
         }
@@ -139,7 +159,7 @@ function ArchToothModel({
       }
     });
     return clone;
-  }, [scene, status, isSelected, hovered, dominantCondition, gl]);
+  }, [scene, status, isSelected, hovered, dominantCondition, pendingRestorationType, gl]);
 
   const { scale, offset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(clonedScene);
@@ -172,10 +192,12 @@ function ArchToothModel({
 const IMPLANT_MODEL_PATH = '/models/teeth/dental_implant.glb';
 
 function ImplantModel({
+  isUpper,
   onClick,
   onPointerOver,
   onPointerOut,
 }: {
+  isUpper: boolean;
   onClick: () => void;
   onPointerOver: () => void;
   onPointerOut: () => void;
@@ -200,19 +222,24 @@ function ImplantModel({
     return clone;
   }, [scene, gl]);
 
-  const { scale, offset } = useMemo(() => {
+  const { scaleArr, offset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(clonedScene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     const s = 1.4 / maxDim;
-    return { scale: s, offset: new THREE.Vector3(-center.x * s, -center.y * s, -center.z * s) };
-  }, [clonedScene]);
+    // Flip Y for lower jaw so screw points into the bone
+    const yFlip = isUpper ? 1 : -1;
+    return {
+      scaleArr: [s, s * yFlip, s] as [number, number, number],
+      offset: new THREE.Vector3(-center.x * s, -center.y * s * yFlip, -center.z * s),
+    };
+  }, [clonedScene, isUpper]);
 
   return (
     <primitive
       object={clonedScene}
-      scale={scale}
+      scale={scaleArr}
       position={offset}
       onClick={(e: any) => { e.stopPropagation(); onClick(); }}
       onPointerOver={(e: any) => { e.stopPropagation(); onPointerOver(); document.body.style.cursor = 'pointer'; }}
@@ -254,6 +281,7 @@ function ArchTooth({
   isSelected,
   dominantCondition,
   pendingStatus,
+  pendingRestorationType,
   onClick,
 }: {
   fdi: number;
@@ -263,6 +291,7 @@ function ArchTooth({
   isSelected: boolean;
   dominantCondition?: string;
   pendingStatus?: string;
+  pendingRestorationType?: string;
   onClick: () => void;
 }) {
   const modelPath = getModelPath(fdi);
@@ -298,6 +327,7 @@ function ArchTooth({
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <ImplantModel
+          isUpper={Math.floor(fdi / 10) <= 2}
           onClick={onClick}
           onPointerOver={() => setHovered(true)}
           onPointerOut={() => setHovered(false)}
@@ -335,6 +365,7 @@ function ArchTooth({
         isSelected={isSelected}
         hovered={hovered}
         dominantCondition={dominantCondition}
+        pendingRestorationType={pendingRestorationType}
         onClick={onClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
@@ -418,6 +449,7 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingResto
           isSelected={selectedTooth === fdi}
           dominantCondition={getDominantCondition(fdi)}
           pendingStatus={pendingRestoration?.toothNumber === fdi ? pendingRestoration.statusChange : undefined}
+          pendingRestorationType={pendingRestoration?.toothNumber === fdi ? pendingRestoration.restorationType : undefined}
           onClick={() => onToothSelect(fdi)}
         />
       ))}
@@ -433,6 +465,7 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingResto
           isSelected={selectedTooth === fdi}
           dominantCondition={getDominantCondition(fdi)}
           pendingStatus={pendingRestoration?.toothNumber === fdi ? pendingRestoration.statusChange : undefined}
+          pendingRestorationType={pendingRestoration?.toothNumber === fdi ? pendingRestoration.restorationType : undefined}
           onClick={() => onToothSelect(fdi)}
         />
       ))}

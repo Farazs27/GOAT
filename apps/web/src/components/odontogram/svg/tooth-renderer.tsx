@@ -271,7 +271,6 @@ function renderSideView(
           )}
           {status === 'ENDO' && (
             <>
-              <path d={sideView.root} fill={CONDITION_COLORS.ENDO} opacity={0.12} />
               <defs>
                 <clipPath id={`endo-clip-${id}`}>
                   <path d={sideView.root} />
