@@ -37,8 +37,13 @@ import {
   ChevronRight as NavRight,
   FileDown,
   Loader2,
+  Download,
+  Printer,
+  Send,
+  FileCheck,
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
+import { InformedConsentPanel } from '@/components/consent/informed-consent-panel';
 
 const Periodontogram = dynamic(() => import('@/components/Periodontogram'), { ssr: false });
 const PrescriptionForm = dynamic(() => import('@/components/prescriptions/prescription-form'), { ssr: false });
@@ -208,7 +213,7 @@ export default function AgendaPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientSearch, setPatientSearch] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [panelTab, setPanelTab] = useState<'afspraken' | 'behandelingen' | 'declaratie' | 'paro' | 'rontgen' | 'recepten'>('afspraken');
+  const [panelTab, setPanelTab] = useState<'afspraken' | 'behandelingen' | 'declaratie' | 'paro' | 'rontgen' | 'recepten' | 'consent'>('afspraken');
   const [prescriptionRefreshKey, setPrescriptionRefreshKey] = useState(0);
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
   const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
@@ -224,7 +229,9 @@ export default function AgendaPage() {
   const [nzaSearchResults, setNzaSearchResults] = useState<any[]>([]);
   const [downloadingQuote, setDownloadingQuote] = useState<string | null>(null);
   const [activeNzaLine, setActiveNzaLine] = useState<number | null>(null);
-  const [invoiceCreated, setInvoiceCreated] = useState<string | null>(null);
+  const [invoiceCreated, setInvoiceCreated] = useState<{ id: string; number: string; isOfferte: boolean } | null>(null);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [notesExpanded, setNotesExpanded] = useState(false);
   const [patientImages, setPatientImages] = useState<PatientImage[]>([]);
   const [imageUploading, setImageUploading] = useState(false);
@@ -716,7 +723,8 @@ export default function AgendaPage() {
       });
       if (res.ok) {
         const inv = await res.json();
-        setInvoiceCreated(inv.invoiceNumber);
+        setInvoiceCreated({ id: inv.id, number: inv.invoiceNumber, isOfferte: isDraft });
+        setEmailSent(false);
         if (!isDraft) {
           // Set to SENT
           await authFetch(`/api/invoices/${inv.id}`, {
@@ -726,6 +734,45 @@ export default function AgendaPage() {
         }
       }
     } catch {}
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!invoiceCreated) return;
+    try {
+      const res = await authFetch(`/api/invoices/${invoiceCreated.id}/pdf`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${invoiceCreated.isOfferte ? 'offerte' : 'factuur'}-${invoiceCreated.number}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {}
+  };
+
+  const handlePrintPdf = async () => {
+    if (!invoiceCreated) return;
+    try {
+      const res = await authFetch(`/api/invoices/${invoiceCreated.id}/pdf`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url);
+      if (printWindow) {
+        printWindow.addEventListener('load', () => printWindow.print());
+      }
+    } catch {}
+  };
+
+  const handleSendEmail = async () => {
+    if (!invoiceCreated || emailSending) return;
+    setEmailSending(true);
+    try {
+      const res = await authFetch(`/api/invoices/${invoiceCreated.id}/send-email`, { method: 'POST' });
+      if (res.ok) setEmailSent(true);
+    } catch {}
+    setEmailSending(false);
   };
 
   const fetchPatientImages = async (patientId: string) => {
@@ -1397,6 +1444,15 @@ export default function AgendaPage() {
                 <Pill className="h-4 w-4" />
                 Recepten
               </button>
+              <button onClick={() => { setPanelTab('consent'); setSplitView(false); }}
+                className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  panelTab === 'consent'
+                    ? 'text-blue-300 border-b-2 border-blue-400'
+                    : 'text-white/40 hover:text-white/60'
+                }`}>
+                <FileCheck className="h-4 w-4" />
+                Consent
+              </button>
               <button onClick={() => { setNotesDeclSplitView(true); }}
                 className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                   notesDeclSplitView
@@ -1663,9 +1719,24 @@ export default function AgendaPage() {
 
                         {invoiceCreated && (
                           <div className="glass-light rounded-xl p-4 text-center">
-                            <Check className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-white/90">Factuur {invoiceCreated}</p>
-                            <button onClick={() => setInvoiceCreated(null)}
+                            <Check className="h-5 w-5 text-emerald-400 mx-auto mb-1.5" />
+                            <p className="text-xs font-medium text-white/90">
+                              {invoiceCreated.isOfferte ? 'Offerte' : 'Factuur'} {invoiceCreated.number}
+                            </p>
+                            <div className="flex items-center justify-center gap-1.5 mt-2">
+                              <button onClick={handleDownloadPdf} className="p-1.5 glass rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all" title="Download PDF">
+                                <Download className="h-3.5 w-3.5" />
+                              </button>
+                              <button onClick={handlePrintPdf} className="p-1.5 glass rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all" title="Printen">
+                                <Printer className="h-3.5 w-3.5" />
+                              </button>
+                              <button onClick={handleSendEmail} disabled={emailSending || emailSent}
+                                className={`p-1.5 glass rounded-lg transition-all ${emailSent ? 'text-emerald-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                                title="E-mail versturen">
+                                {emailSent ? <Check className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+                              </button>
+                            </div>
+                            <button onClick={() => { setInvoiceCreated(null); setEmailSent(false); }}
                               className="mt-2 text-xs text-blue-400 hover:text-blue-300">Nieuwe declaratie</button>
                           </div>
                         )}
@@ -2066,10 +2137,26 @@ export default function AgendaPage() {
                         <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
                           <Check className="h-6 w-6 text-emerald-400" />
                         </div>
-                        <p className="text-sm font-medium text-white/90">Factuur aangemaakt</p>
-                        <p className="text-lg font-bold text-emerald-400 mt-1">{invoiceCreated}</p>
-                        <p className="text-xs text-white/40 mt-2">Bekijk in Facturatie overzicht</p>
-                        <button onClick={() => setInvoiceCreated(null)}
+                        <p className="text-sm font-medium text-white/90">
+                          {invoiceCreated.isOfferte ? 'Offerte aangemaakt' : 'Factuur aangemaakt'}
+                        </p>
+                        <p className="text-lg font-bold text-emerald-400 mt-1">{invoiceCreated.number}</p>
+                        <div className="flex items-center justify-center gap-2 mt-4">
+                          <button onClick={handleDownloadPdf}
+                            className="flex items-center gap-1.5 px-3 py-2 glass rounded-xl text-xs text-white/70 hover:text-white hover:bg-white/10 transition-all">
+                            <Download className="h-3.5 w-3.5" /> Download
+                          </button>
+                          <button onClick={handlePrintPdf}
+                            className="flex items-center gap-1.5 px-3 py-2 glass rounded-xl text-xs text-white/70 hover:text-white hover:bg-white/10 transition-all">
+                            <Printer className="h-3.5 w-3.5" /> Printen
+                          </button>
+                          <button onClick={handleSendEmail} disabled={emailSending || emailSent}
+                            className={`flex items-center gap-1.5 px-3 py-2 glass rounded-xl text-xs transition-all ${emailSent ? 'text-emerald-400' : 'text-white/70 hover:text-white hover:bg-white/10'} ${emailSending ? 'opacity-50' : ''}`}>
+                            {emailSent ? <Check className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+                            {emailSending ? 'Verzenden...' : emailSent ? 'Verzonden' : 'E-mail'}
+                          </button>
+                        </div>
+                        <button onClick={() => { setInvoiceCreated(null); setEmailSent(false); }}
                           className="mt-3 px-3 py-1.5 glass rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all">
                           Nieuwe declaratie
                         </button>
@@ -2359,6 +2446,16 @@ export default function AgendaPage() {
                     </>
                   )}
                 </div>
+              ) : panelTab === 'consent' ? (
+                /* Informed Consent tab */
+                <div>
+                  {selectedAppointment && (
+                    <InformedConsentPanel
+                      patientId={selectedAppointment.patient.id}
+                      patientName={`${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}`}
+                    />
+                  )}
+                </div>
               ) : null}
               </div>
 
@@ -2451,9 +2548,24 @@ export default function AgendaPage() {
 
                   {invoiceCreated && (
                     <div className="glass-light rounded-xl p-4 text-center">
-                      <Check className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
-                      <p className="text-sm font-medium text-white/90">Factuur {invoiceCreated}</p>
-                      <button onClick={() => setInvoiceCreated(null)}
+                      <Check className="h-5 w-5 text-emerald-400 mx-auto mb-1.5" />
+                      <p className="text-xs font-medium text-white/90">
+                        {invoiceCreated.isOfferte ? 'Offerte' : 'Factuur'} {invoiceCreated.number}
+                      </p>
+                      <div className="flex items-center justify-center gap-1.5 mt-2">
+                        <button onClick={handleDownloadPdf} className="p-1.5 glass rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all" title="Download PDF">
+                          <Download className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={handlePrintPdf} className="p-1.5 glass rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all" title="Printen">
+                          <Printer className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={handleSendEmail} disabled={emailSending || emailSent}
+                          className={`p-1.5 glass rounded-lg transition-all ${emailSent ? 'text-emerald-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                          title="E-mail versturen">
+                          {emailSent ? <Check className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                      <button onClick={() => { setInvoiceCreated(null); setEmailSent(false); }}
                         className="mt-2 text-xs text-blue-400 hover:text-blue-300">Nieuwe declaratie</button>
                     </div>
                   )}
