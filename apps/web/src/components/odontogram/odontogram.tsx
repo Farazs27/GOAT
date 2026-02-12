@@ -6,6 +6,7 @@ import OverviewMode from './modes/overview-mode';
 import PerioMode from './modes/perio-mode';
 import QuickselectMode from './modes/quickselect-mode';
 import RestorationPanel from './restoration/restoration-panel';
+import { authFetch } from '@/lib/auth-fetch';
 import './odontogram.css';
 
 // ======= Types =======
@@ -73,7 +74,7 @@ export default function Odontogram({
     if (selectedTooth === null || mode !== 'overview') return;
     setHistoryLoading(true);
     setTreatmentHistory([]);
-    fetch(`/api/patients/${patientId}/teeth/${selectedTooth}/treatments`)
+    authFetch(`/api/patients/${patientId}/teeth/${selectedTooth}/treatments`)
       .then((r) => (r.ok ? r.json() : { treatments: [] }))
       .then((data) => setTreatmentHistory(data.treatments || []))
       .catch(() => setTreatmentHistory([]))

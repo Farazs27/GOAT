@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useRef, useMemo, Suspense, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useMemo, Suspense, useState, useRef, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { getModelPath, shouldMirrorModel } from './model-paths';
+import { getModelPath } from './model-paths';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+const DEBUG_MODE = false;
 
 interface DentalArch3DProps {
   teeth: Array<{ toothNumber: number; status: string; notes?: string | null }>;
@@ -16,10 +14,6 @@ interface DentalArch3DProps {
   selectedTooth: number | null;
   onToothSelect: (toothNumber: number) => void;
 }
-
-// ---------------------------------------------------------------------------
-// Color maps
-// ---------------------------------------------------------------------------
 
 const STATUS_TINTS: Record<string, string> = {
   CROWN: '#f59e0b',
@@ -35,76 +29,42 @@ const CONDITION_COLORS: Record<string, string> = {
   IMPLANT: '#8b5cf6',
 };
 
-// ---------------------------------------------------------------------------
-// Flat row layout — teeth in a horizontal line like the reference
-// ---------------------------------------------------------------------------
+const MAXILLA: readonly number[] = [
+  18, 17, 16, 15, 14, 13, 12, 11,
+  21, 22, 23, 24, 25, 26, 27, 28,
+];
 
-const UPPER_ROW = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
-const LOWER_ROW = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+const MANDIBLE: readonly number[] = [
+  48, 47, 46, 45, 44, 43, 42, 41,
+  31, 32, 33, 34, 35, 36, 37, 38,
+];
 
-const TOOTH_SPACING = 1.3;
-const ROW_GAP = 4.0;
+const SLOT = 1.2;
+const Y_GAP = 2.5;
 
-function getRowPosition(fdi: number): [number, number, number] {
-  const isUpper = Math.floor(fdi / 10) <= 2;
-  const row = isUpper ? UPPER_ROW : LOWER_ROW;
-  const idx = row.indexOf(fdi);
-  if (idx === -1) return [0, 0, 0];
-
-  const x = (idx - 7.5) * TOOTH_SPACING;
-  const y = isUpper ? ROW_GAP / 2 : -ROW_GAP / 2;
-
-  return [x, y, 0];
+function getToothX(index: number): number {
+  return (index - 7.5) * SLOT;
 }
 
 // ---------------------------------------------------------------------------
-// Single tooth in the row
+// Renderer color space setup
 // ---------------------------------------------------------------------------
 
-function RowTooth({
-  fdi,
-  status,
-  isSelected,
-  dominantCondition,
-  onClick,
-}: {
-  fdi: number;
-  status: string;
-  isSelected: boolean;
-  dominantCondition?: string;
-  onClick: () => void;
-}) {
-  const modelPath = getModelPath(fdi);
-  const [hovered, setHovered] = useState(false);
-
-  if (!modelPath || status === 'MISSING') {
-    const pos = getRowPosition(fdi);
-    return (
-      <group position={pos}>
-        <mesh onClick={onClick}>
-          <capsuleGeometry args={[0.15, 0.6, 4, 8]} />
-          <meshBasicMaterial color="#6b7280" wireframe transparent opacity={0.15} />
-        </mesh>
-      </group>
-    );
-  }
-
-  return (
-    <RowToothModel
-      fdi={fdi}
-      modelPath={modelPath}
-      status={status}
-      isSelected={isSelected}
-      hovered={hovered}
-      dominantCondition={dominantCondition}
-      onClick={onClick}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    />
-  );
+function RendererSetup() {
+  const { gl } = useThree();
+  useMemo(() => {
+    gl.outputColorSpace = THREE.SRGBColorSpace;
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.toneMappingExposure = 1.05;
+  }, [gl]);
+  return null;
 }
 
-function RowToothModel({
+// ---------------------------------------------------------------------------
+// Single tooth mesh — premium PBR materials
+// ---------------------------------------------------------------------------
+
+function ArchToothModel({
   fdi,
   modelPath,
   status,
@@ -126,19 +86,39 @@ function RowToothModel({
   onPointerOut: () => void;
 }) {
   const { scene } = useGLTF(modelPath);
+  const { gl } = useThree();
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
     const statusTint = STATUS_TINTS[status];
     const conditionTint = dominantCondition ? CONDITION_COLORS[dominantCondition] : undefined;
     const tintColor = conditionTint || statusTint;
+    const maxAniso = gl.capabilities.getMaxAnisotropy();
 
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
         const mat = (child.material as THREE.MeshStandardMaterial).clone();
+
+        // PBR enamel look
+        mat.roughness = 0.35;
+        mat.metalness = 0.0;
+        mat.envMapIntensity = 0.6;
+
+        // Crisp textures
+        if (mat.map) {
+          mat.map.colorSpace = THREE.SRGBColorSpace;
+          mat.map.anisotropy = maxAniso;
+        }
+        if (mat.normalMap) {
+          mat.normalMap.anisotropy = maxAniso;
+        }
+
+        // Status/condition tinting
         if (tintColor) {
           mat.color.lerp(new THREE.Color(tintColor), conditionTint ? 0.45 : 0.35);
         }
+
+        // Selection/hover glow
         if (isSelected) {
           mat.emissive = new THREE.Color('#3b82f6');
           mat.emissiveIntensity = 0.4;
@@ -146,11 +126,12 @@ function RowToothModel({
           mat.emissive = new THREE.Color('#60a5fa');
           mat.emissiveIntensity = 0.15;
         }
+
         child.material = mat;
       }
     });
     return clone;
-  }, [scene, status, isSelected, hovered, dominantCondition]);
+  }, [scene, status, isSelected, hovered, dominantCondition, gl]);
 
   const { scale, offset } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(clonedScene);
@@ -164,111 +145,139 @@ function RowToothModel({
     };
   }, [clonedScene]);
 
-  const position = getRowPosition(fdi);
-  const quadrant = Math.floor(fdi / 10);
-  const isUpper = quadrant <= 2;
-  const mirror = shouldMirrorModel(fdi);
+  return (
+    <primitive
+      object={clonedScene}
+      scale={scale}
+      position={offset}
+      onClick={(e: any) => { e.stopPropagation(); onClick(); }}
+      onPointerOver={(e: any) => { e.stopPropagation(); onPointerOver(); document.body.style.cursor = 'pointer'; }}
+      onPointerOut={(e: any) => { e.stopPropagation(); onPointerOut(); document.body.style.cursor = 'auto'; }}
+    />
+  );
+}
 
-  // Buccal/facial view: rotate around X so tooth stands upright.
-  // Model long axis = Z. Upper: roots up (rotX=-90°), Lower: roots down (rotX=+90°).
-  const rotX = isUpper ? -Math.PI / 2 : Math.PI / 2;
-  const rotY = mirror ? Math.PI : 0;
-  const rotZ = 0;
+function ArchTooth({
+  fdi,
+  x,
+  y,
+  status,
+  isSelected,
+  dominantCondition,
+  onClick,
+}: {
+  fdi: number;
+  x: number;
+  y: number;
+  status: string;
+  isSelected: boolean;
+  dominantCondition?: string;
+  onClick: () => void;
+}) {
+  const modelPath = getModelPath(fdi);
+  const [hovered, setHovered] = useState(false);
+
+  if (!modelPath || status === 'MISSING') {
+    return (
+      <group position={[x, y, 0]}>
+        <mesh onClick={onClick}>
+          <capsuleGeometry args={[0.15, 0.6, 4, 8]} />
+          <meshBasicMaterial color="#6b7280" wireframe transparent opacity={0.15} />
+        </mesh>
+      </group>
+    );
+  }
 
   return (
-    <group position={position}>
-      <group rotation={[rotX, rotY, rotZ]} scale={mirror ? [-1, 1, 1] : [1, 1, 1]}>
-        <primitive
-          object={clonedScene}
-          scale={scale}
-          position={offset}
-          onClick={(e: any) => { e.stopPropagation(); onClick(); }}
-          onPointerOver={(e: any) => { e.stopPropagation(); onPointerOver(); document.body.style.cursor = 'pointer'; }}
-          onPointerOut={(e: any) => { e.stopPropagation(); onPointerOut(); document.body.style.cursor = 'auto'; }}
-        />
-      </group>
+    <group position={[x, y, 0]}>
+      {/* Invisible click hitbox — reliable raycasting target */}
+      <mesh
+        onClick={(e: any) => { e.stopPropagation(); onClick(); }}
+        onPointerOver={(e: any) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={(e: any) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+      >
+        <boxGeometry args={[0.9, 1.4, 0.9]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <ArchToothModel
+        fdi={fdi}
+        modelPath={modelPath}
+        status={status}
+        isSelected={isSelected}
+        hovered={hovered}
+        dominantCondition={dominantCondition}
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      />
     </group>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Gum line — curved path through tooth cervical points
+// Debug scene (tooth 11 + 41 only)
 // ---------------------------------------------------------------------------
 
-function GumLine({ row, yBase }: { row: number[]; yBase: number }) {
-  const points = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    row.forEach((fdi, idx) => {
-      const x = (idx - 7.5) * TOOTH_SPACING;
-      // Slight wave for natural look
-      const wave = Math.sin((idx / (row.length - 1)) * Math.PI) * 0.12;
-      pts.push(new THREE.Vector3(x, yBase + wave, 0.3));
-    });
-    return pts;
-  }, [row, yBase]);
+function DebugToothModel({ fdi, xOffset }: { fdi: number; xOffset: number }) {
+  const modelPath = getModelPath(fdi);
+  const { scene } = useGLTF(modelPath);
+  const groupRef = useRef<THREE.Group>(null);
+  const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
-  const curve = useMemo(() => {
-    return new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
-  }, [points]);
+  const { scale, offset } = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const s = 2.0 / maxDim;
+    return { scale: s, offset: new THREE.Vector3(-center.x * s, -center.y * s, -center.z * s) };
+  }, [clonedScene]);
 
-  const tubeGeometry = useMemo(() => {
-    return new THREE.TubeGeometry(curve, 64, 0.03, 8, false);
-  }, [curve]);
+  useEffect(() => {
+    if (!groupRef.current) return;
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const size = box.getSize(new THREE.Vector3());
+    console.log(`[DEBUG ${fdi}] size:`, { x: size.x.toFixed(3), y: size.y.toFixed(3), z: size.z.toFixed(3) });
+  }, [clonedScene, fdi]);
 
   return (
-    <mesh geometry={tubeGeometry}>
-      <meshBasicMaterial color="#e74c3c" transparent opacity={0.7} />
-    </mesh>
+    <group position={[xOffset, 0, 0]} ref={groupRef}>
+      <primitive object={clonedScene} scale={scale} position={offset} />
+      <axesHelper args={[1.5]} />
+      <Html position={[0, -2, 0]} center>
+        <span className="text-white text-sm font-bold bg-black/80 px-2 py-1 rounded">Tooth {fdi}</span>
+      </Html>
+    </group>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Jaw label
+// Production scene
 // ---------------------------------------------------------------------------
 
-function JawLabel({ text, y }: { text: string; y: number }) {
-  return (
-    <Html position={[-9.5, y, 0]} style={{ pointerEvents: 'none' }}>
-      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest whitespace-nowrap">
-        {text}
-      </span>
-    </Html>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Scene content
-// ---------------------------------------------------------------------------
-
-function ArchScene({
-  teeth,
-  surfaces,
-  selectedTooth,
-  onToothSelect,
-}: DentalArch3DProps) {
-  const allTeeth = [...UPPER_ROW, ...LOWER_ROW];
-
+function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect }: DentalArch3DProps) {
   function getStatus(fdi: number) {
     return teeth.find((t) => t.toothNumber === fdi)?.status ?? 'PRESENT';
   }
 
   function getDominantCondition(fdi: number): string | undefined {
-    const toothSurfaces = surfaces.filter((s) => s.toothNumber === fdi && s.condition !== 'HEALTHY');
-    if (toothSurfaces.length === 0) return undefined;
-    // Priority: CARIES > ENDO > CROWN > FILLING > IMPLANT
-    const priority = ['CARIES', 'ENDO', 'CROWN', 'FILLING', 'IMPLANT'];
-    for (const cond of priority) {
-      if (toothSurfaces.some((s) => s.condition === cond)) return cond;
+    const s = surfaces.filter((s) => s.toothNumber === fdi && s.condition !== 'HEALTHY');
+    if (s.length === 0) return undefined;
+    for (const cond of ['CARIES', 'ENDO', 'CROWN', 'FILLING', 'IMPLANT']) {
+      if (s.some((x) => x.condition === cond)) return cond;
     }
-    return toothSurfaces[0].condition;
+    return s[0].condition;
   }
 
   return (
     <>
-      {allTeeth.map((fdi) => (
-        <RowTooth
+      {/* MAXILLA — models naturally have roots up, no transform needed */}
+      {MAXILLA.map((fdi, idx) => (
+        <ArchTooth
           key={fdi}
           fdi={fdi}
+          x={getToothX(idx)}
+          y={Y_GAP}
           status={getStatus(fdi)}
           isSelected={selectedTooth === fdi}
           dominantCondition={getDominantCondition(fdi)}
@@ -276,41 +285,47 @@ function ArchScene({
         />
       ))}
 
-      {/* Gum lines removed for cleaner look */}
+      {/* MANDIBLE — no group transform, same as maxilla */}
+      {MANDIBLE.map((fdi, idx) => (
+        <ArchTooth
+          key={fdi}
+          fdi={fdi}
+          x={getToothX(idx)}
+          y={-Y_GAP}
+          status={getStatus(fdi)}
+          isSelected={selectedTooth === fdi}
+          dominantCondition={getDominantCondition(fdi)}
+          onClick={() => onToothSelect(fdi)}
+        />
+      ))}
+
+      {/* Tooth numbers — upper */}
+      {MAXILLA.map((fdi, idx) => (
+        <Html key={`nu-${fdi}`} position={[getToothX(idx), 0.15, 0]} center style={{ pointerEvents: 'none' }}>
+          <span className={`text-[10px] font-bold tabular-nums select-none ${selectedTooth === fdi ? 'text-blue-400' : 'text-gray-500'}`}>{fdi}</span>
+        </Html>
+      ))}
+
+      {/* Tooth numbers — lower */}
+      {MANDIBLE.map((fdi, idx) => (
+        <Html key={`nl-${fdi}`} position={[getToothX(idx), -0.15, 0]} center style={{ pointerEvents: 'none' }}>
+          <span className={`text-[10px] font-bold tabular-nums select-none ${selectedTooth === fdi ? 'text-blue-400' : 'text-gray-500'}`}>{fdi}</span>
+        </Html>
+      ))}
 
       {/* Jaw labels */}
-      <JawLabel text="Bovenkaak" y={ROW_GAP / 2 + 0.9} />
-      <JawLabel text="Onderkaak" y={-ROW_GAP / 2 - 0.9} />
+      <Html position={[0, Y_GAP + 1.8, 0]} center style={{ pointerEvents: 'none' }}>
+        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest whitespace-nowrap">Bovenkaak</span>
+      </Html>
+      <Html position={[0, -(Y_GAP + 1.8), 0]} center style={{ pointerEvents: 'none' }}>
+        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest whitespace-nowrap">Onderkaak</span>
+      </Html>
 
-      {/* Tooth numbers */}
-      {UPPER_ROW.map((fdi, idx) => (
-        <Html
-          key={`num-${fdi}`}
-          position={[(idx - 7.5) * TOOTH_SPACING, 0, 0]}
-          center
-          style={{ pointerEvents: 'none' }}
-        >
-          <span className={`text-[10px] font-bold tabular-nums select-none ${
-            selectedTooth === fdi ? 'text-blue-400' : 'text-gray-500'
-          }`}>
-            {fdi}
-          </span>
-        </Html>
-      ))}
-      {LOWER_ROW.map((fdi, idx) => (
-        <Html
-          key={`num-${fdi}`}
-          position={[(idx - 7.5) * TOOTH_SPACING, -0.15, 0]}
-          center
-          style={{ pointerEvents: 'none' }}
-        >
-          <span className={`text-[10px] font-bold tabular-nums select-none ${
-            selectedTooth === fdi ? 'text-blue-400' : 'text-gray-500'
-          }`}>
-            {fdi}
-          </span>
-        </Html>
-      ))}
+      {/* Midline */}
+      <mesh position={[0, 0, 0.1]}>
+        <planeGeometry args={[0.02, Y_GAP * 2 + 2]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.08} />
+      </mesh>
     </>
   );
 }
@@ -331,46 +346,59 @@ function ArchLoading() {
 }
 
 // ---------------------------------------------------------------------------
-// Main exported component
+// Main
 // ---------------------------------------------------------------------------
 
-export default function DentalArch3D({
-  teeth,
-  surfaces,
-  selectedTooth,
-  onToothSelect,
-}: DentalArch3DProps) {
+export default function DentalArch3D({ teeth, surfaces, selectedTooth, onToothSelect }: DentalArch3DProps) {
   return (
-    <div className="w-full rounded-xl border border-gray-700/50 bg-gray-900/50 overflow-hidden" style={{ height: 520 }}>
+    <div
+      className="w-full rounded-xl border border-gray-700/50 overflow-hidden relative"
+      style={{
+        height: 520,
+        background: 'linear-gradient(180deg, #0B1220 0%, #070B12 100%)',
+      }}
+    >
+      {/* Subtle vignette overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)',
+        }}
+      />
+
       <Canvas
-        dpr={[1.5, 2.5]}
-        camera={{ position: [0, 0, 18], fov: 30, near: 0.1, far: 100 }}
-        gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
-        style={{ background: '#0f1117' }}
+        dpr={[1, 2]}
+        camera={{ position: [0, 0, DEBUG_MODE ? 6 : 18], fov: 30, near: 0.1, far: 100 }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.05,
+        }}
+        style={{ background: 'transparent' }}
       >
-        <color attach="background" args={['#0f1117']} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 10, 7]} intensity={1.2} />
-        <directionalLight position={[-5, 5, -5]} intensity={0.4} />
-        <directionalLight position={[0, -5, 5]} intensity={0.3} />
-        <pointLight position={[0, 0, 5]} intensity={0.4} />
+        <RendererSetup />
+
+        {/* Premium lighting — enamel highlights */}
+        <ambientLight intensity={0.25} />
+        <directionalLight position={[6, 8, 10]} intensity={1.1} />
+        <directionalLight position={[-6, 4, 8]} intensity={0.55} />
+        <hemisphereLight args={['#b1c5ff', '#2a1a0e', 0.35]} />
 
         <Suspense fallback={<ArchLoading />}>
-          <ArchScene
-            teeth={teeth}
-            surfaces={surfaces}
-            selectedTooth={selectedTooth}
-            onToothSelect={onToothSelect}
-          />
+          {DEBUG_MODE ? (
+            <>
+              <DebugToothModel fdi={11} xOffset={-2} />
+              <DebugToothModel fdi={41} xOffset={2} />
+              <axesHelper args={[3]} />
+            </>
+          ) : (
+            <ArchScene teeth={teeth} surfaces={surfaces} selectedTooth={selectedTooth} onToothSelect={onToothSelect} />
+          )}
         </Suspense>
 
-        <OrbitControls
-          enablePan={false}
-          enableZoom={false}
-          enableRotate={false}
-          target={[0, 0, 0]}
-          makeDefault
-        />
+        <OrbitControls enablePan={false} enableZoom={false} enableRotate={DEBUG_MODE} target={[0, 0, 0]} makeDefault />
       </Canvas>
     </div>
   );

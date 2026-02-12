@@ -43,10 +43,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Desktop & iPad Sidebar */}
       <aside className="w-16 lg:w-[200px] xl:w-[220px] 2xl:w-[240px] hidden md:flex flex-col fixed h-screen z-20 transition-all duration-300 glass-sidebar">
         {/* Logo Section */}
-        <div className="p-4 lg:p-6 border-b border-white/[0.06]">
+        <div className="px-2 py-0 lg:px-3 lg:py-0 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/images/nexiom-logo.png" alt="NEXIOM" className="h-8 lg:h-14 w-auto flex-shrink-0 max-w-full" />
+              <img src="/images/nexiom-logo.png" alt="NEXIOM" className="h-12 lg:h-20 w-auto flex-shrink-0 max-w-full" />
             </div>
           </div>
         </div>

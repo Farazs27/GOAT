@@ -182,7 +182,6 @@ export default function OverviewMode({
     : onContextMenu;
 
   const handleArchToothClick = (fdi: number) => {
-    setDetailTooth(fdi);
     handleSelect(fdi);
   };
 

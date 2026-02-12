@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { X, Clock, User, FileText, Save, Eye, Stethoscope } from 'lucide-react';
 import ToothRenderer from '../svg/tooth-renderer';
@@ -109,29 +109,41 @@ export default function RestorationPanel({
 
   const canSubmit = selectedMaterial !== null && selectedSurfaces.length > 0 && !readOnly && !loading;
 
+  // Lock background page scroll while panel is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   return (
-    <div className="fixed right-0 top-0 z-50 h-full w-[380px] animate-slide-in-right bg-white shadow-2xl border-l border-gray-200 flex flex-col">
+    <>
+    {/* Backdrop to block tooth number bleed-through */}
+    <div className="fixed inset-0 z-[59]" style={{ pointerEvents: 'none' }} />
+    <div
+      className="fixed right-0 top-0 z-[60] h-screen w-[380px] animate-slide-in-right shadow-2xl border-l flex flex-col"
+      style={{ background: '#0d1117', borderColor: 'rgba(255,255,255,0.06)' }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 shrink-0">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Tand {toothNumber}</h2>
-          <p className="text-xs text-gray-500">
+          <h2 className="text-lg font-bold text-white">Tand {toothNumber}</h2>
+          <p className="text-xs text-gray-400">
             {TOOTH_TYPE_LABELS[toothIndex] ?? 'Tand'} &middot; {QUADRANT_LABELS[quadrant] ?? ''}
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          className="rounded-md p-1.5 text-gray-500 hover:bg-white/[0.06] hover:text-gray-300 transition-colors"
         >
           <X size={18} />
         </button>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 min-h-0 overflow-y-scroll overscroll-contain px-4 py-4 space-y-5">
         {/* Tooth preview */}
-        <div className="flex items-center justify-center gap-4 rounded-xl bg-gray-50 p-4">
+        <div className="flex items-center justify-center gap-4 rounded-xl bg-white/[0.04] border border-white/[0.06] p-4">
           <Tooth3D
             fdi={toothNumber}
             view="side"
@@ -152,7 +164,7 @@ export default function RestorationPanel({
 
         {/* Restoration type picker */}
         <div className="space-y-1.5">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Type restauratie</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Type restauratie</p>
           <div className="grid grid-cols-3 gap-1.5">
             {RESTORATION_TYPES.map(({ key, label }) => {
               const isActive = restorationType === key;
@@ -162,10 +174,10 @@ export default function RestorationPanel({
                   type="button"
                   disabled={readOnly}
                   onClick={() => setRestorationType(key)}
-                  className={`rounded-lg border-2 px-2 py-2 text-xs font-semibold transition-colors ${
+                  className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${
                     isActive
                       ? 'border-blue-500 bg-blue-500 text-white'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                      : 'border-white/[0.08] bg-white/[0.04] text-gray-300 hover:border-white/[0.15] hover:bg-white/[0.06]'
                   }`}
                 >
                   {label}
@@ -188,39 +200,6 @@ export default function RestorationPanel({
           onSelectMaterial={readOnly ? () => {} : setSelectedMaterial}
         />
 
-        {/* Action buttons */}
-        {!readOnly && (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={!canSubmit}
-              onClick={() => handleAction('monitor')}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Eye size={15} />
-              Bewaken
-            </button>
-            <button
-              type="button"
-              disabled={!canSubmit}
-              onClick={() => handleAction('treat')}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Stethoscope size={15} />
-              Behandelen
-            </button>
-            <button
-              type="button"
-              disabled={!canSubmit}
-              onClick={() => handleAction('save')}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Save size={15} />
-              Opslaan
-            </button>
-          </div>
-        )}
-
         {loading && (
           <div className="flex items-center justify-center py-4">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
@@ -230,25 +209,25 @@ export default function RestorationPanel({
         {/* Treatment history */}
         {treatmentHistory.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Behandelhistorie
             </p>
             <div className="space-y-2">
               {treatmentHistory.map((entry) => (
                 <div
                   key={entry.id}
-                  className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-1"
+                  className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 space-y-1"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-xs font-medium text-gray-700">
-                      <Clock size={12} className="text-gray-400" />
+                    <span className="flex items-center gap-1 text-xs font-medium text-gray-300">
+                      <Clock size={12} className="text-gray-500" />
                       {entry.date}
                     </span>
-                    <span className="rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-mono text-gray-600">
+                    <span className="rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-mono text-gray-400">
                       {entry.nzaCode}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-800">{entry.description}</p>
+                  <p className="text-sm text-gray-200">{entry.description}</p>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <span className="flex items-center gap-1">
                       <User size={11} />
@@ -267,6 +246,42 @@ export default function RestorationPanel({
           </div>
         )}
       </div>
+
+      {/* Action buttons */}
+      {!readOnly && (
+        <div className="shrink-0 border-t border-white/[0.08] px-4 py-3" style={{ background: '#0d1117' }}>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={() => handleAction('monitor')}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Eye size={15} />
+              Bewaken
+            </button>
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={() => handleAction('treat')}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Stethoscope size={15} />
+              Behandelen
+            </button>
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={() => handleAction('save')}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Save size={15} />
+              Opslaan
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }

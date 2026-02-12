@@ -28,7 +28,7 @@ export function getModelPath(fdi: number): string {
   const isUpper = quadrant === 1 || quadrant === 2;
   const folder = isUpper ? UPPER_MODELS[digit] : LOWER_MODELS[digit];
   if (!folder) return '';
-  return `/models/teeth/${folder}/scene.gltf`;
+  return `/models/teeth/${folder}.glb`;
 }
 
 export function shouldMirrorModel(fdi: number): boolean {
