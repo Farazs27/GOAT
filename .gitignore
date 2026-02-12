@@ -157,4 +157,5 @@ Screenshot 2026-02-11 at 14.48.27.png
 Screenshot 2026-02-11 at 14.20.12 (2).png
 Screenshot 2026-02-11 at 15.28.30.png
 odontogram example.pdf
-*.png
+# Allow PNGs in public/images, ignore loose screenshots
+Screenshot*.png
