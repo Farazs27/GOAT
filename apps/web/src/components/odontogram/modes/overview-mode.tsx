@@ -21,6 +21,13 @@ const TOOTH_WIDTH = 48;
 // Props
 // ---------------------------------------------------------------------------
 
+export interface PendingRestoration {
+  toothNumber: number;
+  restorationType: string;
+  surfaces: string[];
+  statusChange?: string;
+}
+
 export interface OverviewModeProps {
   teeth: Array<{ toothNumber: number; status: string; notes?: string | null }>;
   surfaces: Array<{ toothNumber: number; surface: string; condition: string; material?: string | null }>;
@@ -28,6 +35,7 @@ export interface OverviewModeProps {
   onToothSelect: (toothNumber: number) => void;
   onContextMenu: (e: React.MouseEvent, toothNumber: number) => void;
   onDetailSave?: (data: { restorationType: string; surfaces: string[]; material: string; action: string }) => void;
+  pendingRestoration?: PendingRestoration | null;
   readOnly?: boolean;
 }
 
@@ -57,6 +65,22 @@ function getSurfaceConditions(
 // Occlusal row (SVG teeth — top-down view)
 // ---------------------------------------------------------------------------
 
+// Restoration type badge config
+const RESTORATION_BADGE: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  FILLING: { label: 'V', color: '#60a5fa', bg: 'rgba(59,130,246,0.25)', border: 'rgba(96,165,250,0.5)' },
+  INLAY: { label: 'In', color: '#c084fc', bg: 'rgba(192,132,252,0.25)', border: 'rgba(192,132,252,0.5)' },
+  ONLAY: { label: 'On', color: '#a78bfa', bg: 'rgba(167,139,250,0.25)', border: 'rgba(167,139,250,0.5)' },
+  VENEER: { label: 'Ve', color: '#67e8f9', bg: 'rgba(103,232,249,0.25)', border: 'rgba(103,232,249,0.5)' },
+  PARTIAL_CROWN: { label: 'DK', color: '#fbbf24', bg: 'rgba(251,191,36,0.25)', border: 'rgba(251,191,36,0.5)' },
+  CROWN_RESTORATION: { label: 'Kr', color: '#f59e0b', bg: 'rgba(245,158,11,0.25)', border: 'rgba(245,158,11,0.5)' },
+};
+
+const STATUS_BADGE: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  MISSING: { label: 'Ex', color: '#9ca3af', bg: 'rgba(156,163,175,0.25)', border: 'rgba(156,163,175,0.5)' },
+  IMPLANT: { label: 'Im', color: '#a78bfa', bg: 'rgba(167,139,250,0.25)', border: 'rgba(167,139,250,0.5)' },
+  ENDO: { label: 'En', color: '#f97316', bg: 'rgba(249,115,22,0.25)', border: 'rgba(249,115,22,0.5)' },
+};
+
 function OcclusalRow({
   row,
   teeth,
@@ -64,6 +88,7 @@ function OcclusalRow({
   selectedTooth,
   onToothSelect,
   onContextMenu,
+  pendingRestoration,
 }: {
   row: number[];
   teeth: OverviewModeProps['teeth'];
@@ -71,6 +96,7 @@ function OcclusalRow({
   selectedTooth: number | null;
   onToothSelect: (n: number) => void;
   onContextMenu: (e: React.MouseEvent, n: number) => void;
+  pendingRestoration?: PendingRestoration | null;
 }) {
   return (
     <div className="flex justify-center">
@@ -78,6 +104,9 @@ function OcclusalRow({
         const status = getToothStatus(fdi, teeth);
         const sc = getSurfaceConditions(fdi, surfaces);
         const isSelected = selectedTooth === fdi;
+        const pending = pendingRestoration?.toothNumber === fdi ? pendingRestoration : null;
+        const statusBadge = pending?.statusChange ? STATUS_BADGE[pending.statusChange] : null;
+        const badge = statusBadge || (pending ? RESTORATION_BADGE[pending.restorationType] : null);
 
         return (
           <div
@@ -90,17 +119,47 @@ function OcclusalRow({
             {isSelected && (
               <div className="absolute inset-0 rounded-lg border-2 border-blue-400 bg-blue-50/20 pointer-events-none z-20" />
             )}
+            {/* Status change overlay */}
+            {pending?.statusChange === 'MISSING' && (
+              <div className="absolute inset-0 rounded-lg bg-gray-900/50 pointer-events-none z-20 flex items-center justify-center">
+                <span className="text-gray-400 text-lg font-bold opacity-60">✕</span>
+              </div>
+            )}
+            {pending?.statusChange === 'IMPLANT' && (
+              <div className="absolute inset-0 rounded-lg border-2 border-purple-400/40 bg-purple-500/15 pointer-events-none z-20 animate-pulse" />
+            )}
+            {pending?.statusChange === 'ENDO' && (
+              <div className="absolute inset-0 rounded-lg border-2 border-orange-400/40 bg-orange-500/15 pointer-events-none z-20 animate-pulse" />
+            )}
             <ToothRenderer
               fdi={fdi}
               view="occlusal"
               status={status}
               surfaceConditions={sc}
               isSelected={isSelected}
+              selectedSurfaces={pending?.surfaces}
               onClick={() => onToothSelect(fdi)}
               onContextMenu={(e) => onContextMenu(e, fdi)}
               width={TOOTH_WIDTH - 6}
               height={OCCLUSAL_HEIGHT - 6}
             />
+            {/* Restoration type badge */}
+            {badge && (
+              <div
+                className="absolute -top-1 -right-1 z-30 flex items-center justify-center rounded-full pointer-events-none animate-pulse"
+                style={{
+                  width: 18,
+                  height: 18,
+                  background: badge.bg,
+                  border: `1.5px solid ${badge.border}`,
+                  boxShadow: `0 0 8px ${badge.bg}`,
+                }}
+              >
+                <span style={{ color: badge.color, fontSize: 8, fontWeight: 700, lineHeight: 1 }}>
+                  {badge.label}
+                </span>
+              </div>
+            )}
           </div>
         );
       })}
@@ -172,6 +231,7 @@ export default function OverviewMode({
   onToothSelect,
   onContextMenu,
   onDetailSave,
+  pendingRestoration,
   readOnly = false,
 }: OverviewModeProps) {
   const [detailTooth, setDetailTooth] = useState<number | null>(null);
@@ -216,6 +276,7 @@ export default function OverviewMode({
             surfaces={surfaces}
             selectedTooth={selectedTooth}
             onToothSelect={handleArchToothClick}
+            pendingRestoration={pendingRestoration}
           />
         </>
       )}
@@ -235,6 +296,7 @@ export default function OverviewMode({
           selectedTooth={selectedTooth}
           onToothSelect={handleSelect}
           onContextMenu={handleContext}
+          pendingRestoration={pendingRestoration}
         />
 
         <div className="flex items-center my-2">
@@ -250,6 +312,7 @@ export default function OverviewMode({
           selectedTooth={selectedTooth}
           onToothSelect={handleSelect}
           onContextMenu={handleContext}
+          pendingRestoration={pendingRestoration}
         />
         <ToothNumbers row={LOWER_ROW} />
         <div className="flex justify-between items-center px-2">

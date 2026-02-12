@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { PerioToothData } from '@/../../packages/shared-types/src/odontogram';
 import OverviewMode from './modes/overview-mode';
 import PerioMode from './modes/perio-mode';
@@ -68,6 +69,12 @@ export default function Odontogram({
   const [perioData, setPerioData] = useState<Record<string, PerioToothData>>({});
   const [treatmentHistory, setTreatmentHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [pendingRestoration, setPendingRestoration] = useState<{
+    toothNumber: number;
+    restorationType: string;
+    surfaces: string[];
+    statusChange?: string;
+  } | null>(null);
 
   // Fetch treatment history when a tooth is selected in overview
   useEffect(() => {
@@ -116,19 +123,51 @@ export default function Odontogram({
   );
 
   const handleRestorationSave = useCallback(
-    (data: { restorationType: string; surfaces: string[]; material: string; action: string }) => {
+    (data: { restorationType: string; surfaces: string[]; material: string; action: string; statusChange?: string }) => {
       if (selectedTooth === null) return;
-      onTreatmentApply?.({
-        toothNumber: selectedTooth,
-        treatmentType: data.restorationType,
-        nzaCode: '',
-        surfaces: data.surfaces,
-        material: data.material,
-        restorationType: data.restorationType,
-      });
+
+      // Handle status change (Extractie / Implantaat / Endodontie)
+      if (data.statusChange) {
+        authFetch(`/api/patients/${patientId}/teeth/${selectedTooth}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: data.statusChange }),
+        }).then(() => {
+          // Trigger parent refresh for status-only changes
+          if (!(data.surfaces.length > 0 && data.material)) {
+            onTreatmentApply?.({
+              toothNumber: selectedTooth!,
+              treatmentType: data.statusChange!,
+              nzaCode: '',
+              restorationType: data.statusChange!,
+            });
+          }
+        }).catch(console.error);
+      }
+
+      // Handle restoration (surfaces + material)
+      if (data.surfaces.length > 0 && data.material) {
+        onTreatmentApply?.({
+          toothNumber: selectedTooth,
+          treatmentType: data.restorationType,
+          nzaCode: '',
+          surfaces: data.surfaces,
+          material: data.material,
+          restorationType: data.restorationType,
+        });
+      }
+
+      setPendingRestoration(null);
       setSelectedTooth(null);
     },
-    [selectedTooth, onTreatmentApply]
+    [selectedTooth, onTreatmentApply, patientId]
+  );
+
+  const handleSelectionChange = useCallback(
+    (data: { toothNumber: number; restorationType: string; surfaces: string[]; statusChange?: string }) => {
+      setPendingRestoration(data.surfaces.length > 0 || data.statusChange ? data : null);
+    },
+    []
   );
 
   const selectedToothData = selectedTooth !== null ? teeth.find((t) => t.toothNumber === selectedTooth) : undefined;
@@ -162,6 +201,7 @@ export default function Odontogram({
             onToothSelect={handleToothSelect}
             onContextMenu={handleContextMenu}
             onDetailSave={handleRestorationSave}
+            pendingRestoration={pendingRestoration}
             readOnly={readOnly}
           />
         )}
@@ -185,23 +225,27 @@ export default function Odontogram({
         )}
       </div>
 
-      {/* Restoration panel — only in overview mode */}
-      {mode === 'overview' && selectedTooth !== null && (
-        <RestorationPanel
-          toothNumber={selectedTooth}
-          status={selectedToothData?.status || 'PRESENT'}
-          surfaces={selectedToothSurfaces.map((s) => ({
-            surface: s.surface,
-            condition: s.condition,
-            material: s.material || undefined,
-          }))}
-          treatmentHistory={treatmentHistory}
-          onClose={() => setSelectedTooth(null)}
-          onSave={handleRestorationSave}
-          readOnly={readOnly}
-          loading={historyLoading}
-        />
-      )}
+      {/* Restoration panel — rendered via portal to escape glass-card overflow */}
+      {mode === 'overview' && selectedTooth !== null && typeof document !== 'undefined' &&
+        createPortal(
+          <RestorationPanel
+            toothNumber={selectedTooth}
+            status={selectedToothData?.status || 'PRESENT'}
+            surfaces={selectedToothSurfaces.map((s) => ({
+              surface: s.surface,
+              condition: s.condition,
+              material: s.material || undefined,
+            }))}
+            treatmentHistory={treatmentHistory}
+            onClose={() => { setPendingRestoration(null); setSelectedTooth(null); }}
+            onSave={handleRestorationSave}
+            onSelectionChange={handleSelectionChange}
+            readOnly={readOnly}
+            loading={historyLoading}
+          />,
+          document.body
+        )
+      }
     </div>
   );
 }

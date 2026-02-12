@@ -234,6 +234,7 @@ enum ToothStatus {
   BRIDGE_ABUTMENT
   PONTIC
   ROOT_REMNANT
+  ENDO
 }
 
 model ToothSurface {

@@ -149,14 +149,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main content */}
       <main className="flex-1 flex flex-col min-h-screen md:ml-16 lg:ml-[200px] xl:ml-[220px] 2xl:ml-[240px] pt-16 md:pt-0 transition-all duration-300">
         {/* Desktop Header */}
-        <header className="hidden md:flex h-16 lg:h-[72px] items-center justify-between px-6 lg:px-10 sticky top-0 z-10 border-b border-white/[0.04]" style={{ background: 'rgba(14, 12, 10, 0.6)', backdropFilter: 'blur(24px) saturate(140%)', WebkitBackdropFilter: 'blur(24px) saturate(140%)' }}>
+        <header
+          className="hidden md:flex h-16 lg:h-[72px] items-center justify-between px-6 lg:px-10 sticky top-0 z-10 mx-3 mt-3 rounded-2xl border border-white/[0.10]"
+          style={{
+            background: 'rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(20px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+            boxShadow: '0 0 20px rgba(214,167,122,0.10), 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.18)',
+          }}
+        >
           <h1 className="text-lg lg:text-xl font-semibold text-[var(--text-primary)] tracking-tight">
             Dashboard
           </h1>
           <div className="flex items-center gap-4 lg:gap-6">
-            <button className="relative p-2.5 lg:p-3 rounded-2xl hover:bg-white/[0.04] transition-all duration-300 touch-target min-h-[44px] min-w-[44px]">
+            <button className="relative p-2.5 lg:p-3 rounded-2xl hover:bg-white/[0.06] transition-all duration-300 touch-target min-h-[44px] min-w-[44px]">
               <Bell className="h-5 w-5 lg:h-5 lg:w-5 text-[var(--text-secondary)]" />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: 'linear-gradient(135deg, #F5E6D3, #DCC3A5)', boxShadow: '0 0 8px rgba(245,230,211,0.5)' }}></span>
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full" style={{ background: 'linear-gradient(135deg, #D6A77A, #C4956A)', boxShadow: '0 0 8px rgba(214,167,122,0.5)' }}></span>
             </button>
             <span className="text-sm text-[var(--text-tertiary)] hidden sm:block font-medium">
               Tandartspraktijk Amsterdam

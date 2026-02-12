@@ -43,6 +43,8 @@ export interface ToothRendererProps {
   isSelected?: boolean;
   onClick?: () => void;
   onContextMenu?: (e: React.MouseEvent) => void;
+  onSurfaceClick?: (surface: string) => void;
+  selectedSurfaces?: string[];
   className?: string;
   width?: number;
   height?: number;
@@ -174,6 +176,8 @@ export default function ToothRenderer({
   isSelected = false,
   onClick,
   onContextMenu,
+  onSurfaceClick,
+  selectedSurfaces,
   className = '',
   width,
   height,
@@ -186,7 +190,7 @@ export default function ToothRenderer({
   if (view === 'side') {
     return renderSideView(paths, id, fdi, status, surfaceConditions, isSelected, isLower, onClick, onContextMenu, className, width, height);
   }
-  return renderOcclusalView(paths, id, fdi, status, surfaceConditions, isSelected, onClick, onContextMenu, className, width, height);
+  return renderOcclusalView(paths, id, fdi, status, surfaceConditions, isSelected, onClick, onContextMenu, className, width, height, onSurfaceClick, selectedSurfaces);
 }
 
 // ---------------------------------------------------------------------------
@@ -207,7 +211,7 @@ function renderSideView(
   width?: number,
   height?: number,
 ) {
-  const { sideView, sideViewBox, cervicalY } = paths;
+  const { sideView, sideViewBox, cervicalY, rootCount } = paths;
   const vb = `0 0 ${sideViewBox.width} ${sideViewBox.height}`;
   const isMissing = status === 'MISSING';
   const isImplant = status === 'IMPLANT';
@@ -266,7 +270,57 @@ function renderSideView(
             <path d={sideView.crown} fill={CONDITION_COLORS.CROWN} opacity={0.3} stroke={CONDITION_COLORS.CROWN} strokeWidth={0.6} />
           )}
           {status === 'ENDO' && (
-            <path d={sideView.root} fill={CONDITION_COLORS.ENDO} opacity={0.25} />
+            <>
+              <path d={sideView.root} fill={CONDITION_COLORS.ENDO} opacity={0.12} />
+              <defs>
+                <clipPath id={`endo-clip-${id}`}>
+                  <path d={sideView.root} />
+                </clipPath>
+              </defs>
+              <g clipPath={`url(#endo-clip-${id})`}>
+                {/* Red canal lines inside root, stopping at cervicalY */}
+                {rootCount === 1 && (
+                  <line
+                    x1={sideViewBox.width / 2} y1={cervicalY}
+                    x2={sideViewBox.width / 2} y2={sideViewBox.height - 2}
+                    stroke="#ef4444" strokeWidth={1.2} strokeLinecap="round" opacity={0.8}
+                  />
+                )}
+                {rootCount === 2 && (
+                  <>
+                    <line
+                      x1={sideViewBox.width * 0.38} y1={cervicalY}
+                      x2={sideViewBox.width * 0.35} y2={sideViewBox.height - 2}
+                      stroke="#ef4444" strokeWidth={1.0} strokeLinecap="round" opacity={0.8}
+                    />
+                    <line
+                      x1={sideViewBox.width * 0.62} y1={cervicalY}
+                      x2={sideViewBox.width * 0.65} y2={sideViewBox.height - 2}
+                      stroke="#ef4444" strokeWidth={1.0} strokeLinecap="round" opacity={0.8}
+                    />
+                  </>
+                )}
+                {rootCount >= 3 && (
+                  <>
+                    <line
+                      x1={sideViewBox.width * 0.3} y1={cervicalY}
+                      x2={sideViewBox.width * 0.25} y2={sideViewBox.height - 2}
+                      stroke="#ef4444" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}
+                    />
+                    <line
+                      x1={sideViewBox.width * 0.5} y1={cervicalY}
+                      x2={sideViewBox.width * 0.5} y2={sideViewBox.height - 2}
+                      stroke="#ef4444" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}
+                    />
+                    <line
+                      x1={sideViewBox.width * 0.7} y1={cervicalY}
+                      x2={sideViewBox.width * 0.75} y2={sideViewBox.height - 2}
+                      stroke="#ef4444" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}
+                    />
+                  </>
+                )}
+              </g>
+            </>
           )}
           {/* Surface condition overlays on crown */}
           {surfaceConditions && renderSideConditions(sideView, surfaceConditions)}
@@ -318,6 +372,21 @@ function renderSideConditions(
 // Occlusal view rendering — 3D realistic
 // ---------------------------------------------------------------------------
 
+// Map SVG surface key (L = lingual) to the selector key (P = palatinaal for upper, L for lower)
+function svgKeyToSelectorKey(key: SurfaceKey, fdi: number): string {
+  if (key === 'L') {
+    const quadrant = Math.floor(fdi / 10);
+    return quadrant <= 2 ? 'P' : 'L';
+  }
+  return key;
+}
+
+function selectorKeyToSvgKey(selectorKey: string): SurfaceKey | null {
+  if (selectorKey === 'P' || selectorKey === 'L') return 'L';
+  if (['M', 'D', 'O', 'B'].includes(selectorKey)) return selectorKey as SurfaceKey;
+  return null;
+}
+
 function renderOcclusalView(
   paths: ReturnType<typeof getToothPaths>,
   id: string,
@@ -330,11 +399,21 @@ function renderOcclusalView(
   className = '',
   width?: number,
   height?: number,
+  onSurfaceClick?: (surface: string) => void,
+  selectedSurfaces?: string[],
 ) {
   const { occlusalView, occlusalViewBox, cervicalY, sideViewBox } = paths;
   const vb = `0 0 ${occlusalViewBox.width} ${occlusalViewBox.height}`;
   const isMissing = status === 'MISSING';
   const surfaceKeys: SurfaceKey[] = ['M', 'D', 'O', 'B', 'L'];
+  const isInteractive = !!onSurfaceClick;
+
+  // Check if a surface is selected (map selector keys back to SVG keys)
+  const isSurfaceSelected = (svgKey: SurfaceKey): boolean => {
+    if (!selectedSurfaces) return false;
+    const selectorKey = svgKeyToSelectorKey(svgKey, fdi);
+    return selectedSurfaces.includes(selectorKey);
+  };
 
   return (
     <svg
@@ -342,9 +421,9 @@ function renderOcclusalView(
       width={width}
       height={height}
       className={`${className}`}
-      onClick={onClick}
+      onClick={isInteractive ? undefined : onClick}
       onContextMenu={onContextMenu}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{ cursor: isInteractive ? 'default' : onClick ? 'pointer' : 'default' }}
     >
       <ToothGradients id={id} isLower={false} cervicalY={cervicalY} viewBoxHeight={sideViewBox.height} />
 
@@ -362,16 +441,20 @@ function renderOcclusalView(
           {/* Base with radial gradient for 3D depth */}
           <path d={occlusalView.outline} fill={`url(#occ-base-${id})`} stroke="#7a8694" strokeWidth={0.5} />
 
-          {/* Individual surface fills */}
+          {/* Individual surface fills — interactive when onSurfaceClick provided */}
           {surfaceKeys.map((key) => {
             const surfacePath = occlusalView.surfaces[key];
             if (!surfacePath) return null;
 
             const condition = surfaceConditions?.[key];
+            const selected = isSurfaceSelected(key);
             let fillColor = 'transparent';
             let fillOpacity = 0;
 
-            if (condition) {
+            if (selected) {
+              fillColor = '#3b82f6';
+              fillOpacity = 0.45;
+            } else if (condition) {
               if (condition.material && MATERIAL_COLORS[condition.material]) {
                 fillColor = MATERIAL_COLORS[condition.material];
                 fillOpacity = 0.7;
@@ -387,14 +470,39 @@ function renderOcclusalView(
                 d={surfacePath}
                 fill={fillColor}
                 fillOpacity={fillOpacity}
-                stroke="#9ca3af"
-                strokeWidth={0.25}
-                strokeOpacity={0.6}
+                stroke={selected ? '#60a5fa' : '#9ca3af'}
+                strokeWidth={selected ? 0.6 : 0.25}
+                strokeOpacity={selected ? 1 : 0.6}
+                style={isInteractive ? { cursor: 'pointer' } : undefined}
+                onClick={isInteractive ? (e) => {
+                  e.stopPropagation();
+                  onSurfaceClick(svgKeyToSelectorKey(key, fdi));
+                } : undefined}
+                onMouseEnter={isInteractive ? (e) => {
+                  const el = e.currentTarget;
+                  if (!selected) {
+                    el.setAttribute('fill', 'rgba(96,165,250,0.15)');
+                    el.setAttribute('fill-opacity', '1');
+                    el.setAttribute('stroke', '#60a5fa');
+                    el.setAttribute('stroke-width', '0.5');
+                    el.setAttribute('stroke-opacity', '0.8');
+                  }
+                } : undefined}
+                onMouseLeave={isInteractive ? (e) => {
+                  const el = e.currentTarget;
+                  if (!selected) {
+                    el.setAttribute('fill', fillColor);
+                    el.setAttribute('fill-opacity', String(fillOpacity));
+                    el.setAttribute('stroke', '#9ca3af');
+                    el.setAttribute('stroke-width', '0.25');
+                    el.setAttribute('stroke-opacity', '0.6');
+                  }
+                } : undefined}
               />
             );
           })}
 
-          {/* Fissure lines */}
+          {/* Fissure lines — pointer-events none so they don't block clicks */}
           {occlusalView.fissures && (
             <path
               d={occlusalView.fissures}
@@ -403,16 +511,17 @@ function renderOcclusalView(
               strokeWidth={0.4}
               strokeLinecap="round"
               opacity={0.7}
+              style={{ pointerEvents: 'none' }}
             />
           )}
 
           {/* Crown/Implant overlay */}
           {status === 'CROWN' && (
-            <path d={occlusalView.outline} fill={CONDITION_COLORS.CROWN} opacity={0.25} stroke={CONDITION_COLORS.CROWN} strokeWidth={0.6} />
+            <path d={occlusalView.outline} fill={CONDITION_COLORS.CROWN} opacity={0.25} stroke={CONDITION_COLORS.CROWN} strokeWidth={0.6} style={{ pointerEvents: 'none' }} />
           )}
           {status === 'IMPLANT' && (
             <>
-              <path d={occlusalView.outline} fill={CONDITION_COLORS.IMPLANT} opacity={0.2} />
+              <path d={occlusalView.outline} fill={CONDITION_COLORS.IMPLANT} opacity={0.2} style={{ pointerEvents: 'none' }} />
               <circle
                 cx={occlusalViewBox.width / 2}
                 cy={occlusalViewBox.height / 2}
@@ -420,6 +529,7 @@ function renderOcclusalView(
                 fill="none"
                 stroke="#7c3aed"
                 strokeWidth={0.5}
+                style={{ pointerEvents: 'none' }}
               />
             </>
           )}
@@ -428,8 +538,8 @@ function renderOcclusalView(
       {/* Selection glow */}
       {isSelected && (
         <>
-          <path d={occlusalView.outline} fill="none" stroke="#60a5fa" strokeWidth={1} opacity={0.9} />
-          <path d={occlusalView.outline} fill="rgba(96, 165, 250, 0.08)" stroke="none" />
+          <path d={occlusalView.outline} fill="none" stroke="#60a5fa" strokeWidth={1} opacity={0.9} style={{ pointerEvents: 'none' }} />
+          <path d={occlusalView.outline} fill="rgba(96, 165, 250, 0.08)" stroke="none" style={{ pointerEvents: 'none' }} />
         </>
       )}
     </svg>

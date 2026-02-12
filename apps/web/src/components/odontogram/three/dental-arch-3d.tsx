@@ -1,18 +1,26 @@
 'use client';
 
 import React, { useMemo, Suspense, useState, useRef, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { getModelPath } from './model-paths';
 
 const DEBUG_MODE = false;
 
+interface PendingRestoration {
+  toothNumber: number;
+  restorationType: string;
+  surfaces: string[];
+  statusChange?: string;
+}
+
 interface DentalArch3DProps {
   teeth: Array<{ toothNumber: number; status: string; notes?: string | null }>;
   surfaces: Array<{ toothNumber: number; surface: string; condition: string; material?: string | null }>;
   selectedTooth: number | null;
   onToothSelect: (toothNumber: number) => void;
+  pendingRestoration?: PendingRestoration | null;
 }
 
 const STATUS_TINTS: Record<string, string> = {
@@ -157,6 +165,87 @@ function ArchToothModel({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Implant GLB model — replaces tooth when IMPLANT status
+// ---------------------------------------------------------------------------
+
+const IMPLANT_MODEL_PATH = '/models/teeth/dental_implant.glb';
+
+function ImplantModel({
+  onClick,
+  onPointerOver,
+  onPointerOut,
+}: {
+  onClick: () => void;
+  onPointerOver: () => void;
+  onPointerOut: () => void;
+}) {
+  const { scene } = useGLTF(IMPLANT_MODEL_PATH);
+  const { gl } = useThree();
+
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone(true);
+    const maxAniso = gl.capabilities.getMaxAnisotropy();
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const mat = (child.material as THREE.MeshStandardMaterial).clone();
+        mat.roughness = 0.3;
+        mat.metalness = 0.6;
+        mat.envMapIntensity = 0.8;
+        mat.color.lerp(new THREE.Color('#8b5cf6'), 0.15);
+        if (mat.map) { mat.map.colorSpace = THREE.SRGBColorSpace; mat.map.anisotropy = maxAniso; }
+        child.material = mat;
+      }
+    });
+    return clone;
+  }, [scene, gl]);
+
+  const { scale, offset } = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const s = 1.4 / maxDim;
+    return { scale: s, offset: new THREE.Vector3(-center.x * s, -center.y * s, -center.z * s) };
+  }, [clonedScene]);
+
+  return (
+    <primitive
+      object={clonedScene}
+      scale={scale}
+      position={offset}
+      onClick={(e: any) => { e.stopPropagation(); onClick(); }}
+      onPointerOver={(e: any) => { e.stopPropagation(); onPointerOver(); document.body.style.cursor = 'pointer'; }}
+      onPointerOut={(e: any) => { e.stopPropagation(); onPointerOut(); document.body.style.cursor = 'auto'; }}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pulsing emissive wrapper for pending status changes
+// ---------------------------------------------------------------------------
+
+function PulsingGlow({ color, children }: { color: string; children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const t = Math.sin(clock.getElapsedTime() * 3) * 0.5 + 0.5; // 0..1 pulsing
+    groupRef.current.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material && 'emissiveIntensity' in child.material) {
+        (child.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(color);
+        (child.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.15 + t * 0.35;
+      }
+    });
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
+// ---------------------------------------------------------------------------
+// Single tooth in the arch
+// ---------------------------------------------------------------------------
+
 function ArchTooth({
   fdi,
   x,
@@ -164,6 +253,7 @@ function ArchTooth({
   status,
   isSelected,
   dominantCondition,
+  pendingStatus,
   onClick,
 }: {
   fdi: number;
@@ -172,12 +262,52 @@ function ArchTooth({
   status: string;
   isSelected: boolean;
   dominantCondition?: string;
+  pendingStatus?: string;
   onClick: () => void;
 }) {
   const modelPath = getModelPath(fdi);
   const [hovered, setHovered] = useState(false);
 
-  if (!modelPath || status === 'MISSING') {
+  const effectiveStatus = pendingStatus || status;
+  const isImplant = effectiveStatus === 'IMPLANT';
+  const isMissing = effectiveStatus === 'MISSING';
+  const isEndo = effectiveStatus === 'ENDO';
+
+  // Ghost out for pending MISSING
+  if (isMissing) {
+    return (
+      <group position={[x, y, 0]}>
+        <mesh onClick={onClick}>
+          <capsuleGeometry args={[0.15, 0.6, 4, 8]} />
+          <meshBasicMaterial color="#6b7280" wireframe transparent opacity={pendingStatus ? 0.3 : 0.15} />
+        </mesh>
+      </group>
+    );
+  }
+
+  // Implant model replacement
+  if (isImplant) {
+    const content = (
+      <group position={[x, y, 0]}>
+        <mesh
+          onClick={(e: any) => { e.stopPropagation(); onClick(); }}
+          onPointerOver={(e: any) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+          onPointerOut={(e: any) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+        >
+          <boxGeometry args={[0.9, 1.4, 0.9]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+        <ImplantModel
+          onClick={onClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+        />
+      </group>
+    );
+    return pendingStatus ? <PulsingGlow color="#8b5cf6">{content}</PulsingGlow> : content;
+  }
+
+  if (!modelPath) {
     return (
       <group position={[x, y, 0]}>
         <mesh onClick={onClick}>
@@ -188,9 +318,8 @@ function ArchTooth({
     );
   }
 
-  return (
+  const toothContent = (
     <group position={[x, y, 0]}>
-      {/* Invisible click hitbox — reliable raycasting target */}
       <mesh
         onClick={(e: any) => { e.stopPropagation(); onClick(); }}
         onPointerOver={(e: any) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
@@ -212,6 +341,13 @@ function ArchTooth({
       />
     </group>
   );
+
+  // Endo pending: orange pulsing glow
+  if (isEndo && pendingStatus) {
+    return <PulsingGlow color="#f97316">{toothContent}</PulsingGlow>;
+  }
+
+  return toothContent;
 }
 
 // ---------------------------------------------------------------------------
@@ -255,7 +391,7 @@ function DebugToothModel({ fdi, xOffset }: { fdi: number; xOffset: number }) {
 // Production scene
 // ---------------------------------------------------------------------------
 
-function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect }: DentalArch3DProps) {
+function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingRestoration }: DentalArch3DProps) {
   function getStatus(fdi: number) {
     return teeth.find((t) => t.toothNumber === fdi)?.status ?? 'PRESENT';
   }
@@ -281,6 +417,7 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect }: DentalArch
           status={getStatus(fdi)}
           isSelected={selectedTooth === fdi}
           dominantCondition={getDominantCondition(fdi)}
+          pendingStatus={pendingRestoration?.toothNumber === fdi ? pendingRestoration.statusChange : undefined}
           onClick={() => onToothSelect(fdi)}
         />
       ))}
@@ -295,6 +432,7 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect }: DentalArch
           status={getStatus(fdi)}
           isSelected={selectedTooth === fdi}
           dominantCondition={getDominantCondition(fdi)}
+          pendingStatus={pendingRestoration?.toothNumber === fdi ? pendingRestoration.statusChange : undefined}
           onClick={() => onToothSelect(fdi)}
         />
       ))}
@@ -349,7 +487,7 @@ function ArchLoading() {
 // Main
 // ---------------------------------------------------------------------------
 
-export default function DentalArch3D({ teeth, surfaces, selectedTooth, onToothSelect }: DentalArch3DProps) {
+export default function DentalArch3D({ teeth, surfaces, selectedTooth, onToothSelect, pendingRestoration }: DentalArch3DProps) {
   return (
     <div
       className="w-full rounded-xl border border-gray-700/50 overflow-hidden relative"
@@ -394,7 +532,7 @@ export default function DentalArch3D({ teeth, surfaces, selectedTooth, onToothSe
               <axesHelper args={[3]} />
             </>
           ) : (
-            <ArchScene teeth={teeth} surfaces={surfaces} selectedTooth={selectedTooth} onToothSelect={onToothSelect} />
+            <ArchScene teeth={teeth} surfaces={surfaces} selectedTooth={selectedTooth} onToothSelect={onToothSelect} pendingRestoration={pendingRestoration} />
           )}
         </Suspense>
 

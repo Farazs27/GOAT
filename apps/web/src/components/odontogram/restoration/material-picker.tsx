@@ -22,7 +22,7 @@ export default function MaterialPicker({
 }: MaterialPickerProps) {
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Materiaal</p>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Materiaal</p>
       <div className="grid grid-cols-3 gap-1.5">
         {MATERIALS.map(({ key, label, color }) => {
           const isActive = selectedMaterial === key;
@@ -31,15 +31,17 @@ export default function MaterialPicker({
               key={key}
               type="button"
               onClick={() => onSelectMaterial(key)}
-              className={`flex flex-col items-center gap-1 rounded-lg border-2 px-2 py-2 text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-all duration-200 ${
                 isActive
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'bg-white/[0.10] text-white border-white/[0.20] ring-1 ring-white/[0.15] backdrop-blur-xl shadow-lg'
+                  : 'bg-white/[0.04] text-gray-400 border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] hover:text-gray-300 backdrop-blur-xl'
               }`}
             >
               <span
-                className="h-5 w-5 rounded-full border border-gray-300"
-                style={{ backgroundColor: color }}
+                className={`h-6 w-6 rounded-full border transition-all duration-200 ${
+                  isActive ? 'border-white/30 scale-110 shadow-lg' : 'border-white/[0.12]'
+                }`}
+                style={{ backgroundColor: color, boxShadow: isActive ? `0 0 12px ${color}50` : undefined }}
               />
               <span className="leading-tight text-center">{label}</span>
             </button>

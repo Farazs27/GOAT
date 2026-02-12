@@ -8,19 +8,6 @@ interface SurfaceSelectorProps {
   onToggleSurface: (surface: string) => void;
 }
 
-const SURFACES = [
-  { key: 'CB', label: 'Cervicaal Buccaal' },
-  { key: 'B', label: 'Buccaal' },
-  { key: 'M', label: 'Mesiaal' },
-  { key: 'O', label: 'Occlusaal' },
-  { key: 'D', label: 'Distaal' },
-  { key: 'P', label: 'Palatinaal' },
-  { key: 'CP', label: 'Cervicaal Palatinaal' },
-  { key: 'BC', label: 'Buccaal Knobbel' },
-  { key: 'PC', label: 'Palatinaal Knobbel' },
-  { key: 'BS', label: 'Buccaal Oppervlak' },
-  { key: 'PS', label: 'Palatinaal Oppervlak' },
-] as const;
 
 export default function SurfaceSelector({
   toothNumber: _toothNumber,
@@ -31,15 +18,15 @@ export default function SurfaceSelector({
 
   const btnClass = (key: string) =>
     isActive(key)
-      ? 'bg-blue-500 text-white border-blue-600 ring-1 ring-blue-400'
-      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
+      ? 'bg-blue-500/30 text-blue-300 border-blue-400/40 ring-1 ring-blue-400/30 backdrop-blur-xl shadow-lg shadow-blue-500/10'
+      : 'bg-white/[0.04] text-gray-400 border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] hover:text-gray-300 backdrop-blur-xl';
 
   const btn = (key: string, label: string, className?: string) => (
     <button
       key={key}
       type="button"
       onClick={() => onToggleSurface(key)}
-      className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${btnClass(key)} ${className ?? ''}`}
+      className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all duration-200 ${btnClass(key)} ${className ?? ''}`}
     >
       {label}
     </button>
@@ -47,7 +34,7 @@ export default function SurfaceSelector({
 
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Vlakken</p>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Vlakken</p>
       <div className="flex flex-col items-center gap-1.5">
         {/* Row 1: Cervicaal Buccaal */}
         <div className="flex justify-center">
