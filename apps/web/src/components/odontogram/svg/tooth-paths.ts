@@ -26,6 +26,7 @@ export interface ToothPaths {
   occlusalViewBox: { width: number; height: number };
   cervicalY: number;   // Y position of cervical line in side view
   rootCount: number;   // Number of roots (1, 2, or 3)
+  endoCanals: string[]; // SVG path(s) for root canal lines (endo visualization)
 }
 
 export type ToothType =
@@ -619,6 +620,68 @@ const molar3Occlusal: ToothOcclusalView = {
 // Complete tooth data by type
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Endo canal paths — anatomically accurate curves through root canal centers
+// Defined in upper orientation (root UP = low Y, crown DOWN = high Y)
+// Transformed automatically for lower teeth by getToothPaths()
+// ---------------------------------------------------------------------------
+
+// Central incisor: single straight canal, slight palatal curve
+const centralIncisorCanals = [
+  'M15,38 C15,30 14.8,22 14.8,14 C14.9,8 15,4 15,1.5',
+];
+
+// Lateral incisor: single canal, often curves distally at apex
+const lateralIncisorCanals = [
+  'M14,37 C14,29 13.6,21 13.5,13 C13.6,7 13.8,3.5 14,1.5',
+];
+
+// Canine: single long canal, follows long thick root
+const canineCanals = [
+  'M16,44 C16,36 15.5,27 15.3,18 C15.3,11 15.8,5 16,1.5',
+];
+
+// Premolar 1: two canals — buccal (left, longer) and palatal (right, shorter)
+const premolar1Canals = [
+  // Buccal canal — follows buccal root curvature
+  'M8,36 C7,32 5.5,26 5,19 C4.8,13 6.5,7 9,2.5',
+  // Palatal canal — follows palatal root, diverges right
+  'M22,36 C23.5,32 26.5,26 27.5,19 C28,13 27,7 25,2.5',
+];
+
+// Premolar 2: single canal, centered
+const premolar2Canals = [
+  'M15,39 C15,31 14.5,23 14.5,15 C14.6,9 15,4.5 15,1.5',
+];
+
+// Molar 1: three canals — mesiobuccal, distobuccal, palatal
+const molar1Canals = [
+  // Mesiobuccal canal — leftmost, longest root
+  'M5.5,36 C5,31 3.5,24 3,17 C2.8,11 4.5,6 7,1.5',
+  // Distobuccal canal — middle, shorter root
+  'M11,36 C11,32 11.5,27 12,22 C12.5,17 14,11 18,5.5',
+  // Palatal canal — rightmost, thick divergent root
+  'M29,36 C30,31 33,24 34,17 C34.5,11 32,6 29.5,3',
+];
+
+// Molar 2: three canals, roots closer together
+const molar2Canals = [
+  // Mesiobuccal canal
+  'M6,36 C5.5,31 4.5,24 4,17 C3.8,11 5.5,6 8,2.5',
+  // Distobuccal canal
+  'M11.5,36 C12,32 12.5,26 13,20 C13.5,15 15.5,9 19,5',
+  // Palatal canal
+  'M28,36 C29,31 32,24 32.5,17 C33,11 31,6 29,4',
+];
+
+// Molar 3: two canals (often fused roots)
+const molar3Canals = [
+  // Mesial canal — left root
+  'M10,35 C9.5,31 8,25 7.5,18 C7.5,12 10,6 14,1.5',
+  // Distal canal — right root
+  'M23,35 C24,31 27,25 28,18 C28.2,12 27,6 25,2.5',
+];
+
 const TOOTH_DATA: Record<ToothType, ToothPaths> = {
   'central-incisor': {
     sideView: centralIncisorSide,
@@ -627,6 +690,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 30, height: 20 },
     cervicalY: 39,
     rootCount: 1,
+    endoCanals: centralIncisorCanals,
   },
   'lateral-incisor': {
     sideView: lateralIncisorSide,
@@ -635,6 +699,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 26, height: 18 },
     cervicalY: 38,
     rootCount: 1,
+    endoCanals: lateralIncisorCanals,
   },
   'canine': {
     sideView: canineSide,
@@ -643,6 +708,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 30, height: 22 },
     cervicalY: 45,
     rootCount: 1,
+    endoCanals: canineCanals,
   },
   'premolar-1': {
     sideView: premolar1Side,
@@ -651,6 +717,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 32, height: 31 },
     cervicalY: 37,
     rootCount: 2,
+    endoCanals: premolar1Canals,
   },
   'premolar-2': {
     sideView: premolar2Side,
@@ -659,6 +726,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 30, height: 29 },
     cervicalY: 39,
     rootCount: 1,
+    endoCanals: premolar2Canals,
   },
   'molar-1': {
     sideView: molar1Side,
@@ -667,6 +735,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 40, height: 38 },
     cervicalY: 37,
     rootCount: 3,
+    endoCanals: molar1Canals,
   },
   'molar-2': {
     sideView: molar2Side,
@@ -675,6 +744,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 38, height: 35 },
     cervicalY: 37,
     rootCount: 3,
+    endoCanals: molar2Canals,
   },
   'molar-3': {
     sideView: molar3Side,
@@ -683,6 +753,7 @@ const TOOTH_DATA: Record<ToothType, ToothPaths> = {
     occlusalViewBox: { width: 34, height: 31 },
     cervicalY: 36,
     rootCount: 2,
+    endoCanals: molar3Canals,
   },
 };
 
@@ -855,6 +926,14 @@ export function getToothPaths(fdi: number): ToothPaths {
   const sideView = transformSideView(base.sideView, sw, sh, isLower, isMirrored);
   const occlusalView = transformOcclusalView(base.occlusalView, ow, oh, isMirrored);
 
+  // Transform endo canal paths with the same flips as side view
+  const endoCanals = base.endoCanals.map((canal) => {
+    let result = canal;
+    if (isLower) result = flipPathVertically(result, sh);
+    if (isMirrored) result = flipPathHorizontally(result, sw);
+    return result;
+  });
+
   return {
     sideView,
     occlusalView,
@@ -862,6 +941,7 @@ export function getToothPaths(fdi: number): ToothPaths {
     occlusalViewBox: base.occlusalViewBox,
     cervicalY: isLower ? sh - base.cervicalY : base.cervicalY,
     rootCount: base.rootCount,
+    endoCanals,
   };
 }
 

@@ -211,7 +211,7 @@ function renderSideView(
   width?: number,
   height?: number,
 ) {
-  const { sideView, sideViewBox, cervicalY, rootCount } = paths;
+  const { sideView, sideViewBox, cervicalY, rootCount, endoCanals } = paths;
   const vb = `0 0 ${sideViewBox.width} ${sideViewBox.height}`;
   const isMissing = status === 'MISSING';
   const isImplant = status === 'IMPLANT';
@@ -277,47 +277,18 @@ function renderSideView(
                 </clipPath>
               </defs>
               <g clipPath={`url(#endo-clip-${id})`}>
-                {/* Red canal lines inside root, stopping at cervicalY */}
-                {rootCount === 1 && (
-                  <line
-                    x1={sideViewBox.width / 2} y1={cervicalY}
-                    x2={sideViewBox.width / 2} y2={sideViewBox.height - 2}
-                    stroke="#ef4444" strokeWidth={1.2} strokeLinecap="round" opacity={0.8}
+                {endoCanals.map((canal, i) => (
+                  <path
+                    key={i}
+                    d={canal}
+                    fill="none"
+                    stroke="#ef4444"
+                    strokeWidth={rootCount >= 3 ? 0.9 : rootCount === 2 ? 1.0 : 1.2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={0.85}
                   />
-                )}
-                {rootCount === 2 && (
-                  <>
-                    <line
-                      x1={sideViewBox.width * 0.38} y1={cervicalY}
-                      x2={sideViewBox.width * 0.35} y2={sideViewBox.height - 2}
-                      stroke="#ef4444" strokeWidth={1.0} strokeLinecap="round" opacity={0.8}
-                    />
-                    <line
-                      x1={sideViewBox.width * 0.62} y1={cervicalY}
-                      x2={sideViewBox.width * 0.65} y2={sideViewBox.height - 2}
-                      stroke="#ef4444" strokeWidth={1.0} strokeLinecap="round" opacity={0.8}
-                    />
-                  </>
-                )}
-                {rootCount >= 3 && (
-                  <>
-                    <line
-                      x1={sideViewBox.width * 0.3} y1={cervicalY}
-                      x2={sideViewBox.width * 0.25} y2={sideViewBox.height - 2}
-                      stroke="#ef4444" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}
-                    />
-                    <line
-                      x1={sideViewBox.width * 0.5} y1={cervicalY}
-                      x2={sideViewBox.width * 0.5} y2={sideViewBox.height - 2}
-                      stroke="#ef4444" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}
-                    />
-                    <line
-                      x1={sideViewBox.width * 0.7} y1={cervicalY}
-                      x2={sideViewBox.width * 0.75} y2={sideViewBox.height - 2}
-                      stroke="#ef4444" strokeWidth={0.9} strokeLinecap="round" opacity={0.8}
-                    />
-                  </>
-                )}
+                ))}
               </g>
             </>
           )}

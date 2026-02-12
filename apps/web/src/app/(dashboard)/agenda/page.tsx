@@ -41,10 +41,13 @@ import {
   Printer,
   Send,
   FileCheck,
+  Scan,
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { InformedConsentPanel } from '@/components/consent/informed-consent-panel';
+import type { ToothData, SurfaceData } from '@/components/odontogram/odontogram';
 
+const Odontogram = dynamic(() => import('@/components/odontogram/odontogram'), { ssr: false });
 const Periodontogram = dynamic(() => import('@/components/Periodontogram'), { ssr: false });
 const PrescriptionForm = dynamic(() => import('@/components/prescriptions/prescription-form'), { ssr: false });
 const PrescriptionList = dynamic(() => import('@/components/prescriptions/prescription-list'), { ssr: false });
@@ -213,7 +216,7 @@ export default function AgendaPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientSearch, setPatientSearch] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [panelTab, setPanelTab] = useState<'afspraken' | 'behandelingen' | 'declaratie' | 'paro' | 'rontgen' | 'recepten' | 'consent'>('afspraken');
+  const [panelTab, setPanelTab] = useState<'afspraken' | 'behandelingen' | 'declaratie' | 'paro' | 'rontgen' | 'recepten' | 'consent' | 'gebit'>('afspraken');
   const [prescriptionRefreshKey, setPrescriptionRefreshKey] = useState(0);
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
   const [treatmentPlans, setTreatmentPlans] = useState<TreatmentPlan[]>([]);
@@ -243,6 +246,10 @@ export default function AgendaPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
+  // Odontogram state
+  const [odontogramTeeth, setOdontogramTeeth] = useState<ToothData[]>([]);
+  const [odontogramSurfaces, setOdontogramSurfaces] = useState<SurfaceData[]>([]);
+
   // codeBrowserOpen removed — panel is always inline
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
   const [pendingLoading, setPendingLoading] = useState<Record<string, boolean>>({});
@@ -473,14 +480,17 @@ export default function AgendaPage() {
     setManualLines([]);
     setRemovedAutoKeys(new Set());
     try {
-      const [appts, plans, imgs] = await Promise.all([
+      const [appts, plans, imgs, odonto] = await Promise.all([
         authFetch(`/api/appointments?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
         authFetch(`/api/treatment-plans?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
         authFetch(`/api/patients/${a.patient.id}/images`).then(r => r.ok ? r.json() : []),
+        authFetch(`/api/patients/${a.patient.id}/odontogram`).then(r => r.ok ? r.json() : { teeth: [], surfaces: [] }),
       ]);
       setPatientAppointments(appts);
       setTreatmentPlans(plans);
       setPatientImages(imgs);
+      setOdontogramTeeth(odonto.teeth || []);
+      setOdontogramSurfaces(odonto.surfaces || []);
     } catch {}
     setPanelLoading(false);
   };
@@ -781,6 +791,38 @@ export default function AgendaPage() {
       if (res.ok) setPatientImages(await res.json());
     } catch {}
   };
+
+  const fetchOdontogramData = async (patientId: string) => {
+    try {
+      const res = await authFetch(`/api/patients/${patientId}/odontogram`);
+      if (res.ok) {
+        const data = await res.json();
+        setOdontogramTeeth(data.teeth || []);
+        setOdontogramSurfaces(data.surfaces || []);
+      }
+    } catch {}
+  };
+
+  const handleOdontogramTreatmentApply = useCallback(async (data: {
+    toothNumber: number;
+    treatmentType: string;
+    nzaCode: string;
+    surfaces?: string[];
+    material?: string;
+    restorationType?: string;
+  }) => {
+    if (!selectedAppointment) return;
+    try {
+      await authFetch(`/api/patients/${selectedAppointment.patient.id}/odontogram`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      fetchOdontogramData(selectedAppointment.patient.id);
+    } catch (err) {
+      console.error('Odontogram treatment apply failed:', err);
+    }
+  }, [selectedAppointment]);
 
   const uploadImage = async (file: File, imageType: string = 'XRAY') => {
     if (!selectedAppointment) return;
@@ -1416,6 +1458,15 @@ export default function AgendaPage() {
                 }`}>
                 <Euro className="h-4 w-4" />
                 Declaratie
+              </button>
+              <button onClick={() => { setPanelTab('gebit'); setSplitView(false); }}
+                className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  panelTab === 'gebit'
+                    ? 'text-blue-300 border-b-2 border-blue-400'
+                    : 'text-white/40 hover:text-white/60'
+                }`}>
+                <Scan className="h-4 w-4" />
+                Gebit
               </button>
               <button onClick={() => { setPanelTab('paro'); setSplitView(false); }}
                 className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
@@ -2286,6 +2337,19 @@ export default function AgendaPage() {
                       }}
                     />
                   </div>
+                </div>
+              ) : panelTab === 'gebit' ? (
+                /* Gebitsstatus / Odontogram tab */
+                <div>
+                  {selectedAppointment && (
+                    <Odontogram
+                      patientId={selectedAppointment.patient.id}
+                      appointmentId={selectedAppointment.id}
+                      teeth={odontogramTeeth}
+                      surfaces={odontogramSurfaces}
+                      onTreatmentApply={handleOdontogramTreatmentApply}
+                    />
+                  )}
                 </div>
               ) : panelTab === 'paro' ? (
                 /* Periodontogram tab */

@@ -64,6 +64,55 @@ function getToothX(index: number): number {
   return (index - 7.5) * SLOT;
 }
 
+// Root count per tooth position (FDI last digit)
+function getRootCount(fdi: number): number {
+  const tooth = fdi % 10;
+  // 1=central incisor(1), 2=lateral(1), 3=canine(1), 4=premolar1(2), 5=premolar2(1), 6=molar1(3), 7=molar2(3), 8=molar3(2)
+  return [0, 1, 1, 1, 2, 1, 3, 3, 2][tooth] || 1;
+}
+
+// 3D canal line positions relative to tooth center, per root count
+// Each canal is [xOffset, xTilt] where xTilt is the lean at the apex
+function getCanalOffsets(rootCount: number): Array<[number, number]> {
+  if (rootCount === 1) return [[0, 0]];
+  if (rootCount === 2) return [[-0.12, -0.06], [0.12, 0.06]];
+  return [[-0.18, -0.08], [0, 0], [0.18, 0.08]];
+}
+
+// Red endo canal lines rendered as thin cylinders through the root area only
+function EndoCanals3D({ fdi, isUpper }: { fdi: number; isUpper: boolean }) {
+  const rootCount = getRootCount(fdi);
+  const canals = getCanalOffsets(rootCount);
+  const dir = isUpper ? 1 : -1;
+  // Root spans from cervical (y≈0) to apex (y≈±0.7). Keep lines strictly in root.
+  const cervicalY = dir * 0.02;  // just past cervical line, don't enter crown
+  const apexY = dir * 0.68;      // near tip of root
+
+  return (
+    <>
+      {canals.map(([xOff, xTilt], i) => {
+        const bottomX = xOff;
+        const topX = xOff + xTilt;
+        const dx = topX - bottomX;
+        const dy = apexY - cervicalY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dx, dy);
+
+        return (
+          <mesh
+            key={i}
+            position={[(topX + bottomX) / 2, (apexY + cervicalY) / 2, 0.15]}
+            rotation={[0, 0, -angle]}
+          >
+            <cylinderGeometry args={[0.018, 0.012, length, 6]} />
+            <meshBasicMaterial color="#dc2626" />
+          </mesh>
+        );
+      })}
+    </>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Renderer color space setup
 // ---------------------------------------------------------------------------
@@ -229,7 +278,7 @@ function ImplantModel({
     const maxDim = Math.max(size.x, size.y, size.z);
     const s = 1.4 / maxDim;
     // Flip Y for lower jaw so screw points into the bone
-    const yFlip = isUpper ? 1 : -1;
+    const yFlip = isUpper ? -1 : 1;
     return {
       scaleArr: [s, s * yFlip, s] as [number, number, number],
       offset: new THREE.Vector3(-center.x * s, -center.y * s * yFlip, -center.z * s),
@@ -348,6 +397,8 @@ function ArchTooth({
     );
   }
 
+  const isUpper = Math.floor(fdi / 10) <= 2;
+
   const toothContent = (
     <group position={[x, y, 0]}>
       <mesh
@@ -370,12 +421,13 @@ function ArchTooth({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       />
+      {isEndo && <EndoCanals3D fdi={fdi} isUpper={isUpper} />}
     </group>
   );
 
-  // Endo pending: orange pulsing glow
-  if (isEndo && pendingStatus) {
-    return <PulsingGlow color="#f97316">{toothContent}</PulsingGlow>;
+  // Endo: just show tooth with red canal lines, no glow
+  if (isEndo) {
+    return toothContent;
   }
 
   return toothContent;
