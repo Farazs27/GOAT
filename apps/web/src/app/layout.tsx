@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'NEXIOM - Praktijkmanagement',
     description: 'NEXIOM tandarts praktijkmanagement software',
+    images: [{ url: '/images/nexiom-logo.png', width: 512, height: 512, alt: 'NEXIOM Logo' }],
+    siteName: 'NEXIOM',
+  },
+  icons: {
+    icon: '/images/nexiom-logo-sm.png',
+    apple: '/images/nexiom-logo.png',
   },
 };
 
