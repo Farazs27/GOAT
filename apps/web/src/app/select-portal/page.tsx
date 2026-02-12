@@ -182,8 +182,8 @@ export default function SelectPortalPage() {
           {/* Header / Logo + greeting */}
           <div className="header-fade flex flex-col items-center mb-14">
             {/* Logo */}
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-8">
-              <span className="text-xl font-bold text-white tracking-tight">DF</span>
+            <div className="mb-8">
+              <img src="/images/nexiom-logo-md.png" alt="NEXIOM" className="h-16 w-auto mx-auto" />
             </div>
 
             {/* Greeting */}
@@ -281,7 +281,7 @@ export default function SelectPortalPage() {
             Uitloggen
           </button>
           <p className="text-xs text-white/15 font-medium tracking-wider">
-            DentFlow &copy; 2026 &middot; v1.0
+            NEXIOM &copy; 2026 &middot; v1.0
           </p>
         </div>
       </div>

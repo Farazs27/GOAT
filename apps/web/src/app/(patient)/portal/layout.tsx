@@ -385,7 +385,7 @@ export default function PatientPortalLayout({
               </div>
               <div>
                 <span className="font-bold text-lg tracking-tight text-white/90">
-                  DentFlow
+                  NEXIOM
                 </span>
                 <span className="text-xs block text-white/30">
                   Patientenportaal
@@ -530,7 +530,7 @@ export default function PatientPortalLayout({
                 </svg>
               </div>
               <span className="font-bold text-white/90 tracking-tight">
-                DentFlow
+                NEXIOM
               </span>
             </div>
             <button

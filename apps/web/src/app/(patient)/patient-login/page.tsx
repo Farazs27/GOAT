@@ -49,15 +49,13 @@ export default function PatientLoginPage() {
         {/* Logo - responsive sizing */}
         <div className="text-center mb-8 sm:mb-10 lg:mb-12">
           <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-[#e8945a] to-[#d4864a] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#e8945a]/20 mx-auto mb-4 sm:mb-5 lg:mb-6">
-            <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
-              DF
-            </span>
+            <img src="/images/nexiom-logo-sm.png" alt="NEXIOM" className="w-10 sm:w-12 lg:w-14 h-auto" />
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white/95 mb-2 sm:mb-3 tracking-tight">
             Pati&euml;ntenportaal
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-white/45">
-            Welkom bij DentFlow
+            Welkom bij NEXIOM
           </p>
         </div>
 

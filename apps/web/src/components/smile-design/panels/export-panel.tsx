@@ -141,7 +141,7 @@ export function ExportPanel({ stageRef, designTitle, patientName }: ExportPanelP
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
       doc.text(`${landmarks.length} landmarks geplaatst`, 20, 285);
-      doc.text('Gegenereerd door DentFlow Smile Design', 120, 285);
+      doc.text('Gegenereerd door NEXIOM Smile Design', 120, 285);
 
       doc.save(`${designTitle.replace(/\s+/g, '_')}_rapport.pdf`);
     } finally {

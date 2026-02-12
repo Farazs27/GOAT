@@ -27,7 +27,7 @@ export default function EmailPage() {
           </h2>
           <p className="text-[var(--text-secondary)] mb-6">
             Verbind uw Gmail-account om e-mails te verzenden en ontvangen via
-            DentFlow.
+            NEXIOM.
           </p>
           <Button
             className="bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white"

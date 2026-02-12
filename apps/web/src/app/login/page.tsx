@@ -52,16 +52,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md lg:max-w-lg relative z-10">
         {/* Logo and title */}
         <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-          <div className="w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 bg-gradient-to-br from-[#DCC3A5] to-[#C4A882] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-5 lg:mb-6" style={{ boxShadow: '0 0 60px rgba(234,216,192,0.2)' }}>
-            <span className="text-2xl sm:text-3xl lg:text-3xl font-bold text-[#0E0C0A] tracking-tight">
-              DF
-            </span>
+          <div className="mx-auto mb-4 sm:mb-5 lg:mb-6">
+            <img src="/images/nexiom-logo-md.png" alt="NEXIOM" className="h-14 sm:h-16 lg:h-20 w-auto mx-auto" />
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-4xl font-bold mb-2 sm:mb-3" style={{ color: 'rgba(245, 230, 211, 0.95)' }}>
             Medewerker Portaal
           </h1>
           <p className="text-base sm:text-lg" style={{ color: 'rgba(234, 216, 192, 0.6)' }}>
-            Log in op uw DentFlow account
+            Log in op uw NEXIOM account
           </p>
         </div>
 
@@ -195,7 +193,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="text-center mt-6 sm:mt-8">
           <p className="text-xs sm:text-sm" style={{ color: 'rgba(234, 216, 192, 0.2)' }}>
-            DentFlow &copy; 2026 &middot; v1.0
+            NEXIOM &copy; 2026 &middot; v1.0
           </p>
         </div>
       </div>

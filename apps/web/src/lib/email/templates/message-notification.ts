@@ -118,7 +118,7 @@ export function getMessageNotificationEmail(data: MessageNotificationData): {
     </div>
     
     <div class="footer">
-      <p>Deze e-mail is automatisch verzonden door DentFlow</p>
+      <p>Deze e-mail is automatisch verzonden door NEXIOM</p>
       <p>&copy; ${new Date().getFullYear()} ${practice.name}</p>
     </div>
   </div>

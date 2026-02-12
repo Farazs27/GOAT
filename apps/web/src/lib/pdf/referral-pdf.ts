@@ -216,7 +216,7 @@ export function generateReferralPdf(data: ReferralPdfData): ArrayBuffer {
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
-  doc.text(`Gegenereerd door DentFlow op ${formatDate(new Date())}`, pageWidth / 2, footerY, { align: 'center' });
+  doc.text(`Gegenereerd door NEXIOM op ${formatDate(new Date())}`, pageWidth / 2, footerY, { align: 'center' });
 
   return doc.output('arraybuffer');
 }

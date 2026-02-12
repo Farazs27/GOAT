@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <Crown className="h-4 w-4 text-white" />
             </div>
             <div className="hidden lg:block">
-              <span className="font-semibold text-lg text-white/90">DentFlow</span>
+              <span className="font-semibold text-lg text-white/90">NEXIOM</span>
               <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/20 font-medium uppercase tracking-wider">Admin</span>
             </div>
           </div>

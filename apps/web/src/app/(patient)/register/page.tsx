@@ -223,10 +223,10 @@ export default function PatientRegisterPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 bg-gradient-to-br from-[#e8945a] to-[#d4864a] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#e8945a]/20 mx-auto mb-4">
-            <span className="text-xl font-bold text-white">DF</span>
+            <img src="/images/nexiom-logo-sm.png" alt="NEXIOM" className="w-8 h-auto" />
           </div>
           <h1 className="text-2xl font-bold text-white/95 mb-1 tracking-tight">Pati&euml;nt registratie</h1>
-          <p className="text-base text-white/45">Meld u aan bij DentFlow</p>
+          <p className="text-base text-white/45">Meld u aan bij NEXIOM</p>
         </div>
 
         {/* Step indicator */}

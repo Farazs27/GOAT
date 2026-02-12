@@ -46,10 +46,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="p-4 lg:p-6 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-2xl flex items-center justify-center flex-shrink-0 btn-liquid-primary shadow-none">
-                <span className="text-base lg:text-lg font-bold">DF</span>
-              </div>
-              <span className="font-semibold text-base lg:text-lg text-[var(--text-primary)] hidden lg:inline tracking-tight">DentFlow</span>
+              <img src="/images/nexiom-logo-sm.png" alt="NEXIOM" className="h-8 lg:h-9 w-auto flex-shrink-0" />
             </div>
           </div>
         </div>
@@ -113,10 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-16 glass-sidebar flex items-center justify-between px-4 z-30 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl btn-liquid-primary shadow-none flex items-center justify-center">
-            <span className="text-sm font-bold">DF</span>
-          </div>
-          <span className="font-semibold text-[var(--text-primary)] tracking-tight">DentFlow</span>
+          <img src="/images/nexiom-logo-sm.png" alt="NEXIOM" className="h-7 w-auto" />
         </div>
         <button
           className="p-2 rounded-xl hover:bg-white/[0.04] transition-colors touch-target"
