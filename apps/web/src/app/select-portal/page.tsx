@@ -183,7 +183,7 @@ export default function SelectPortalPage() {
           <div className="header-fade flex flex-col items-center mb-14">
             {/* Logo */}
             <div className="mb-8">
-              <img src="/images/nexiom-logo-md.png" alt="NEXIOM" className="h-16 w-auto mx-auto" />
+              <img src="/images/nexiom-logo.png" alt="NEXIOM" className="h-16 w-auto mx-auto" />
             </div>
 
             {/* Greeting */}

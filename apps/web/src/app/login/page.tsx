@@ -52,14 +52,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md lg:max-w-lg relative z-10">
         {/* Logo and title */}
         <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-          <div className="mx-auto mb-4 sm:mb-5 lg:mb-6">
-            <img src="/images/nexiom-logo-md.png" alt="NEXIOM" className="h-14 sm:h-16 lg:h-20 w-auto mx-auto" />
+          <div className="mx-auto mb-6 sm:mb-7 lg:mb-8">
+            <img src="/images/nexiom-logo.png" alt="NEXIOM" className="h-20 sm:h-24 lg:h-28 w-auto mx-auto" />
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-4xl font-bold mb-2 sm:mb-3" style={{ color: 'rgba(245, 230, 211, 0.95)' }}>
+          <h1 className="text-2xl sm:text-3xl lg:text-3xl font-bold mb-2 sm:mb-3" style={{ color: 'rgba(245, 230, 211, 0.95)' }}>
             Medewerker Portaal
           </h1>
           <p className="text-base sm:text-lg" style={{ color: 'rgba(234, 216, 192, 0.6)' }}>
-            Log in op uw NEXIOM account
+            Log in op uw account
           </p>
         </div>
 

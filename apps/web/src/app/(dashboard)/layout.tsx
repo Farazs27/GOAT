@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="p-4 lg:p-6 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src="/images/nexiom-logo-sm.png" alt="NEXIOM" className="h-8 lg:h-9 w-auto flex-shrink-0" />
+              <img src="/images/nexiom-logo.png" alt="NEXIOM" className="h-8 lg:h-14 w-auto flex-shrink-0 max-w-full" />
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-16 glass-sidebar flex items-center justify-between px-4 z-30 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <img src="/images/nexiom-logo-sm.png" alt="NEXIOM" className="h-7 w-auto" />
+          <img src="/images/nexiom-logo.png" alt="NEXIOM" className="h-7 w-auto" />
         </div>
         <button
           className="p-2 rounded-xl hover:bg-white/[0.04] transition-colors touch-target"
