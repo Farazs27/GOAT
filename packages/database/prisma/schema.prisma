@@ -87,6 +87,7 @@ model User {
   lastLoginAt    DateTime? @map("last_login_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
+  dashboardLayout Json?    @map("dashboard_layout")
 
   // Relations
   practice                   Practice               @relation(fields: [practiceId], references: [id])
@@ -190,6 +191,7 @@ model Patient {
   complaints        Complaint[]
   emailThreads      EmailThread[]
   whatsappConversations WhatsAppConversation[]
+  patientCategories     PatientCategory[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -1207,4 +1209,20 @@ model WhatsAppMessage {
 
   @@index([conversationId, createdAt])
   @@map("whatsapp_messages")
+}
+
+// ============================================================
+// PATIENT CATEGORIES
+// ============================================================
+
+model PatientCategory {
+  id         String   @id @default(uuid())
+  patientId  String   @map("patient_id")
+  category   String
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, category])
+  @@map("patient_categories")
 }

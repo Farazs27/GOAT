@@ -8,17 +8,46 @@ export async function GET(request: NextRequest) {
     const user = await withAuth(request);
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || undefined;
+    const categoriesParam = url.searchParams.get('categories') || undefined;
     const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const limit = parseInt(url.searchParams.get('limit') || '200');
     const skip = (page - 1) * limit;
 
     const where: any = { practiceId: user.practiceId, isActive: true };
+
+    // Category filter
+    if (categoriesParam) {
+      const cats = categoriesParam.split(',').map(c => c.trim()).filter(Boolean);
+      if (cats.length > 0) {
+        where.patientCategories = { some: { category: { in: cats } } };
+      }
+    }
+
     if (search) {
-      where.OR = [
+      const orConditions: any[] = [
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { patientNumber: { contains: search, mode: 'insensitive' } },
       ];
+      // Try to parse as date (dd-mm-yyyy or yyyy-mm-dd)
+      const ddmmyyyy = search.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      const yyyymmdd = search.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (ddmmyyyy) {
+        const d = new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2].padStart(2, '0')}-${ddmmyyyy[1].padStart(2, '0')}`);
+        if (!isNaN(d.getTime())) {
+          const nextDay = new Date(d);
+          nextDay.setDate(nextDay.getDate() + 1);
+          orConditions.push({ dateOfBirth: { gte: d, lt: nextDay } });
+        }
+      } else if (yyyymmdd) {
+        const d = new Date(search);
+        if (!isNaN(d.getTime())) {
+          const nextDay = new Date(d);
+          nextDay.setDate(nextDay.getDate() + 1);
+          orConditions.push({ dateOfBirth: { gte: d, lt: nextDay } });
+        }
+      }
+      where.OR = orConditions;
     }
 
     const [patients, total] = await Promise.all([
@@ -27,6 +56,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
         orderBy: { lastName: 'asc' },
+        include: { patientCategories: { select: { category: true } } },
       }),
       prisma.patient.count({ where }),
     ]);

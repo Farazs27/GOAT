@@ -11,6 +11,18 @@ export async function GET(request: NextRequest) {
     const where: any = { practiceId: user.practiceId };
     if (patientId) where.patientId = patientId;
 
+    const status = url.searchParams.get('status');
+    if (status) {
+      const statuses = status.split(',');
+      where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
+    }
+
+    const countOnly = url.searchParams.get('countOnly') === 'true';
+    if (countOnly) {
+      const count = await prisma.treatmentPlan.count({ where });
+      return Response.json({ count });
+    }
+
     const plans = await prisma.treatmentPlan.findMany({
       where,
       include: {

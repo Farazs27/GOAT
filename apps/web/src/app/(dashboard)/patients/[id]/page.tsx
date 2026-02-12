@@ -29,6 +29,8 @@ import {
   ChevronRight,
   FolderOpen,
   ChevronDown,
+  Plus,
+  Tag,
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import type { ToothData, SurfaceData } from '@/components/odontogram/odontogram';
@@ -141,6 +143,10 @@ export default function PatientDetailPage() {
   const [odontogramTeeth, setOdontogramTeeth] = useState<ToothData[]>([]);
   const [odontogramSurfaces, setOdontogramSurfaces] = useState<SurfaceData[]>([]);
 
+  // Categories
+  const [patientCategories, setPatientCategories] = useState<string[]>([]);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
   // Medical history panel
   const [showMedicalHistory, setShowMedicalHistory] = useState(false);
 
@@ -166,6 +172,7 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     fetchPatient();
+    fetchCategories();
   }, [patientId]);
 
   const fetchPatient = async () => {
@@ -179,6 +186,25 @@ export default function PatientDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await authFetch(`/api/patients/${patientId}/categories`);
+      if (res.ok) setPatientCategories(await res.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateCategories = async (cats: string[]) => {
+    await authFetch(`/api/patients/${patientId}/categories`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categories: cats }),
+    });
+    setPatientCategories(cats);
+    setShowCategoryDropdown(false);
   };
 
   const fetchNotes = useCallback(async () => {
@@ -789,6 +815,59 @@ export default function PatientDetailPage() {
         {/* Tab content */}
         <div className="transition-opacity duration-200 ease-in-out">
           {activeTab === 'overview' && (
+            <>
+            {/* Categories */}
+            <div className="glass-card rounded-2xl p-5 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-blue-400" />
+                  Categorieën
+                </h3>
+              </div>
+              <div className="flex items-center flex-wrap gap-2">
+                {patientCategories.map(cat => {
+                  const colors: Record<string, string> = {
+                    'Actief': 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+                    'Inactief': 'bg-gray-500/15 text-gray-300 border-gray-500/20',
+                    'Definitief Archief': 'bg-red-500/15 text-red-300 border-red-500/20',
+                    'Algemeen': 'bg-blue-500/15 text-blue-300 border-blue-500/20',
+                    'Orthodontie': 'bg-purple-500/15 text-purple-300 border-purple-500/20',
+                    'Restoratief': 'bg-amber-500/15 text-amber-300 border-amber-500/20',
+                    'Multidisciplinair': 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20',
+                    'Endodontologie': 'bg-pink-500/15 text-pink-300 border-pink-500/20',
+                    'Parodontologie': 'bg-teal-500/15 text-teal-300 border-teal-500/20',
+                    'Nazorg': 'bg-orange-500/15 text-orange-300 border-orange-500/20',
+                  };
+                  return (
+                    <span key={cat} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium border ${colors[cat] || colors['Algemeen']}`}>
+                      {cat}
+                      <button onClick={() => updateCategories(patientCategories.filter(c => c !== cat))} className="hover:opacity-70"><X className="h-3 w-3" /></button>
+                    </span>
+                  );
+                })}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs text-white/40 hover:text-white/60 hover:bg-white/5 border border-dashed border-white/15 transition-all"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Toevoegen
+                  </button>
+                  {showCategoryDropdown && (
+                    <div className="absolute top-full left-0 mt-1 z-50 w-52 glass-card rounded-xl border border-white/10 shadow-2xl py-1">
+                      {['Actief','Inactief','Definitief Archief','Algemeen','Orthodontie','Restoratief','Multidisciplinair','Endodontologie','Parodontologie','Nazorg']
+                        .filter(c => !patientCategories.includes(c))
+                        .map(cat => (
+                          <button key={cat} onClick={() => updateCategories([...patientCategories, cat])} className="w-full text-left px-3 py-1.5 text-xs text-white/70 hover:bg-white/5 transition-colors">
+                            {cat}
+                          </button>
+                        ))}
+                      {patientCategories.length === 10 && <p className="px-3 py-1.5 text-xs text-white/30">Alle categorieën toegewezen</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="glass-card rounded-2xl p-5">
               <h3 className="text-sm font-semibold text-white/80 mb-4 uppercase tracking-wider">Patientgegevens</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -826,6 +905,7 @@ export default function PatientDetailPage() {
                 </div>
               </div>
             </div>
+            </>
           )}
 
           {activeTab === 'prescriptions' && (

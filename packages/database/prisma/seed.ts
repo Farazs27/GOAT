@@ -282,6 +282,7 @@ async function main() {
   console.log('Cleaning existing data...\n');
 
   // Delete in FK-safe order
+  await prisma.patientCategory.deleteMany();
   await prisma.message.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.notification.deleteMany();
@@ -460,6 +461,76 @@ async function main() {
     });
     patients.push({ id: patient.id, patientNumber: patient.patientNumber });
   }
+  // Additional patients for category demo data
+  const extraPatientData = [
+    { number: 'P-2026-0011', first: 'Kees', last: 'van Dijk', dob: '1990-05-20', email: 'kees.vandijk@email.nl', phone: '+31 6 11122233', bsn: '111222333', insurance: 'VGZ', insNumber: '111222333', gender: 'M', street: 'Bilderdijkstraat 10', city: 'Amsterdam', postal: '1053 KA', alerts: [], meds: [] },
+    { number: 'P-2026-0012', first: 'Lotte', last: 'Bos', dob: '1988-09-14', email: 'lotte.bos@email.nl', phone: '+31 6 11122244', bsn: '111222344', insurance: 'CZ', insNumber: '111222344', gender: 'F', street: 'Overtoom 200', city: 'Amsterdam', postal: '1054 HP', alerts: [], meds: [] },
+    { number: 'P-2026-0013', first: 'Pieter', last: 'Vermeer', dob: '1975-03-08', email: 'pieter.vermeer@email.nl', phone: '+31 6 11122255', bsn: '111222355', insurance: 'Menzis', insNumber: '111222355', gender: 'M', street: 'Nassaukade 100', city: 'Amsterdam', postal: '1052 DE', alerts: ['Astma'], meds: ['Salbutamol'] },
+    { number: 'P-2026-0014', first: 'Noor', last: 'de Groot', dob: '1999-12-01', email: 'noor.degroot@email.nl', phone: '+31 6 11122266', bsn: '111222366', insurance: 'Zilveren Kruis', insNumber: '111222366', gender: 'F', street: 'Da Costakade 50', city: 'Amsterdam', postal: '1053 WH', alerts: [], meds: [] },
+    { number: 'P-2026-0015', first: 'Daan', last: 'Vos', dob: '1982-07-25', email: 'daan.vos@email.nl', phone: '+31 6 11122277', bsn: '111222377', insurance: 'VGZ', insNumber: '111222377', gender: 'M', street: 'Jan Pieter Heijestraat 30', city: 'Amsterdam', postal: '1053 GA', alerts: [], meds: [] },
+    { number: 'P-2026-0016', first: 'Iris', last: 'Meijer', dob: '1993-11-18', email: 'iris.meijer@email.nl', phone: '+31 6 11122288', bsn: '111222388', insurance: 'CZ', insNumber: '111222388', gender: 'F', street: 'Kinkerstraat 40', city: 'Amsterdam', postal: '1053 DT', alerts: [], meds: [] },
+    { number: 'P-2026-0017', first: 'Ruben', last: 'Kramer', dob: '1960-02-28', email: 'ruben.kramer@email.nl', phone: '+31 6 11122299', bsn: '111222399', insurance: 'Menzis', insNumber: '111222399', gender: 'M', street: 'Eerste Constantijn Huygensstraat 5', city: 'Amsterdam', postal: '1054 BP', alerts: ['Pacemaker'], meds: ['Warfarine'] },
+    { number: 'P-2026-0018', first: 'Eva', last: 'Jonker', dob: '2003-06-09', email: 'eva.jonker@email.nl', phone: '+31 6 11133311', bsn: '111333111', insurance: 'VGZ', insNumber: '111333111', gender: 'F', street: 'Vondelstraat 60', city: 'Amsterdam', postal: '1054 GE', alerts: [], meds: [] },
+    { number: 'P-2026-0019', first: 'Bart', last: 'Willems', dob: '1971-10-03', email: 'bart.willems@email.nl', phone: '+31 6 11133322', bsn: '111333222', insurance: 'Zilveren Kruis', insNumber: '111333222', gender: 'M', street: 'Stadhouderskade 80', city: 'Amsterdam', postal: '1072 AC', alerts: ['Diabetes type 1'], meds: ['Insuline'] },
+    { number: 'P-2026-0020', first: 'Sophie', last: 'van Leeuwen', dob: '1986-08-22', email: 'sophie.vleeuwen@email.nl', phone: '+31 6 11133333', bsn: '111333333', insurance: 'CZ', insNumber: '111333333', gender: 'F', street: 'Weteringschans 90', city: 'Amsterdam', postal: '1017 XS', alerts: [], meds: [] },
+    { number: 'P-2026-0021', first: 'Jasper', last: 'Kok', dob: '1997-01-14', email: 'jasper.kok@email.nl', phone: '+31 6 11133344', bsn: '111333444', insurance: 'Menzis', insNumber: '111333444', gender: 'M', street: 'Ferdinand Bolstraat 100', city: 'Amsterdam', postal: '1072 LJ', alerts: [], meds: [] },
+    { number: 'P-2026-0022', first: 'Femke', last: 'Dijkstra', dob: '1980-04-07', email: 'femke.dijkstra@email.nl', phone: '+31 6 11133355', bsn: '111333555', insurance: 'VGZ', insNumber: '111333555', gender: 'F', street: 'Albert Cuypstraat 110', city: 'Amsterdam', postal: '1073 BD', alerts: ['Bloedingsneigingen'], meds: [] },
+    { number: 'P-2026-0023', first: 'Maarten', last: 'Peters', dob: '1955-09-30', email: 'maarten.peters@email.nl', phone: '+31 6 11133366', bsn: '111333666', insurance: 'Zilveren Kruis', insNumber: '111333666', gender: 'M', street: 'Van Woustraat 120', city: 'Amsterdam', postal: '1073 LT', alerts: ['Hypertensie'], meds: ['Amlodipine'] },
+    { number: 'P-2026-0024', first: 'Anouk', last: 'Hoekstra', dob: '2000-07-16', email: 'anouk.hoekstra@email.nl', phone: '+31 6 11133377', bsn: '111333777', insurance: 'CZ', insNumber: '111333777', gender: 'F', street: 'Ceintuurbaan 130', city: 'Amsterdam', postal: '1074 CR', alerts: [], meds: [] },
+    { number: 'P-2026-0025', first: 'Thijs', last: 'Brouwer', dob: '1968-12-11', email: 'thijs.brouwer@email.nl', phone: '+31 6 11133388', bsn: '111333888', insurance: 'Menzis', insNumber: '111333888', gender: 'M', street: 'Sarphatistraat 140', city: 'Amsterdam', postal: '1018 GK', alerts: [], meds: [] },
+    { number: 'P-2026-0026', first: 'Lisa', last: 'Prins', dob: '1991-05-04', email: 'lisa.prins@email.nl', phone: '+31 6 11144411', bsn: '111444111', insurance: 'VGZ', insNumber: '111444111', gender: 'F', street: 'Plantage Middenlaan 20', city: 'Amsterdam', postal: '1018 DD', alerts: [], meds: [] },
+    { number: 'P-2026-0027', first: 'Jeroen', last: 'van der Wal', dob: '1973-08-29', email: 'jeroen.vdwal@email.nl', phone: '+31 6 11144422', bsn: '111444222', insurance: 'Zilveren Kruis', insNumber: '111444222', gender: 'M', street: 'Weesperstraat 30', city: 'Amsterdam', postal: '1018 DN', alerts: [], meds: ['Omeprazol'] },
+    { number: 'P-2026-0028', first: 'Charlotte', last: 'Scholten', dob: '1984-02-17', email: 'charlotte.scholten@email.nl', phone: '+31 6 11144433', bsn: '111444333', insurance: 'CZ', insNumber: '111444333', gender: 'F', street: 'Jodenbreestraat 40', city: 'Amsterdam', postal: '1011 NK', alerts: [], meds: [] },
+    { number: 'P-2026-0029', first: 'Rick', last: 'Schouten', dob: '1996-06-12', email: 'rick.schouten@email.nl', phone: '+31 6 11144444', bsn: '111444444', insurance: 'Menzis', insNumber: '111444444', gender: 'M', street: 'Nieuwmarkt 50', city: 'Amsterdam', postal: '1012 CR', alerts: [], meds: [] },
+    { number: 'P-2026-0030', first: 'Merel', last: 'de Wit', dob: '1977-11-23', email: 'merel.dewit@email.nl', phone: '+31 6 11144455', bsn: '111444555', insurance: 'VGZ', insNumber: '111444555', gender: 'F', street: 'Zeedijk 60', city: 'Amsterdam', postal: '1012 BA', alerts: [], meds: [] },
+    { number: 'P-2026-0031', first: 'Bram', last: 'Huisman', dob: '1963-04-19', email: 'bram.huisman@email.nl', phone: '+31 6 11155511', bsn: '111555111', insurance: 'Zilveren Kruis', insNumber: '111555111', gender: 'M', street: 'Haarlemmerstraat 70', city: 'Amsterdam', postal: '1013 EL', alerts: ['Nierfalen'], meds: ['Dialyse'] },
+    { number: 'P-2026-0032', first: 'Julia', last: 'Geerts', dob: '2002-01-06', email: 'julia.geerts@email.nl', phone: '+31 6 11155522', bsn: '111555222', insurance: 'CZ', insNumber: '111555222', gender: 'F', street: 'Brouwersgracht 80', city: 'Amsterdam', postal: '1013 GW', alerts: [], meds: [] },
+    { number: 'P-2026-0033', first: 'Sander', last: 'van den Heuvel', dob: '1989-10-15', email: 'sander.vdheuvel@email.nl', phone: '+31 6 11155533', bsn: '111555333', insurance: 'Menzis', insNumber: '111555333', gender: 'M', street: 'Bloemgracht 90', city: 'Amsterdam', postal: '1016 KJ', alerts: [], meds: [] },
+    { number: 'P-2026-0034', first: 'Nina', last: 'Smeets', dob: '1994-03-28', email: 'nina.smeets@email.nl', phone: '+31 6 11155544', bsn: '111555444', insurance: 'VGZ', insNumber: '111555444', gender: 'F', street: 'Egelantiersgracht 100', city: 'Amsterdam', postal: '1015 RL', alerts: [], meds: [] },
+    { number: 'P-2026-0035', first: 'Tom', last: 'van Vliet', dob: '1952-07-08', email: 'tom.vanvliet@email.nl', phone: '+31 6 11155555', bsn: '111555555', insurance: 'Zilveren Kruis', insNumber: '111555555', gender: 'M', street: 'Lindengracht 110', city: 'Amsterdam', postal: '1015 KK', alerts: ['COPD'], meds: ['Tiotropium'] },
+    { number: 'P-2026-0036', first: 'Sanne', last: 'Bosman', dob: '1987-12-20', email: 'sanne.bosman@email.nl', phone: '+31 6 11166611', bsn: '111666111', insurance: 'CZ', insNumber: '111666111', gender: 'F', street: 'Westerstraat 120', city: 'Amsterdam', postal: '1015 MN', alerts: [], meds: [] },
+    { number: 'P-2026-0037', first: 'Lars', last: 'Kuijpers', dob: '1979-06-02', email: 'lars.kuijpers@email.nl', phone: '+31 6 11166622', bsn: '111666222', insurance: 'Menzis', insNumber: '111666222', gender: 'M', street: 'Haarlemmerdijk 130', city: 'Amsterdam', postal: '1013 KG', alerts: [], meds: [] },
+    { number: 'P-2026-0038', first: 'Vera', last: 'Timmermans', dob: '2004-09-11', email: 'vera.timmermans@email.nl', phone: '+31 6 11166633', bsn: '111666333', insurance: 'VGZ', insNumber: '111666333', gender: 'F', street: 'Czaar Peterstraat 140', city: 'Amsterdam', postal: '1018 PL', alerts: [], meds: [] },
+    { number: 'P-2026-0039', first: 'Jesse', last: 'Maas', dob: '1966-01-30', email: 'jesse.maas@email.nl', phone: '+31 6 11166644', bsn: '111666444', insurance: 'Zilveren Kruis', insNumber: '111666444', gender: 'M', street: 'Eerste van Swindenstraat 150', city: 'Amsterdam', postal: '1093 GA', alerts: [], meds: ['Metoprolol'] },
+    { number: 'P-2026-0040', first: 'Mila', last: 'Hermans', dob: '1998-04-15', email: 'mila.hermans@email.nl', phone: '+31 6 11166655', bsn: '111666555', insurance: 'CZ', insNumber: '111666555', gender: 'F', street: 'Dapperstraat 160', city: 'Amsterdam', postal: '1093 BT', alerts: [], meds: [] },
+    { number: 'P-2026-0041', first: 'Wouter', last: 'Peeters', dob: '1974-08-07', email: 'wouter.peeters@email.nl', phone: '+31 6 11177711', bsn: '111777111', insurance: 'Menzis', insNumber: '111777111', gender: 'M', street: 'Linnaeusstraat 170', city: 'Amsterdam', postal: '1093 EE', alerts: [], meds: [] },
+    { number: 'P-2026-0042', first: 'Amber', last: 'Claessen', dob: '1981-11-26', email: 'amber.claessen@email.nl', phone: '+31 6 11177722', bsn: '111777222', insurance: 'VGZ', insNumber: '111777222', gender: 'F', street: 'Mauritskade 180', city: 'Amsterdam', postal: '1092 AD', alerts: ['Epilepsie'], meds: ['Valproaat'] },
+    { number: 'P-2026-0043', first: 'Stijn', last: 'van der Berg', dob: '1957-05-13', email: 'stijn.vdberg@email.nl', phone: '+31 6 11177733', bsn: '111777333', insurance: 'Zilveren Kruis', insNumber: '111777333', gender: 'M', street: 'Oosterpark 190', city: 'Amsterdam', postal: '1092 AE', alerts: [], meds: [] },
+    { number: 'P-2026-0044', first: 'Roos', last: 'de Jong', dob: '1995-02-09', email: 'roos.dejong@email.nl', phone: '+31 6 11177744', bsn: '111777444', insurance: 'CZ', insNumber: '111777444', gender: 'F', street: 'Wibautstraat 200', city: 'Amsterdam', postal: '1091 GP', alerts: [], meds: [] },
+    { number: 'P-2026-0045', first: 'Hugo', last: 'Franssen', dob: '1969-09-24', email: 'hugo.franssen@email.nl', phone: '+31 6 11177755', bsn: '111777555', insurance: 'Menzis', insNumber: '111777555', gender: 'M', street: 'Roetersstraat 210', city: 'Amsterdam', postal: '1018 WB', alerts: [], meds: [] },
+    { number: 'P-2026-0046', first: 'Fleur', last: 'van Beek', dob: '2001-06-18', email: 'fleur.vanbeek@email.nl', phone: '+31 6 11188811', bsn: '111888111', insurance: 'VGZ', insNumber: '111888111', gender: 'F', street: 'Valkenburgerstraat 220', city: 'Amsterdam', postal: '1011 MZ', alerts: [], meds: [] },
+    { number: 'P-2026-0047', first: 'Tim', last: 'Hendriks', dob: '1983-03-05', email: 'tim.hendriks@email.nl', phone: '+31 6 11188822', bsn: '111888222', insurance: 'Zilveren Kruis', insNumber: '111888222', gender: 'M', street: 'Rapenburgerstraat 230', city: 'Amsterdam', postal: '1011 MJ', alerts: [], meds: [] },
+    { number: 'P-2026-0048', first: 'Lieke', last: 'Wolters', dob: '1976-10-31', email: 'lieke.wolters@email.nl', phone: '+31 6 11188833', bsn: '111888333', insurance: 'CZ', insNumber: '111888333', gender: 'F', street: 'Kloveniersburgwal 240', city: 'Amsterdam', postal: '1012 CV', alerts: [], meds: [] },
+    { number: 'P-2026-0049', first: 'Cas', last: 'Jansma', dob: '1992-08-14', email: 'cas.jansma@email.nl', phone: '+31 6 11188844', bsn: '111888444', insurance: 'Menzis', insNumber: '111888444', gender: 'M', street: 'Geldersekade 250', city: 'Amsterdam', postal: '1012 BH', alerts: [], meds: [] },
+    { number: 'P-2026-0050', first: 'Ella', last: 'Driessen', dob: '1964-01-22', email: 'ella.driessen@email.nl', phone: '+31 6 11188855', bsn: '111888555', insurance: 'VGZ', insNumber: '111888555', gender: 'F', street: 'Oudezijds Voorburgwal 260', city: 'Amsterdam', postal: '1012 GL', alerts: ['Reuma'], meds: ['Methotrexaat'] },
+  ];
+
+  for (const p of extraPatientData) {
+    const patient = await prisma.patient.upsert({
+      where: { practiceId_patientNumber: { practiceId: practice.id, patientNumber: p.number } },
+      update: {},
+      create: {
+        practiceId: practice.id,
+        patientNumber: p.number,
+        firstName: p.first,
+        lastName: p.last,
+        dateOfBirth: new Date(p.dob),
+        gender: p.gender,
+        email: p.email,
+        phone: p.phone,
+        bsn: p.bsn,
+        insuranceCompany: p.insurance,
+        insuranceNumber: p.insNumber,
+        addressStreet: p.street,
+        addressCity: p.city,
+        addressPostal: p.postal,
+        medicalAlerts: p.alerts,
+        medications: p.meds,
+        gdprConsentAt: daysAgo(90),
+      },
+    });
+    patients.push({ id: patient.id, patientNumber: patient.patientNumber });
+  }
   console.log(`  ${patients.length} patients seeded`);
 
   // ─── Teeth ───────────────────────────────────────────────
@@ -490,6 +561,107 @@ async function main() {
   if (tooth46_p2) await prisma.tooth.update({ where: { id: tooth46_p2.id }, data: { status: 'IMPLANT', notes: 'Implantaat 2024' } });
 
   console.log('  Teeth initialized for all patients');
+
+  // ─── Patient Categories ────────────────────────────────────
+  console.log('Seeding patient categories...');
+  // Categories: Actief, Inactief, Definitief Archief, Algemeen, Orthodontie, Restoratief, Multidisciplinair, Endodontologie, Parodontologie, Nazorg
+  // Each patient index maps to: patients[0]=Peter, [1]=Maria, ..., [9]=Fleur, [10]=Kees, ..., [49]=Ella
+  const categoryAssignments: { patientIdx: number; category: string }[] = [
+    // Actief (patients 0-14 + extras)
+    { patientIdx: 0, category: 'Actief' }, { patientIdx: 1, category: 'Actief' }, { patientIdx: 2, category: 'Actief' },
+    { patientIdx: 3, category: 'Actief' }, { patientIdx: 4, category: 'Actief' }, { patientIdx: 5, category: 'Actief' },
+    { patientIdx: 6, category: 'Actief' }, { patientIdx: 7, category: 'Actief' }, { patientIdx: 8, category: 'Actief' },
+    { patientIdx: 9, category: 'Actief' }, { patientIdx: 10, category: 'Actief' }, { patientIdx: 11, category: 'Actief' },
+    { patientIdx: 12, category: 'Actief' }, { patientIdx: 13, category: 'Actief' }, { patientIdx: 14, category: 'Actief' },
+    { patientIdx: 20, category: 'Actief' }, { patientIdx: 21, category: 'Actief' }, { patientIdx: 25, category: 'Actief' },
+
+    // Inactief
+    { patientIdx: 15, category: 'Inactief' }, { patientIdx: 16, category: 'Inactief' }, { patientIdx: 17, category: 'Inactief' },
+    { patientIdx: 18, category: 'Inactief' }, { patientIdx: 19, category: 'Inactief' }, { patientIdx: 30, category: 'Inactief' },
+    { patientIdx: 31, category: 'Inactief' }, { patientIdx: 32, category: 'Inactief' }, { patientIdx: 33, category: 'Inactief' },
+    { patientIdx: 34, category: 'Inactief' }, { patientIdx: 35, category: 'Inactief' }, { patientIdx: 36, category: 'Inactief' },
+    { patientIdx: 37, category: 'Inactief' }, { patientIdx: 38, category: 'Inactief' }, { patientIdx: 39, category: 'Inactief' },
+
+    // Definitief Archief
+    { patientIdx: 22, category: 'Definitief Archief' }, { patientIdx: 23, category: 'Definitief Archief' },
+    { patientIdx: 24, category: 'Definitief Archief' }, { patientIdx: 30, category: 'Definitief Archief' },
+    { patientIdx: 31, category: 'Definitief Archief' }, { patientIdx: 32, category: 'Definitief Archief' },
+    { patientIdx: 33, category: 'Definitief Archief' }, { patientIdx: 34, category: 'Definitief Archief' },
+    { patientIdx: 35, category: 'Definitief Archief' }, { patientIdx: 36, category: 'Definitief Archief' },
+    { patientIdx: 37, category: 'Definitief Archief' }, { patientIdx: 38, category: 'Definitief Archief' },
+    { patientIdx: 39, category: 'Definitief Archief' }, { patientIdx: 40, category: 'Definitief Archief' },
+    { patientIdx: 41, category: 'Definitief Archief' },
+
+    // Algemeen
+    { patientIdx: 0, category: 'Algemeen' }, { patientIdx: 1, category: 'Algemeen' }, { patientIdx: 3, category: 'Algemeen' },
+    { patientIdx: 5, category: 'Algemeen' }, { patientIdx: 9, category: 'Algemeen' }, { patientIdx: 10, category: 'Algemeen' },
+    { patientIdx: 11, category: 'Algemeen' }, { patientIdx: 13, category: 'Algemeen' }, { patientIdx: 14, category: 'Algemeen' },
+    { patientIdx: 20, category: 'Algemeen' }, { patientIdx: 21, category: 'Algemeen' }, { patientIdx: 25, category: 'Algemeen' },
+    { patientIdx: 26, category: 'Algemeen' }, { patientIdx: 27, category: 'Algemeen' }, { patientIdx: 28, category: 'Algemeen' },
+
+    // Orthodontie
+    { patientIdx: 3, category: 'Orthodontie' }, { patientIdx: 9, category: 'Orthodontie' }, { patientIdx: 13, category: 'Orthodontie' },
+    { patientIdx: 17, category: 'Orthodontie' }, { patientIdx: 21, category: 'Orthodontie' }, { patientIdx: 23, category: 'Orthodontie' },
+    { patientIdx: 28, category: 'Orthodontie' }, { patientIdx: 29, category: 'Orthodontie' }, { patientIdx: 32, category: 'Orthodontie' },
+    { patientIdx: 35, category: 'Orthodontie' }, { patientIdx: 37, category: 'Orthodontie' }, { patientIdx: 40, category: 'Orthodontie' },
+    { patientIdx: 43, category: 'Orthodontie' }, { patientIdx: 45, category: 'Orthodontie' }, { patientIdx: 47, category: 'Orthodontie' },
+
+    // Restoratief
+    { patientIdx: 0, category: 'Restoratief' }, { patientIdx: 2, category: 'Restoratief' }, { patientIdx: 4, category: 'Restoratief' },
+    { patientIdx: 6, category: 'Restoratief' }, { patientIdx: 7, category: 'Restoratief' }, { patientIdx: 10, category: 'Restoratief' },
+    { patientIdx: 12, category: 'Restoratief' }, { patientIdx: 15, category: 'Restoratief' }, { patientIdx: 19, category: 'Restoratief' },
+    { patientIdx: 22, category: 'Restoratief' }, { patientIdx: 26, category: 'Restoratief' }, { patientIdx: 30, category: 'Restoratief' },
+    { patientIdx: 34, category: 'Restoratief' }, { patientIdx: 41, category: 'Restoratief' }, { patientIdx: 46, category: 'Restoratief' },
+
+    // Multidisciplinair
+    { patientIdx: 2, category: 'Multidisciplinair' }, { patientIdx: 4, category: 'Multidisciplinair' },
+    { patientIdx: 8, category: 'Multidisciplinair' }, { patientIdx: 12, category: 'Multidisciplinair' },
+    { patientIdx: 16, category: 'Multidisciplinair' }, { patientIdx: 18, category: 'Multidisciplinair' },
+    { patientIdx: 22, category: 'Multidisciplinair' }, { patientIdx: 24, category: 'Multidisciplinair' },
+    { patientIdx: 27, category: 'Multidisciplinair' }, { patientIdx: 31, category: 'Multidisciplinair' },
+    { patientIdx: 36, category: 'Multidisciplinair' }, { patientIdx: 39, category: 'Multidisciplinair' },
+    { patientIdx: 42, category: 'Multidisciplinair' }, { patientIdx: 44, category: 'Multidisciplinair' },
+    { patientIdx: 48, category: 'Multidisciplinair' },
+
+    // Endodontologie
+    { patientIdx: 0, category: 'Endodontologie' }, { patientIdx: 2, category: 'Endodontologie' },
+    { patientIdx: 6, category: 'Endodontologie' }, { patientIdx: 8, category: 'Endodontologie' },
+    { patientIdx: 11, category: 'Endodontologie' }, { patientIdx: 14, category: 'Endodontologie' },
+    { patientIdx: 16, category: 'Endodontologie' }, { patientIdx: 19, category: 'Endodontologie' },
+    { patientIdx: 24, category: 'Endodontologie' }, { patientIdx: 27, category: 'Endodontologie' },
+    { patientIdx: 33, category: 'Endodontologie' }, { patientIdx: 38, category: 'Endodontologie' },
+    { patientIdx: 41, category: 'Endodontologie' }, { patientIdx: 44, category: 'Endodontologie' },
+    { patientIdx: 49, category: 'Endodontologie' },
+
+    // Parodontologie
+    { patientIdx: 2, category: 'Parodontologie' }, { patientIdx: 4, category: 'Parodontologie' },
+    { patientIdx: 7, category: 'Parodontologie' }, { patientIdx: 8, category: 'Parodontologie' },
+    { patientIdx: 12, category: 'Parodontologie' }, { patientIdx: 16, category: 'Parodontologie' },
+    { patientIdx: 18, category: 'Parodontologie' }, { patientIdx: 22, category: 'Parodontologie' },
+    { patientIdx: 25, category: 'Parodontologie' }, { patientIdx: 29, category: 'Parodontologie' },
+    { patientIdx: 34, category: 'Parodontologie' }, { patientIdx: 39, category: 'Parodontologie' },
+    { patientIdx: 42, category: 'Parodontologie' }, { patientIdx: 46, category: 'Parodontologie' },
+    { patientIdx: 49, category: 'Parodontologie' },
+
+    // Nazorg
+    { patientIdx: 1, category: 'Nazorg' }, { patientIdx: 5, category: 'Nazorg' }, { patientIdx: 7, category: 'Nazorg' },
+    { patientIdx: 10, category: 'Nazorg' }, { patientIdx: 13, category: 'Nazorg' }, { patientIdx: 15, category: 'Nazorg' },
+    { patientIdx: 20, category: 'Nazorg' }, { patientIdx: 23, category: 'Nazorg' }, { patientIdx: 26, category: 'Nazorg' },
+    { patientIdx: 29, category: 'Nazorg' }, { patientIdx: 33, category: 'Nazorg' }, { patientIdx: 36, category: 'Nazorg' },
+    { patientIdx: 40, category: 'Nazorg' }, { patientIdx: 43, category: 'Nazorg' }, { patientIdx: 48, category: 'Nazorg' },
+  ];
+
+  for (const ca of categoryAssignments) {
+    if (patients[ca.patientIdx]) {
+      await prisma.patientCategory.create({
+        data: {
+          patientId: patients[ca.patientIdx].id,
+          category: ca.category,
+        },
+      });
+    }
+  }
+  console.log(`  ${categoryAssignments.length} category assignments seeded`);
 
   // ─── Tooth Surfaces (findings) ───────────────────────────
   console.log('Seeding tooth surfaces...');
