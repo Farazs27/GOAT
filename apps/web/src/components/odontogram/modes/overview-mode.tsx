@@ -27,6 +27,7 @@ export interface OverviewModeProps {
   selectedTooth: number | null;
   onToothSelect: (toothNumber: number) => void;
   onContextMenu: (e: React.MouseEvent, toothNumber: number) => void;
+  onDetailSave?: (data: { restorationType: string; surfaces: string[]; material: string; action: string }) => void;
   readOnly?: boolean;
 }
 
@@ -170,6 +171,7 @@ export default function OverviewMode({
   selectedTooth,
   onToothSelect,
   onContextMenu,
+  onDetailSave,
   readOnly = false,
 }: OverviewModeProps) {
   const [detailTooth, setDetailTooth] = useState<number | null>(null);
@@ -200,6 +202,8 @@ export default function OverviewMode({
           status={detailStatus}
           surfaceConditions={detailSurfaces}
           onClose={() => setDetailTooth(null)}
+          onSave={onDetailSave}
+          readOnly={readOnly}
         />
       ) : (
         <>

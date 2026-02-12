@@ -160,6 +160,7 @@ export default function Odontogram({
             selectedTooth={selectedTooth}
             onToothSelect={handleToothSelect}
             onContextMenu={handleContextMenu}
+            onDetailSave={handleRestorationSave}
             readOnly={readOnly}
           />
         )}

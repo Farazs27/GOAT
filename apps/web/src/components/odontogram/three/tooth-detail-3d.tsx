@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useMemo, Suspense } from 'react';
+import React, { useMemo, Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { getModelPath, shouldMirrorModel } from './model-paths';
+import SurfaceSelector from '../restoration/surface-selector';
+import MaterialPicker from '../restoration/material-picker';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,6 +17,8 @@ interface ToothDetail3DProps {
   status: string;
   surfaceConditions?: Record<string, { condition: string; material?: string }>;
   onClose: () => void;
+  onSave?: (data: { restorationType: string; surfaces: string[]; material: string; action: string }) => void;
+  readOnly?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -36,6 +40,16 @@ const CONDITION_LABELS: Record<string, string> = {
   IMPLANT: 'Implantaat',
   MISSING: 'Afwezig',
 };
+
+const RESTORATION_TYPES = [
+  { key: 'FILLING', label: 'Vulling' },
+  { key: 'INLAY', label: 'Inlay' },
+  { key: 'ONLAY', label: 'Onlay' },
+  { key: 'VENEER', label: 'Veneer' },
+  { key: 'PARTIAL_CROWN', label: 'Deelkroon' },
+  { key: 'CROWN_RESTORATION', label: 'Kroon' },
+  { key: 'CARIES', label: 'Cariës' },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Tooth model
@@ -98,11 +112,18 @@ export default function ToothDetail3D({
   status,
   surfaceConditions,
   onClose,
+  onSave,
+  readOnly = false,
 }: ToothDetail3DProps) {
   const modelPath = getModelPath(fdi);
   const mirror = shouldMirrorModel(fdi);
   const quadrant = Math.floor(fdi / 10);
   const toothNum = fdi % 10;
+
+  // Editing state
+  const [restorationType, setRestorationType] = useState('FILLING');
+  const [selectedSurfaces, setSelectedSurfaces] = useState<string[]>([]);
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
 
   const toothTypeNames: Record<number, string> = {
     1: 'Centrale snijtand',
@@ -125,6 +146,24 @@ export default function ToothDetail3D({
   const surfaceEntries = surfaceConditions
     ? Object.entries(surfaceConditions).filter(([, v]) => v.condition !== 'HEALTHY')
     : [];
+
+  const handleToggleSurface = (surface: string) => {
+    setSelectedSurfaces((prev) =>
+      prev.includes(surface) ? prev.filter((s) => s !== surface) : [...prev, surface]
+    );
+  };
+
+  const canSubmit = selectedMaterial !== null && selectedSurfaces.length > 0 && !readOnly;
+
+  const handleSave = (action: string) => {
+    if (!canSubmit || !onSave || !selectedMaterial) return;
+    onSave({
+      restorationType,
+      surfaces: selectedSurfaces,
+      material: selectedMaterial,
+      action,
+    });
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -150,7 +189,7 @@ export default function ToothDetail3D({
       </div>
 
       {/* 3D Viewer */}
-      <div className="rounded-xl border border-gray-700/50 bg-gray-900/50 overflow-hidden" style={{ height: 340 }}>
+      <div className="rounded-xl border border-gray-700/50 bg-gray-900/50 overflow-hidden" style={{ height: 280 }}>
         {modelPath && status !== 'MISSING' ? (
           <Canvas
             dpr={[1.5, 2.5]}
@@ -184,6 +223,8 @@ export default function ToothDetail3D({
               autoRotateSpeed={2}
               minDistance={2}
               maxDistance={10}
+              minPolarAngle={0}
+              maxPolarAngle={Math.PI}
             />
           </Canvas>
         ) : (
@@ -203,10 +244,10 @@ export default function ToothDetail3D({
         Sleep om te draaien &mdash; scroll om in/uit te zoomen
       </p>
 
-      {/* Surface conditions */}
+      {/* Existing surface conditions */}
       {surfaceEntries.length > 0 && (
         <div className="bg-gray-800/50 rounded-lg p-3">
-          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Oppervlakken</h4>
+          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Huidige status</h4>
           <div className="grid grid-cols-2 gap-1.5">
             {surfaceEntries.map(([surface, data]) => (
               <div key={surface} className="flex items-center gap-2 text-sm">
@@ -228,6 +269,75 @@ export default function ToothDetail3D({
           {CONDITION_LABELS[status] || status}
         </span>
       </div>
+
+      {/* Editing controls */}
+      {!readOnly && onSave && (
+        <div className="space-y-4 border-t border-gray-700/50 pt-4">
+          <h4 className="text-sm font-bold text-white">Behandeling toevoegen</h4>
+
+          {/* Restoration type */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {RESTORATION_TYPES.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setRestorationType(key)}
+                  className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors ${
+                    restorationType === key
+                      ? 'bg-blue-500 text-white border-blue-600'
+                      : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Surface selector */}
+          <SurfaceSelector
+            toothNumber={fdi}
+            selectedSurfaces={selectedSurfaces}
+            onToggleSurface={handleToggleSurface}
+          />
+
+          {/* Material picker */}
+          <MaterialPicker
+            selectedMaterial={selectedMaterial}
+            onSelectMaterial={setSelectedMaterial}
+          />
+
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={() => handleSave('save')}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors ${
+                canSubmit
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Opslaan
+            </button>
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={() => handleSave('treat')}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors ${
+                canSubmit
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Behandelen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

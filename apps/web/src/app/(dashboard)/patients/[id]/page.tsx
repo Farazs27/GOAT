@@ -48,6 +48,7 @@ const TreatmentPlanBuilder = dynamic(() => import('@/components/treatments/treat
 const PrescriptionList = dynamic(() => import('@/components/prescriptions/prescription-list'));
 const MedicalHistoryPanel = dynamic(() => import('@/components/patient-history/medical-history-panel'));
 const DentalXRayViewer = dynamic(() => import('@/components/xray-viewer/DentalXRayViewer'), { ssr: false });
+const PatientStlViewer = dynamic(() => import('@/components/patient-stl-viewer'), { ssr: false });
 
 interface Patient {
   id: string;
@@ -137,7 +138,8 @@ export default function PatientDetailPage() {
   // Images / Rontgen
   const [patientImages, setPatientImages] = useState<PatientImage[]>([]);
   const [imageUploading, setImageUploading] = useState(false);
-  const [imageModal, setImageModal] = useState<{ index: number } | null>(null);
+  const [imageModal, setImageModal] = useState<{ index: number; mode: 'xray' | 'photo' | 'stl' } | null>(null);
+  const [imageSubTab, setImageSubTab] = useState('all');
 
   // Odontogram data
   const [odontogramTeeth, setOdontogramTeeth] = useState<ToothData[]>([]);
@@ -446,7 +448,7 @@ export default function PatientDetailPage() {
     { id: 'prescriptions', icon: Pill, label: 'Recepten' },
     { id: 'invoices', icon: CreditCard, label: 'Facturen' },
     { id: 'referrals', icon: ExternalLink, label: 'Verwijzingen' },
-    { id: 'rontgen', icon: ImageIcon, label: 'Rontgen' },
+    { id: 'rontgen', icon: ImageIcon, label: 'Beeldmateriaal' },
   ];
 
 
@@ -1058,90 +1060,219 @@ export default function PatientDetailPage() {
             </div>
           )}
 
-          {activeTab === 'rontgen' && (
-            <div className="glass-card rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Rontgenfoto&apos;s</h3>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => window.open(`visiquick://patient/${patientId}`, '_self')}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Openen in VisiQuick
-                  </button>
-                  <label className="flex items-center gap-2 px-4 py-2.5 glass rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
-                    <Upload className="h-4 w-4" />
-                    {imageUploading ? 'Uploaden...' : 'Upload'}
-                    <input
-                      type="file"
-                      accept="image/*,.dcm,.dicom"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => {
-                        const files = e.target.files;
-                        if (files) {
-                          Array.from(files).forEach(file => uploadPatientImage(file));
-                        }
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
+          {activeTab === 'rontgen' && (() => {
+            const imgSubTabs = [
+              { key: 'all', label: 'Alle', types: null as string[] | null, uploadType: 'OTHER' },
+              { key: 'intraoral_scan', label: 'Intraoral Scan', types: ['INTRAORAL_SCAN'], uploadType: 'INTRAORAL_SCAN' },
+              { key: 'intraoral_photo', label: 'Intraoral Foto', types: ['INTRAORAL', 'INTRAORAL_PHOTO'], uploadType: 'INTRAORAL_PHOTO' },
+              { key: 'facial', label: 'Gezichtsfoto', types: ['FACIAL', 'EXTRAORAL'], uploadType: 'FACIAL' },
+              { key: 'xray', label: 'Röntgen', types: ['XRAY'], uploadType: 'XRAY' },
+              { key: 'cephalometric', label: 'Cefalometrisch', types: ['CEPHALOMETRIC'], uploadType: 'CEPHALOMETRIC' },
+            ];
+            const activeSub = imgSubTabs.find(t => t.key === imageSubTab) ?? imgSubTabs[0];
+            const filteredImages = activeSub.types
+              ? patientImages.filter(img => activeSub.types!.includes(img.imageType))
+              : patientImages;
+            const activeUploadType = activeSub.uploadType;
 
-              {patientImages.length === 0 ? (
-                <div className="text-center py-12">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-3 text-white/15" />
-                  <p className="text-sm text-white/30">Geen rontgenfoto&apos;s gevonden</p>
-                  <p className="text-xs text-white/20 mt-1">Upload een afbeelding of open VisiQuick</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {patientImages.map((img, idx) => (
+            const typeLabel = (type: string) => {
+              const map: Record<string, string> = {
+                XRAY: 'Röntgen', CEPHALOMETRIC: 'Cefalo', INTRAORAL_SCAN: 'IO Scan',
+                INTRAORAL_PHOTO: 'IO Foto', INTRAORAL: 'Intraoraal', FACIAL: 'Gezicht',
+                EXTRAORAL: 'Extraoraal', OTHER: 'Overig',
+              };
+              return map[type] ?? type;
+            };
+
+            return (
+              <div className="glass-card rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Beeldmateriaal</h3>
+                  <div className="flex items-center gap-3">
                     <button
-                      key={img.id}
-                      onClick={() => setImageModal({ index: idx })}
-                      className="group rounded-xl overflow-hidden border border-white/10 hover:border-blue-500/30 transition-all bg-black/20"
+                      onClick={() => window.open(`visiquick://patient/${patientId}`, '_self')}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20"
                     >
-                      <div className="aspect-square relative">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={img.filePath}
-                          alt={img.fileName}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                          <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </div>
-                      <div className="p-2">
-                        <p className="text-[10px] text-white/40 truncate">{img.fileName}</p>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/20">
-                            {img.imageType === 'XRAY' ? 'Rontgen' : img.imageType === 'INTRAORAL' ? 'Intraoraal' : img.imageType === 'EXTRAORAL' ? 'Extraoraal' : 'Overig'}
-                          </span>
-                          <span className="text-[9px] text-white/30">
-                            {new Date(img.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
-                          </span>
-                        </div>
-                      </div>
+                      <ExternalLink className="h-4 w-4" />
+                      VisiQuick
                     </button>
-                  ))}
+                    <label className="flex items-center gap-2 px-4 py-2.5 glass rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
+                      <Upload className="h-4 w-4" />
+                      {imageUploading ? 'Uploaden...' : `Upload ${activeSub.key !== 'all' ? activeSub.label : ''}`}
+                      <input
+                        type="file"
+                        accept="image/*,.dcm,.dicom,.stl"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files) {
+                            Array.from(files).forEach(file => uploadPatientImage(file, activeUploadType));
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
-              )}
 
-              {/* Professional X-Ray Viewer */}
-              {imageModal !== null && patientImages.length > 0 && (
-                <DentalXRayViewer
-                  images={patientImages}
-                  initialIndex={imageModal.index}
-                  onClose={() => setImageModal(null)}
-                  onDelete={(id) => { deletePatientImage(id); setImageModal(null); }}
-                />
-              )}
-            </div>
-          )}
+                {/* Sub-tabs */}
+                <div className="flex flex-wrap gap-1.5">
+                  {imgSubTabs.map((tab) => {
+                    const count = tab.types
+                      ? patientImages.filter(img => tab.types!.includes(img.imageType)).length
+                      : patientImages.length;
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => setImageSubTab(tab.key)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                          imageSubTab === tab.key
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                            : 'bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/60 border border-transparent'
+                        }`}
+                      >
+                        {tab.label}
+                        {count > 0 && <span className="ml-1.5 opacity-60">{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Image grid */}
+                {filteredImages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ImageIcon className="h-12 w-12 mx-auto mb-3 text-white/15" />
+                    <p className="text-sm text-white/30">
+                      {patientImages.length === 0 ? 'Geen beeldmateriaal gevonden' : `Geen ${activeSub.label.toLowerCase()} gevonden`}
+                    </p>
+                    <p className="text-xs text-white/20 mt-1">Upload een afbeelding of open VisiQuick</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {filteredImages.map((img) => {
+                      // Find index in full array for the modal viewer
+                      const fullIdx = patientImages.findIndex(pi => pi.id === img.id);
+                      return (
+                        <button
+                          key={img.id}
+                          onClick={() => {
+                            const isStl = img.fileName?.toLowerCase().endsWith('.stl') || img.imageType === 'INTRAORAL_SCAN';
+                            const isXray = ['XRAY', 'CEPHALOMETRIC'].includes(img.imageType);
+                            const mode = isStl ? 'stl' : isXray ? 'xray' : 'photo';
+                            setImageModal({ index: fullIdx, mode });
+                          }}
+                          className="group rounded-xl overflow-hidden border border-white/10 hover:border-blue-500/30 transition-all bg-black/20"
+                        >
+                          <div className="aspect-square relative">
+                            {img.fileName?.toLowerCase().endsWith('.stl') || img.imageType === 'INTRAORAL_SCAN' ? (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+                                <svg className="w-10 h-10 text-blue-400/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3L2 12l10 9 10-9L12 3z"/><path d="M2 12l10 4 10-4"/></svg>
+                                <span className="text-[10px] text-white/40 mt-1">3D Scan</span>
+                              </div>
+                            ) : (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={img.filePath}
+                                  alt={img.fileName}
+                                  className="w-full h-full object-cover"
+                                />
+                              </>
+                            )}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                              <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </div>
+                          <div className="p-2">
+                            <p className="text-[10px] text-white/40 truncate">{img.fileName}</p>
+                            <div className="flex items-center justify-between mt-0.5">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                                {typeLabel(img.imageType)}
+                              </span>
+                              <span className="text-[9px] text-white/30">
+                                {new Date(img.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Image Viewers */}
+                {imageModal !== null && patientImages.length > 0 && imageModal.mode === 'xray' && (
+                  <DentalXRayViewer
+                    images={patientImages.filter(img => ['XRAY', 'CEPHALOMETRIC'].includes(img.imageType))}
+                    initialIndex={(() => {
+                      const xrayImages = patientImages.filter(img => ['XRAY', 'CEPHALOMETRIC'].includes(img.imageType));
+                      const clickedImg = patientImages[imageModal.index];
+                      return Math.max(0, xrayImages.findIndex(img => img.id === clickedImg?.id));
+                    })()}
+                    onClose={() => setImageModal(null)}
+                    onDelete={(id) => { deletePatientImage(id); setImageModal(null); }}
+                  />
+                )}
+
+                {/* Photo Lightbox */}
+                {imageModal !== null && imageModal.mode === 'photo' && (() => {
+                  const img = patientImages[imageModal.index];
+                  if (!img) return null;
+                  return (
+                    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center" onClick={() => setImageModal(null)}>
+                      <button className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors z-10" onClick={() => setImageModal(null)}>
+                        <X className="w-5 h-5" />
+                      </button>
+                      <button
+                        className="absolute top-4 left-4 p-2 rounded-xl bg-red-500/20 hover:bg-red-500/40 text-red-300 transition-colors z-10"
+                        onClick={(e) => { e.stopPropagation(); deletePatientImage(img.id); setImageModal(null); }}
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.filePath}
+                        alt={img.fileName}
+                        className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-black/60 text-white/70 text-sm">
+                        {img.fileName}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* STL 3D Viewer */}
+                {imageModal !== null && imageModal.mode === 'stl' && (() => {
+                  const img = patientImages[imageModal.index];
+                  if (!img) return null;
+                  return (
+                    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col">
+                      <div className="flex items-center justify-between p-4">
+                        <span className="text-sm text-white/70">{img.fileName}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/40 text-red-300 transition-colors"
+                            onClick={() => { deletePatientImage(img.id); setImageModal(null); }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" onClick={() => setImageModal(null)}>
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <PatientStlViewer url={img.filePath} />
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })()}
         </div>
       </div>
 

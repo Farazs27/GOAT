@@ -67,6 +67,7 @@ model Practice {
   whatsappConversations WhatsAppConversation[]
   whatsappMessages      WhatsAppMessage[]
   customCodeCategories  CustomCodeCategory[]
+  dsdDesigns            DsdDesign[]
 
   @@map("practices")
 }
@@ -109,6 +110,7 @@ model User {
   messagesSent               Message[]              @relation("MessageSender")
   referralsCreated           Referral[]             @relation("ReferralCreator")
   whatsappMessagesSent       WhatsAppMessage[]      @relation("WhatsAppSender")
+  dsdDesignsCreated          DsdDesign[]            @relation("DsdDesignCreator")
 
   @@map("users")
 }
@@ -193,6 +195,7 @@ model Patient {
   emailThreads      EmailThread[]
   whatsappConversations WhatsAppConversation[]
   patientCategories     PatientCategory[]
+  dsdDesigns            DsdDesign[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -933,13 +936,14 @@ model PatientImage {
   filePath   String   @map("file_path")
   fileSize   Int      @map("file_size")
   mimeType   String   @map("mime_type")
-  imageType  String   @default("XRAY") @map("image_type") // XRAY, INTRAORAL, EXTRAORAL, OTHER
+  imageType  String   @default("XRAY") @map("image_type") // XRAY, CEPHALOMETRIC, INTRAORAL_SCAN, INTRAORAL_PHOTO, FACIAL, EXTRAORAL, OTHER
   notes      String?
   createdAt  DateTime @default(now()) @map("created_at")
 
-  practice Practice @relation(fields: [practiceId], references: [id])
-  patient  Patient  @relation(fields: [patientId], references: [id])
-  uploader User     @relation("PatientImageUploader", fields: [uploadedBy], references: [id])
+  practice   Practice    @relation(fields: [practiceId], references: [id])
+  patient    Patient     @relation(fields: [patientId], references: [id])
+  uploader   User        @relation("PatientImageUploader", fields: [uploadedBy], references: [id])
+  dsdDesigns DsdDesign[]
 
   @@map("patient_images")
 }
@@ -1260,4 +1264,58 @@ model CustomCodeCategoryCode {
 
   @@unique([categoryId, nzaCodeId])
   @@map("custom_code_category_codes")
+}
+
+// ============================================================
+// DIGITAL SMILE DESIGN (DSD)
+// ============================================================
+
+enum DsdStatus {
+  DRAFT
+  IN_PROGRESS
+  REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+model DsdDesign {
+  id         String    @id @default(uuid())
+  practiceId String    @map("practice_id")
+  patientId  String    @map("patient_id")
+  createdBy  String    @map("created_by")
+  title      String
+  status     DsdStatus @default(DRAFT)
+  imageId    String    @map("image_id")
+  notes      String?   @db.Text
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  practice Practice           @relation(fields: [practiceId], references: [id])
+  patient  Patient            @relation(fields: [patientId], references: [id])
+  creator  User               @relation("DsdDesignCreator", fields: [createdBy], references: [id])
+  image    PatientImage       @relation(fields: [imageId], references: [id])
+  versions DsdDesignVersion[]
+
+  @@index([patientId])
+  @@map("dsd_designs")
+}
+
+model DsdDesignVersion {
+  id              String   @id @default(uuid())
+  designId        String   @map("design_id")
+  versionNumber   Int      @map("version_number")
+  createdBy       String   @map("created_by")
+  notes           String?  @db.Text
+  landmarkData    Json     @map("landmark_data")
+  calibrationData Json?    @map("calibration_data")
+  measurements    Json?
+  derivedLines    Json?    @map("derived_lines")
+  stlFileUrl      String?  @map("stl_file_url")
+  stlFileName     String?  @map("stl_file_name")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  design DsdDesign @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@unique([designId, versionNumber])
+  @@map("dsd_design_versions")
 }

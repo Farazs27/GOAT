@@ -42,8 +42,8 @@ const CONDITION_COLORS: Record<string, string> = {
 const UPPER_ROW = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 const LOWER_ROW = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
 
-const TOOTH_SPACING = 1.1;
-const ROW_GAP = 3.2;
+const TOOTH_SPACING = 1.3;
+const ROW_GAP = 4.0;
 
 function getRowPosition(fdi: number): [number, number, number] {
   const isUpper = Math.floor(fdi / 10) <= 2;
@@ -157,7 +157,7 @@ function RowToothModel({
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    const s = 1.0 / maxDim;
+    const s = 1.4 / maxDim;
     return {
       scale: s,
       offset: new THREE.Vector3(-center.x * s, -center.y * s, -center.z * s),
@@ -169,11 +169,11 @@ function RowToothModel({
   const isUpper = quadrant <= 2;
   const mirror = shouldMirrorModel(fdi);
 
-  // Upper teeth: roots point up (default model orientation).
-  // Lower teeth: flip on X axis so roots point down, and flip Z to face camera.
-  const rotX = isUpper ? 0 : Math.PI;
+  // Buccal/facial view: rotate around X so tooth stands upright.
+  // Model long axis = Z. Upper: roots up (rotX=-90°), Lower: roots down (rotX=+90°).
+  const rotX = isUpper ? -Math.PI / 2 : Math.PI / 2;
   const rotY = mirror ? Math.PI : 0;
-  const rotZ = isUpper ? 0 : Math.PI;
+  const rotZ = 0;
 
   return (
     <group position={position}>
@@ -341,10 +341,10 @@ export default function DentalArch3D({
   onToothSelect,
 }: DentalArch3DProps) {
   return (
-    <div className="w-full rounded-xl border border-gray-700/50 bg-gray-900/50 overflow-hidden" style={{ height: 450 }}>
+    <div className="w-full rounded-xl border border-gray-700/50 bg-gray-900/50 overflow-hidden" style={{ height: 520 }}>
       <Canvas
         dpr={[1.5, 2.5]}
-        camera={{ position: [0, 0, 14], fov: 30, near: 0.1, far: 100 }}
+        camera={{ position: [0, 0, 18], fov: 30, near: 0.1, far: 100 }}
         gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
         style={{ background: '#0f1117' }}
       >
@@ -367,9 +367,7 @@ export default function DentalArch3D({
         <OrbitControls
           enablePan={false}
           enableZoom={false}
-          enableRotate={true}
-          minPolarAngle={Math.PI / 4}
-          maxPolarAngle={Math.PI * 3 / 4}
+          enableRotate={false}
           target={[0, 0, 0]}
           makeDefault
         />

@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Menu,
   X,
+  Sparkles,
 } from "lucide-react";
 import AiChat from "@/components/AiChat";
 
@@ -27,6 +28,7 @@ const navItems = [
   { icon: FileText, label: "Facturen", href: "/billing" },
   { icon: CreditCard, label: "Betalingen", href: "/payments" },
   { icon: BarChart3, label: "Rapportage", href: "/reports" },
+  { icon: Sparkles, label: "Smile Design", href: "/smile-design" },
   { icon: Settings, label: "Instellingen", href: "/settings" },
 ];
 
