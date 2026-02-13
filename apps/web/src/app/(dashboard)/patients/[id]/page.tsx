@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -118,11 +118,12 @@ const TREATMENT_STATUS_LABELS: Record<string, string> = {
 export default function PatientDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const patientId = params.id as string;
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -333,6 +334,19 @@ export default function PatientDetailPage() {
     fetchTreatmentHistory();
     fetchReferrals();
   }, [fetchTreatmentHistory, fetchReferrals]);
+
+  // Scroll to section from URL hash (e.g. #section-notities)
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section && !loading) {
+      const el = document.getElementById(`section-${section}`);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      }
+    }
+  }, [loading, searchParams]);
 
   const fetchOutstandingBalance = useCallback(async () => {
     try {
@@ -684,7 +698,7 @@ export default function PatientDetailPage() {
       </div>
 
       {/* Gebitsstatus — Always visible */}
-      <div className="glass-card rounded-2xl p-6">
+      <div className="glass-card rounded-2xl p-6 overflow-hidden min-h-[400px] md:min-h-[500px]">
         <div className="flex items-center gap-2 mb-4">
           <ImageIcon className="h-4 w-4 text-blue-400" />
           <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Gebitsstatus</h3>
@@ -700,15 +714,15 @@ export default function PatientDetailPage() {
 
       {/* Behandelingen & Notities — Side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="glass-card rounded-2xl p-6">
+        <div id="section-behandelingen" className="glass-card rounded-2xl p-6 scroll-mt-6">
           <div className="flex items-center gap-2 mb-4">
             <ClipboardList className="h-4 w-4 text-emerald-400" />
             <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Behandelingen</h3>
           </div>
-          <TreatmentPlanBuilder patientId={patientId} />
+          <TreatmentPlanBuilder patientId={patientId} patientName={`${patient.firstName} ${patient.lastName}`} />
         </div>
 
-        <div className="glass-card rounded-2xl p-6">
+        <div id="section-notities" className="glass-card rounded-2xl p-6 scroll-mt-6">
           <div className="flex items-center gap-2 mb-4">
             <FileText className="h-4 w-4 text-violet-400" />
             <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Notities</h3>
@@ -717,6 +731,7 @@ export default function PatientDetailPage() {
             patientId={patientId}
             notes={notes}
             onNoteCreated={fetchNotes}
+            autoOpen={searchParams.get('autoOpen') === 'true'}
           />
         </div>
       </div>

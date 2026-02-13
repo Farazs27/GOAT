@@ -2,19 +2,13 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
 import { NZA_CODE_EXAMPLES } from '@/lib/ai/nza-codebook';
+import { validateAndCorrectSuggestions, type AiSuggestion } from '@/lib/ai/treatment-validator';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-interface AiDetectedCode {
-  code: string;
-  description: string;
-  toothNumber: string;
-  quantity: string;
-  reasoning: string;
-}
+// ─── Category pre-filtering (same as analyze-notes) ─────────────────────────
 
-// Category keywords for pre-filtering — only send relevant categories to prompt
 const CATEGORY_TRIGGERS: Record<string, string[]> = {
   VERDOVING: ['verdoving', 'loco', 'anesthesie', 'geleidingsverdoving', 'sedatie', 'lachgas', 'verd'],
   CONSULTATIE: ['consult', 'controle', 'onderzoek', 'recall', 'verwijzing', 'intake', 'telefonisch', 'spoed', 'behandelplan', 'instructie', 'mondverzorging'],
@@ -33,13 +27,13 @@ const CATEGORY_TRIGGERS: Record<string, string[]> = {
   IMPLANTAAT: ['implantaat', 'impl', 'implantatie', 'fixture', 'implantaatkroon', 'Implantaat'],
 };
 
-function getRelevantCategories(notes: string): string[] {
-  const lowerNotes = notes.toLowerCase();
+function getRelevantCategories(text: string): string[] {
+  const lowerText = text.toLowerCase();
   const matched = new Set<string>();
 
   for (const [category, triggers] of Object.entries(CATEGORY_TRIGGERS)) {
     for (const trigger of triggers) {
-      if (lowerNotes.includes(trigger.toLowerCase())) {
+      if (lowerText.includes(trigger.toLowerCase())) {
         matched.add(category);
         break;
       }
@@ -65,7 +59,6 @@ function getRelevantCategories(notes: string): string[] {
 
 function buildCodebookPrompt(relevantCategories: string[]): string {
   const categorySet = new Set(relevantCategories);
-  // Match on both uppercase category key and the actual category value in the codebook
   const relevantExamples = NZA_CODE_EXAMPLES.filter(ex =>
     categorySet.has(ex.category) || categorySet.has(ex.category.toUpperCase())
   );
@@ -83,28 +76,38 @@ function buildCodebookPrompt(relevantCategories: string[]): string {
   }).join('\n\n');
 }
 
-function buildPrompt(
-  notes: { bevindingen: string; behandelplan: string; uitlegAfspraken: string; algemeen: string },
-  codebookSection: string,
-  allCodesList: string
-): string {
-  return `Je bent een expert Nederlands tandheelkundig declaratiesysteem. Je kent ALLE NZa prestatiecodes, KNMT-richtlijnen, en tandheelkundige terminologie. Je MOET de juiste NZa-codes detecteren uit klinische notities.
+// ─── Chat prompt builder ─────────────────────────────────────────────────────
 
-KLINISCHE NOTITIES VAN DE TANDARTS:
-═══════════════════════════════════
-Bevindingen: ${notes.bevindingen || '(leeg)'}
-Behandelplan: ${notes.behandelplan || '(leeg)'}
-Uitleg & Afspraken: ${notes.uitlegAfspraken || '(leeg)'}
-Algemeen: ${notes.algemeen || '(leeg)'}
-═══════════════════════════════════
+function buildChatPrompt(
+  message: string,
+  history: Array<{ role: string; content: string; suggestions?: unknown[] }>,
+  codebookSection: string,
+  allCodesList: string,
+  context?: { selectedTeeth?: number[]; performerId?: string }
+): string {
+  // Format last 6 messages of history
+  const recentHistory = history.slice(-6);
+  const historySection = recentHistory.length > 0
+    ? recentHistory.map(h => `${h.role === 'user' ? 'TANDARTS' : 'ASSISTENT'}: ${h.content}`).join('\n')
+    : '(geen eerdere berichten)';
+
+  const contextSection = context?.selectedTeeth?.length
+    ? `\nGESELECTEERDE ELEMENTEN: ${context.selectedTeeth.join(', ')}`
+    : '';
+
+  return `Je bent een expert Nederlands tandheelkundig declaratiesysteem en AI-assistent voor tandartsen. Je helpt bij het opstellen van behandelplannen door NZa prestatiecodes te detecteren uit natuurlijke taal.
+
+CHATGESCHIEDENIS:
+${historySection}
+
+HUIDIGE INVOER VAN DE TANDARTS:
+"${message}"
+${contextSection}
 
 CODEBOEK MET VOORBEELDEN:
-Hieronder staan de relevante NZa-codes met voorbeelden van hoe tandartsen deze verrichtingen noteren.
-Gebruik deze voorbeelden om de notities hierboven te matchen met de juiste codes.
-
 ${codebookSection}
 
-ALLE BESCHIKBARE CODES (voor referentie):
+ALLE BESCHIKBARE CODES (met toelichting):
 ${allCodesList}
 
 AFKORTINGEN DIE TANDARTSEN GEBRUIKEN:
@@ -162,14 +165,19 @@ BEGELEIDENDE CODES (voeg automatisch toe als logisch):
 - Bij kroonpreparatie → voeg A10 toe
 - Bij chirurgische ingrepen → voeg A10 toe
 
+CONTEXT-BEWUSTZIJN:
+- Als de tandarts "dezelfde", "ook voor", "hetzelfde", "idem", "ook" zegt, verwijs dan naar de VORIGE suggesties in de chatgeschiedenis
+- Bijvoorbeeld: "hetzelfde voor 37" → herhaal de laatst voorgestelde codes maar dan voor element 37
+- "ook een vulling" → gebruik dezelfde vulling-specificaties als eerder besproken
+
 STRIKTE REGELS:
-1. Detecteer ALLEEN verrichtingen die DAADWERKELIJK beschreven staan in de notities
-2. Geef bij elke code het FDI-tandnummer als dat vermeld is (of lege string als niet van toepassing)
+1. Detecteer ALLEEN verrichtingen die DAADWERKELIJK beschreven staan in de invoer (of via context uit eerdere berichten)
+2. Geef bij elke code de FDI-tandnummers als die vermeld zijn
 3. Tel vlakken NAUWKEURIG bij vullingen — dit bepaalt de juiste code
 4. Tel kanalen NAUWKEURIG bij endo — dit bepaalt de juiste code
 5. Voeg begeleidende codes toe (verdoving, röntgen) als de behandeling dat logisch vereist
 6. Geef NOOIT dezelfde code + tandnummer combinatie dubbel
-7. Gebruik quantity "1" tenzij expliciet meerdere sessies/injecties vermeld
+7. Gebruik quantity 1 tenzij expliciet meerdere sessies/injecties vermeld
 8. Bij gebitsreiniging: tel het aantal keer 5 minuten voor de quantity van M01
 
 Retourneer een JSON array:
@@ -177,56 +185,115 @@ Retourneer een JSON array:
   {
     "code": "NZA-code",
     "description": "Korte beschrijving",
-    "toothNumber": "FDI-tandnummer of lege string",
-    "quantity": "aantal (standaard 1)",
-    "reasoning": "Waarom deze code: citeer het relevante stuk uit de notities"
+    "toothNumbers": [36],
+    "surfaces": "MO",
+    "canals": null,
+    "quantity": 1,
+    "reasoning": "Waarom deze code: citeer het relevante stuk uit de invoer",
+    "isCompanion": false
   }
 ]
+
+- toothNumbers: array van FDI-nummers (leeg array als niet van toepassing)
+- surfaces: string vlaknotatie of null als niet van toepassing
+- canals: getal of null als niet van toepassing
+- isCompanion: true als het een automatisch toegevoegde begeleidende code is
 
 Retourneer [] als er geen verrichtingen staan.
 Retourneer ALLEEN codes uit de beschikbare lijst.`;
 }
 
+// ─── Generate natural language summary ───────────────────────────────────────
+
+async function generateSummary(
+  message: string,
+  suggestions: Array<{ nzaCode: string; description: string; toothNumbers: number[] }>
+): Promise<string> {
+  if (suggestions.length === 0) {
+    // Detect language
+    const isDutch = /[a-z]/.test(message.toLowerCase()) &&
+      /(vulling|kroon|extractie|endo|comp|tand|element|paro|controle|brug)/i.test(message);
+    return isDutch
+      ? 'Ik kon geen specifieke verrichtingen herkennen. Kun je het iets anders formuleren?'
+      : 'I could not detect any specific procedures. Could you rephrase?';
+  }
+
+  const summaryPrompt = `Je bent een tandheelkundig AI-assistent. De tandarts typte: "${message}"
+
+Hieruit zijn deze codes gedetecteerd:
+${suggestions.map(s => `- ${s.nzaCode}: ${s.description}${s.toothNumbers.length ? ` (element ${s.toothNumbers.join(', ')})` : ''}`).join('\n')}
+
+Geef een KORTE bevestiging (1-2 zinnen) in DEZELFDE TAAL als de invoer van de tandarts. Wees bondig en professioneel. Noem de belangrijkste verrichtingen. Gebruik geen markdown.`;
+
+  try {
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: summaryPrompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          topP: 0.8,
+          maxOutputTokens: 256,
+        },
+      }),
+    });
+
+    if (!res.ok) return suggestions.length + ' verrichting(en) gedetecteerd.';
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text?.trim() || suggestions.length + ' verrichting(en) gedetecteerd.';
+  } catch {
+    return suggestions.length + ' verrichting(en) gedetecteerd.';
+  }
+}
+
+// ─── POST handler ────────────────────────────────────────────────────────────
+
 export async function POST(request: NextRequest) {
   try {
     await withAuth(request);
     const body = await request.json();
-    const { bevindingen, behandelplan, uitlegAfspraken, algemeen } = body;
+    const { message, history = [], context } = body;
+
+    if (!message || typeof message !== 'string' || message.trim().length < 2) {
+      throw new ApiError('Bericht is te kort', 400);
+    }
 
     if (!GEMINI_API_KEY) {
       throw new ApiError('Gemini API key niet geconfigureerd', 500);
     }
 
-    // Skip if all notes are empty
-    const combined = `${bevindingen || ''}${behandelplan || ''}${uitlegAfspraken || ''}${algemeen || ''}`.trim();
-    if (combined.length < 3) {
-      return Response.json({ detectedLines: [], source: 'ai' });
-    }
-
-    // Fetch all active NZA codes from DB
+    // Fetch all active NZA codes from DB (with toelichting)
     const nzaCodes = await prisma.nzaCode.findMany({
       where: { isActive: true },
       orderBy: { code: 'asc' },
     });
 
-    // Determine which categories are relevant based on note content
-    const relevantCategories = getRelevantCategories(combined);
+    // Combine message with recent history for category detection
+    const recentText = [
+      message,
+      ...history.slice(-4).map((h: { content: string }) => h.content),
+    ].join(' ');
 
-    // Build codebook examples section for relevant categories
+    // Determine relevant categories
+    const relevantCategories = getRelevantCategories(recentText);
+
+    // Build codebook examples for relevant categories
     const codebookSection = buildCodebookPrompt(relevantCategories);
 
-    // Build compact all-codes reference
-    const allCodesList = nzaCodes.map(c =>
-      `${c.code}: ${c.descriptionNl} (€${c.maxTariff})`
-    ).join('\n');
+    // Build compact all-codes reference (with toelichting)
+    const allCodesList = nzaCodes.map(c => {
+      const toelichting = (c as Record<string, unknown>).toelichting;
+      const toelichtingStr = toelichting ? ` — ${toelichting}` : '';
+      return `${c.code}: ${c.descriptionNl} (€${c.maxTariff})${toelichtingStr}`;
+    }).join('\n');
 
-    const prompt = buildPrompt(
-      { bevindingen, behandelplan, uitlegAfspraken, algemeen },
-      codebookSection,
-      allCodesList
-    );
+    // Build chat prompt
+    const prompt = buildChatPrompt(message, history, codebookSection, allCodesList, context);
 
-    // Call Gemini API
+    // Call Gemini API for code detection
     const geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -251,51 +318,89 @@ export async function POST(request: NextRequest) {
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!responseText) {
-      return Response.json({ detectedLines: [], source: 'ai', error: 'no_response' });
+      return Response.json({
+        response: 'Geen verrichtingen gedetecteerd.',
+        suggestions: [],
+      });
     }
 
-    // Parse the structured JSON response
-    let aiResult: AiDetectedCode[];
+    // Parse AI response
+    let aiResult: Array<{
+      code: string;
+      description: string;
+      toothNumbers: number[];
+      surfaces: string | null;
+      canals: number | null;
+      quantity: number;
+      reasoning: string;
+      isCompanion: boolean;
+    }>;
+
     try {
       aiResult = JSON.parse(responseText);
     } catch {
       console.error('Failed to parse Gemini response:', responseText);
-      return Response.json({ detectedLines: [], source: 'ai', error: 'parse_error' });
+      return Response.json({
+        response: 'Er ging iets mis bij het verwerken van de AI-respons.',
+        suggestions: [],
+      });
     }
 
     if (!Array.isArray(aiResult)) {
-      return Response.json({ detectedLines: [], source: 'ai', error: 'invalid_format' });
+      return Response.json({
+        response: 'Geen verrichtingen gedetecteerd.',
+        suggestions: [],
+      });
     }
 
-    // Map AI results to DetectedLine format, enriching with DB data
+    // Map to AiSuggestion[] for validator
+    const aiSuggestions: AiSuggestion[] = aiResult.map(item => ({
+      code: item.code,
+      description: item.description || '',
+      toothNumbers: Array.isArray(item.toothNumbers) ? item.toothNumbers : [],
+      surfaces: item.surfaces || undefined,
+      canals: item.canals || undefined,
+      quantity: item.quantity || 1,
+      reasoning: item.reasoning || '',
+      isCompanion: item.isCompanion || false,
+    }));
+
+    // Run through validator
+    const validated = validateAndCorrectSuggestions(aiSuggestions, message);
+
+    // Build code lookup map
     const codeMap = new Map(nzaCodes.map(c => [c.code, c]));
-    const seen = new Set<string>();
-    const detectedLines = aiResult
-      .filter(item => codeMap.has(item.code))
-      .map(item => {
-        const nza = codeMap.get(item.code)!;
-        const toothNumber = item.toothNumber || '';
-        const dedupeKey = `${item.code}:${toothNumber}`;
 
-        if (seen.has(dedupeKey)) return null;
-        seen.add(dedupeKey);
-
+    // Build final suggestions with DB enrichment
+    const suggestions = validated
+      .filter(v => codeMap.has(v.code))
+      .map((v, idx) => {
+        const nza = codeMap.get(v.code)!;
         return {
-          code: item.code,
+          id: `tc-${Date.now()}-${idx}`,
+          nzaCode: v.code,
           nzaCodeId: nza.id,
           description: nza.descriptionNl,
-          toothNumber,
-          unitPrice: String(nza.maxTariff),
-          quantity: item.quantity || '1',
-          dedupeKey,
-          auto: true as const,
-          aiDetected: true,
-          reasoning: item.reasoning || '',
+          toothNumbers: v.toothNumbers,
+          unitPrice: Number(nza.maxTariff),
+          quantity: v.quantity,
+          reasoning: v.reasoning,
+          confidence: v.confidence,
+          isCompanion: v.isCompanion,
+          corrected: v.corrected,
+          corrections: v.corrections,
         };
-      })
-      .filter(Boolean);
+      });
 
-    return Response.json({ detectedLines, source: 'ai' });
+    // Generate natural language summary (second Gemini call)
+    const summaryInput = suggestions.map(s => ({
+      nzaCode: s.nzaCode,
+      description: s.description,
+      toothNumbers: s.toothNumbers,
+    }));
+    const response = await generateSummary(message, summaryInput);
+
+    return Response.json({ response, suggestions });
   } catch (error) {
     return handleError(error);
   }

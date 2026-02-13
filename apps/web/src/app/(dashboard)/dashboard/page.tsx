@@ -54,7 +54,7 @@ export default function DashboardPage() {
   const [layout, setLayout] = useState<DashboardLayout>(DEFAULT_LAYOUT);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [activeWidget, setActiveWidget] = useState<'appointments-today' | 'nog-te-voltooien' | 'completed-today' | 'behandelplannen' | null>(null);
+  const [activeWidget, setActiveWidget] = useState<'appointments-today' | 'nog-te-voltooien' | 'completed-today' | 'behandelplannen' | 'without-followup' | null>(null);
   const [loading, setLoading] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -66,8 +66,8 @@ export default function DashboardPage() {
     Promise.all([
       authFetch(`/api/appointments?date=${today}`).then(r => r.ok ? r.json() : []).catch(() => []),
       authFetch('/api/patients?limit=6&page=1').then(r => r.ok ? r.json() : { data: [], meta: { total: 0 } }).catch(() => ({ data: [], meta: { total: 0 } })),
-      authFetch('/api/treatment-plans?status=DRAFT,PROPOSED,ACCEPTED,IN_PROGRESS&countOnly=true').then(r => r.ok ? r.json() : { count: 0 }).catch(() => ({ count: 0 })),
-      authFetch('/api/treatment-plans?status=ACCEPTED,IN_PROGRESS&countOnly=true').then(r => r.ok ? r.json() : { count: 0 }).catch(() => ({ count: 0 })),
+      authFetch('/api/dashboard/tasks?type=nog-te-voltooien&countOnly=true').then(r => r.ok ? r.json() : { count: 0 }).catch(() => ({ count: 0 })),
+      authFetch('/api/dashboard/tasks?type=behandelplannen&countOnly=true').then(r => r.ok ? r.json() : { count: 0 }).catch(() => ({ count: 0 })),
       authFetch('/api/patients/without-followup').then(r => r.ok ? r.json() : []).catch(() => []),
       authFetch('/api/user/dashboard-layout').then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([appts, patientsData, pendingPlans, activePlans, followups, savedLayout]) => {
@@ -133,7 +133,7 @@ export default function DashboardPage() {
       <WidgetRecentPatients patients={patients} onPatientClick={setSelectedPatient} />
     ),
     'without-followup': (
-      <WidgetWithoutFollowup patients={followupPatients} />
+      <WidgetWithoutFollowup patients={followupPatients} onClick={() => setActiveWidget('without-followup')} />
     ),
   };
 
@@ -163,6 +163,7 @@ export default function DashboardPage() {
         <WidgetDetailSlideout
           type={activeWidget}
           appointments={appointments}
+          followupPatients={followupPatients}
           onClose={() => setActiveWidget(null)}
         />
       )}

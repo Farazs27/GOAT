@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import { UserX, CheckCircle2 } from 'lucide-react';
 
 interface Patient {
@@ -9,23 +8,20 @@ interface Patient {
   patientNumber: string;
   firstVisitDate: string;
   firstVisitType: string;
+  contactedAt?: string | null;
 }
-
-const typeLabels: Record<string, string> = {
-  CHECKUP: 'Controle',
-  TREATMENT: 'Behandeling',
-  EMERGENCY: 'Spoed',
-  CONSULTATION: 'Consult',
-  HYGIENE: 'Mondhygiëne',
-};
 
 interface Props {
   patients: Patient[];
+  onClick?: () => void;
 }
 
-export function WidgetWithoutFollowup({ patients }: Props) {
+export function WidgetWithoutFollowup({ patients, onClick }: Props) {
   return (
-    <div className="glass-card rounded-2xl p-4 h-full flex flex-col">
+    <div
+      className="glass-card rounded-2xl p-4 h-full flex flex-col cursor-pointer hover:bg-white/[0.04] transition-all duration-200"
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <UserX className="h-4 w-4 text-[rgba(234,216,192,0.4)]" />
@@ -49,30 +45,23 @@ export function WidgetWithoutFollowup({ patients }: Props) {
         </div>
       ) : (
         <div className="space-y-1 flex-1 overflow-y-auto">
-          {patients.map((patient) => {
-            const visitDate = new Date(patient.firstVisitDate);
-            const formattedDate = visitDate.toLocaleDateString('nl-NL', {
-              day: '2-digit',
-              month: '2-digit',
-            });
-
-            return (
-              <Link
-                key={patient.id}
-                href={`/patients/${patient.id}`}
-                className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[rgba(245,230,211,0.95)] truncate">
-                    {patient.firstName} {patient.lastName}
-                  </p>
-                  <p className="text-xs text-[rgba(234,216,192,0.4)]">
-                    Eerste bezoek: {formattedDate} • {typeLabels[patient.firstVisitType] || patient.firstVisitType}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
+          {patients.slice(0, 4).map((patient) => (
+            <div
+              key={patient.id}
+              className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02]"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[rgba(245,230,211,0.95)] truncate">
+                  {patient.firstName} {patient.lastName}
+                </p>
+              </div>
+            </div>
+          ))}
+          {patients.length > 4 && (
+            <p className="text-[11px] text-center py-1" style={{ color: 'rgba(234,216,192,0.4)' }}>
+              +{patients.length - 4} meer
+            </p>
+          )}
         </div>
       )}
     </div>

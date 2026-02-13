@@ -68,6 +68,7 @@ model Practice {
   whatsappMessages      WhatsAppMessage[]
   customCodeCategories  CustomCodeCategory[]
   dsdDesigns            DsdDesign[]
+  dentistTasks          DentistTask[]
 
   @@map("practices")
 }
@@ -111,6 +112,7 @@ model User {
   referralsCreated           Referral[]             @relation("ReferralCreator")
   whatsappMessagesSent       WhatsAppMessage[]      @relation("WhatsAppSender")
   dsdDesignsCreated          DsdDesign[]            @relation("DsdDesignCreator")
+  assignedTasks              DentistTask[]          @relation("AssignedTasks")
 
   @@map("users")
 }
@@ -196,6 +198,7 @@ model Patient {
   whatsappConversations WhatsAppConversation[]
   patientCategories     PatientCategory[]
   dsdDesigns            DsdDesign[]
+  dentistTasks          DentistTask[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -1319,4 +1322,56 @@ model DsdDesignVersion {
 
   @@unique([designId, versionNumber])
   @@map("dsd_design_versions")
+}
+
+// ============================================================
+// DENTIST TASKS
+// ============================================================
+
+enum TaskCategory {
+  CLINICAL_NOTE
+  INVOICE
+  PRESCRIPTION
+  TREATMENT
+  CUSTOM
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  NOT_DONE
+  IN_PROGRESS
+  DONE
+}
+
+model DentistTask {
+  id          String       @id @default(uuid())
+  practiceId  String       @map("practice_id")
+  userId      String       @map("user_id")
+  patientId   String?      @map("patient_id")
+  title       String
+  description String?
+  category    TaskCategory
+  targetType  String?      @map("target_type")
+  targetId    String?      @map("target_id")
+  dueDate     DateTime?    @map("due_date")
+  priority    TaskPriority @default(NORMAL)
+  status      TaskStatus   @default(NOT_DONE)
+  completedAt DateTime?    @map("completed_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  practice Practice  @relation(fields: [practiceId], references: [id])
+  user     User      @relation("AssignedTasks", fields: [userId], references: [id])
+  patient  Patient?  @relation(fields: [patientId], references: [id])
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@map("dentist_tasks")
 }

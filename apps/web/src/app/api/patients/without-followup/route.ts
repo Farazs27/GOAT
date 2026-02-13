@@ -47,7 +47,34 @@ export async function GET(request: NextRequest) {
         };
       });
 
-    return Response.json(result);
+    // Check for recent follow-up reminder notifications
+    const patientIds = result.map(p => p.id);
+    const recentReminders = patientIds.length > 0
+      ? await prisma.notification.findMany({
+          where: {
+            patientId: { in: patientIds },
+            template: 'followup-reminder',
+            status: 'SENT',
+            sentAt: { gte: thirtyDaysAgo },
+          },
+          select: { patientId: true, sentAt: true },
+          orderBy: { sentAt: 'desc' },
+        })
+      : [];
+
+    const reminderMap = new Map<string, Date>();
+    for (const r of recentReminders) {
+      if (r.patientId && !reminderMap.has(r.patientId)) {
+        reminderMap.set(r.patientId, r.sentAt!);
+      }
+    }
+
+    const enriched = result.map(p => ({
+      ...p,
+      contactedAt: reminderMap.get(p.id)?.toISOString() || null,
+    }));
+
+    return Response.json(enriched);
   } catch (error) {
     return handleError(error);
   }

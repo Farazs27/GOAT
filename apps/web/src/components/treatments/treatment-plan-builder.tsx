@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, FileDown, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import TreatmentHistoryDropdown from './treatment-history-dropdown';
+
+const TreatmentPlanOverlay = dynamic(() => import('./treatment-plan-overlay'), { ssr: false });
 
 interface NzaCode {
   id: string;
@@ -36,6 +39,7 @@ interface TreatmentPlan {
 
 interface TreatmentPlanBuilderProps {
   patientId: string;
+  patientName?: string;
 }
 
 const statusLabels: Record<string, string> = {
@@ -52,10 +56,11 @@ const statusColors: Record<string, string> = {
   CANCELLED: 'bg-red-500/20 text-red-300 border-red-500/20',
 };
 
-export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilderProps) {
+export default function TreatmentPlanBuilder({ patientId, patientName }: TreatmentPlanBuilderProps) {
   const [plans, setPlans] = useState<TreatmentPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   const [newPlanTitle, setNewPlanTitle] = useState('');
   const [newPlanDescription, setNewPlanDescription] = useState('');
   const [addingToPlanId, setAddingToPlanId] = useState<string | null>(null);
@@ -170,15 +175,13 @@ export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilder
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Behandelplannen</h3>
-        {!showCreatePlan && (
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20"
-            onClick={() => setShowCreatePlan(true)}
-          >
-            <Plus className="h-4 w-4" />
-            Nieuw behandelplan
-          </button>
-        )}
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20"
+          onClick={() => setShowOverlay(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Nieuw behandelplan
+        </button>
       </div>
 
       {showCreatePlan && (
@@ -358,6 +361,14 @@ export default function TreatmentPlanBuilder({ patientId }: TreatmentPlanBuilder
           </div>
         );
       })}
+      {showOverlay && (
+        <TreatmentPlanOverlay
+          patientId={patientId}
+          patientName={patientName || 'Patiënt'}
+          onClose={() => setShowOverlay(false)}
+          onSaved={() => { fetchPlans(); }}
+        />
+      )}
     </div>
   );
 }

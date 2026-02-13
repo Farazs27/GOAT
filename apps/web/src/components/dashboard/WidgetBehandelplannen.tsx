@@ -42,7 +42,7 @@ export function WidgetBehandelplannen({ count, onClick }: Props) {
             className="text-xs mt-1"
             style={{ color: 'rgba(234,216,192,0.35)' }}
           >
-            actieve behandelplannen
+            openstaande behandelingen
           </p>
         </div>
       </div>

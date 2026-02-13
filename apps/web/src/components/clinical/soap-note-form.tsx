@@ -15,15 +15,16 @@ interface SoapNoteFormProps {
   patientId: string;
   notes: ClinicalNote[];
   onNoteCreated: () => void;
+  autoOpen?: boolean;
 }
 
-export default function SoapNoteForm({ patientId, notes, onNoteCreated }: SoapNoteFormProps) {
+export default function SoapNoteForm({ patientId, notes, onNoteCreated, autoOpen = false }: SoapNoteFormProps) {
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [analysis, setAnalysis] = useState('');
   const [plan, setPlan] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(autoOpen);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -82,9 +82,16 @@ export default function BillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('invoiceId');
+  });
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [patientFilter, setPatientFilter] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('patientId');
+  });
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [showPayment, setShowPayment] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('PIN');
@@ -93,8 +100,12 @@ export default function BillingPage() {
 
   const fetchData = async () => {
     try {
+      const params = new URLSearchParams();
+      if (statusFilter) params.set('status', statusFilter);
+      if (patientFilter) params.set('patientId', patientFilter);
+      const queryStr = params.toString();
       const [invRes, statsRes] = await Promise.all([
-        authFetch(`/api/invoices${statusFilter ? `?status=${statusFilter}` : ''}`),
+        authFetch(`/api/invoices${queryStr ? `?${queryStr}` : ''}`),
         authFetch('/api/invoices/stats'),
       ]);
       const invData = await invRes.json();
@@ -116,7 +127,16 @@ export default function BillingPage() {
 
   useEffect(() => {
     fetchData();
-  }, [statusFilter]);
+  }, [statusFilter, patientFilter]);
+
+  // Auto-scroll to expanded invoice from URL
+  useEffect(() => {
+    if (expandedId && !loading) {
+      setTimeout(() => {
+        document.getElementById(`invoice-${expandedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [loading]);
 
   const filteredInvoices = invoices.filter((inv) => {
     if (!searchQuery) return true;
@@ -289,6 +309,7 @@ export default function BillingPage() {
             <div key={inv.id} className="glass-card rounded-2xl overflow-hidden">
               {/* Invoice row */}
               <div
+                id={`invoice-${inv.id}`}
                 className="p-4 flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-colors"
                 onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}
               >
