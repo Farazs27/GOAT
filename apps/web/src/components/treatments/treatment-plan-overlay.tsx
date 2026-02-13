@@ -246,9 +246,23 @@ export default function TreatmentPlanOverlay({ patientId, patientName, onClose, 
   }, []);
 
   const handleCodeSelect = (code: NzaCode) => {
-    setSelectedNza(code);
-    setDescription(code.descriptionNl);
-    setUnitPrice(String(Number(code.maxTariff)));
+    // Directly add to queue for quick multi-treatment entry
+    const performer = practitioners.find(p => p.id === performedById);
+    const entry: TreatmentEntry = {
+      id: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      diagnosis,
+      description: code.descriptionNl,
+      toothNumbers: [...selectedTeeth],
+      nzaCodeId: code.id,
+      nzaCode: code.code,
+      nzaDescription: code.descriptionNl,
+      unitPrice: Number(code.maxTariff) || 0,
+      performedById,
+      performerName: performer ? `${performer.firstName} ${performer.lastName}` : '',
+      notes: '',
+      followUp: '',
+    };
+    setQueue(prev => [...prev, entry]);
   };
 
   const handleAddToQueue = () => {
