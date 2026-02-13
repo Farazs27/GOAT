@@ -27,10 +27,10 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
   // VERDOVING (Anesthesia)
   // ─────────────────────────────────────────────
   {
-    code: 'A01',
+    code: 'A10',
     category: 'VERDOVING',
-    description: 'Lokale verdoving (infiltratie)',
-    maxTariff: 15.43,
+    description: 'Geleidings-, infiltratie- en/of intraligamentaire verdoving',
+    maxTariff: 18.75,
     requiresTooth: false,
     requiresSurface: false,
     examples: [
@@ -54,13 +54,13 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'add. verdoving ling 46',
     ],
     keywords: ['bijverdoving', 'additioneel', 'extra carpule', 'naverdoving', 'add.', 'bijverd'],
-    companions: ['A01'],
+    companions: ['A10'],
   },
   {
-    code: 'A10',
+    code: 'A15',
     category: 'VERDOVING',
-    description: 'Oppervlakte-anesthesie',
-    maxTariff: 9.88,
+    description: 'Oppervlakte verdoving',
+    maxTariff: 9.75,
     requiresTooth: false,
     requiresSurface: false,
     examples: [
@@ -69,21 +69,6 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'topicale anesthesie gel regio 74-75',
     ],
     keywords: ['spray', 'oppervlakte', 'topicaal', 'gel', 'xylocaine spray', 'surface', 'topic'],
-    companions: [],
-  },
-  {
-    code: 'A15',
-    category: 'VERDOVING',
-    description: 'Geleidingsverdoving',
-    maxTariff: 18.0,
-    requiresTooth: false,
-    requiresSurface: false,
-    examples: [
-      'mandibulaire geleiding re voor ext 48',
-      'geleidingsverd n. alv inf li',
-      'blok anesthesie OK re foramen infraorbitale',
-    ],
-    keywords: ['geleiding', 'mandibulaire', 'blok', 'n. alveolaris', 'foramen', 'geleidingsverd', 'blokanaesthesie'],
     companions: [],
   },
   {
@@ -99,7 +84,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'sedatie lachgas 1 kwartier, angstig kind',
     ],
     keywords: ['lachgas', 'sedatie', 'inhalatie', 'N2O', 'inhalatiesedatie', 'angstig', 'relaxatie'],
-    companions: ['A01'],
+    companions: ['A10'],
   },
 
   // ─────────────────────────────────────────────
@@ -163,7 +148,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'spoed bwt, abces regio 36 buiten werktijd',
     ],
     keywords: ['spoed', 'spoedconsult', 'buiten werktijd', 'avonddienst', 'weekenddienst', 'noodgeval', 'acute'],
-    companions: ['A01', 'X10'],
+    companions: ['A10', 'X10'],
   },
   {
     code: 'C13',
@@ -223,7 +208,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'probl. consult, pt heeft last van bloedend tandvlees front OK',
     ],
     keywords: ['probleemgericht', 'klacht', 'pijnklacht', 'klachtgericht', 'probl.', 'gericht consult'],
-    companions: ['X10', 'A01'],
+    companions: ['X10', 'A10'],
   },
   {
     code: 'C80',
@@ -275,10 +260,10 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
   // ENDO (Endodontics)
   // ─────────────────────────────────────────────
   {
-    code: 'E01',
+    code: 'E60',
     category: 'ENDO',
-    description: 'Pulpa-extirpatie/pulpotomie',
-    maxTariff: 77.16,
+    description: 'Pulpotomie',
+    maxTariff: 60.01,
     requiresTooth: true,
     requiresSurface: false,
     examples: [
@@ -287,13 +272,13 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'extirpatie 36, pulpitis acuta',
     ],
     keywords: ['extirpatie', 'pulpotomie', 'pulpa', 'vitaal extirpatie', 'pulpitis', 'vitaalextirpatie', 'exstirpatie'],
-    companions: ['A01', 'E60', 'X10'],
+    companions: ['A10', 'E60', 'X10'],
   },
   {
-    code: 'E02',
+    code: 'E13',
     category: 'ENDO',
     description: 'Wortelkanaalbehandeling 1 kanaal',
-    maxTariff: 128.6,
+    maxTariff: 135.03,
     requiresTooth: true,
     requiresSurface: false,
     examples: [
@@ -302,13 +287,13 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'wortelkanaalbehandeling 33 1k afgerond met GP vulling',
     ],
     keywords: ['wkb', 'endo', 'wortelkanaal', '1k', '1 kanaal', 'wortelkanaalbehandeling', 'kanaalbehandeling'],
-    companions: ['A01', 'E60', 'E40', 'X10'],
+    companions: ['A10', 'E60', 'E40', 'X10'],
   },
   {
-    code: 'E03',
+    code: 'E14',
     category: 'ENDO',
     description: 'Wortelkanaalbehandeling 2 kanalen',
-    maxTariff: 192.9,
+    maxTariff: 195.04,
     requiresTooth: true,
     requiresSurface: false,
     examples: [
@@ -317,28 +302,43 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'wortelkn beh 14 2k, rotary nikkel-titan, GP condensatie',
     ],
     keywords: ['wkb', 'endo', '2k', '2 kanalen', 'wortelkanaal', 'twee kanalen'],
-    companions: ['A01', 'E60', 'E40', 'X10'],
+    companions: ['A10', 'E60', 'E40', 'X10'],
   },
   {
-    code: 'E04',
+    code: 'E16',
     category: 'ENDO',
-    description: 'Wortelkanaalbehandeling 3 of meer kanalen',
-    maxTariff: 257.2,
+    description: 'Wortelkanaalbehandeling 3 kanalen',
+    maxTariff: 255.06,
     requiresTooth: true,
     requiresSurface: false,
     examples: [
       'wkb 26 3k, MB1 MB2 DB P, afgevuld GP',
-      'endo 36 4 kanalen ML DL MB DB rotary afgerond',
       'wkb 46 3k afgemaakt vandaag, GP vulling + comp afsluiting',
+      'endo 16 3 kanalen, rotary NiTi, afgevuld GP + sealer',
     ],
-    keywords: ['wkb', 'endo', '3k', '4k', '3 kanalen', '4 kanalen', 'meerkanalen', 'drie kanalen'],
-    companions: ['A01', 'E60', 'E50', 'X10'],
+    keywords: ['wkb', 'endo', '3k', '3 kanalen', 'drie kanalen', 'meerkanalen'],
+    companions: ['A10', 'E60', 'E50', 'X10'],
   },
   {
-    code: 'E13',
+    code: 'E17',
     category: 'ENDO',
-    description: 'Directe overkapping pulpa',
-    maxTariff: 38.58,
+    description: 'Wortelkanaalbehandeling 4 of meer kanalen',
+    maxTariff: 315.07,
+    requiresTooth: true,
+    requiresSurface: false,
+    examples: [
+      'endo 36 4 kanalen ML DL MB DB rotary afgerond',
+      'wkb 46 4k, alle kanalen afgevuld GP',
+      'wortelkanaalbehandeling 26 4k MB1 MB2 DB P afgerond',
+    ],
+    keywords: ['wkb', 'endo', '4k', '4 kanalen', '4+ kanalen', 'vier kanalen'],
+    companions: ['A10', 'E60', 'E50', 'X10'],
+  },
+  {
+    code: 'E40',
+    category: 'ENDO',
+    description: 'Directe pulpa-overkapping',
+    maxTariff: 37.51,
     requiresTooth: true,
     requiresSurface: false,
     examples: [
@@ -347,13 +347,13 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'dir. overkapping MTA 26 na onbedoelde expositie',
     ],
     keywords: ['overkapping', 'CaOH', 'pulpa blootgelegd', 'directe overkapping', 'expositie', 'dir. overkapping'],
-    companions: ['A01', 'V30'],
+    companions: ['A10', 'V30'],
   },
   {
-    code: 'E16',
+    code: 'E77',
     category: 'ENDO',
-    description: 'Noodbehandeling endodontisch',
-    maxTariff: 51.44,
+    description: 'Initiele wortelkanaalbehandeling/spoedbehandeling',
+    maxTariff: 75.02,
     requiresTooth: true,
     requiresSurface: false,
     examples: [
@@ -362,7 +362,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'acute pulpitis 26, nood extirpatie + pijnstilling ingelegd',
     ],
     keywords: ['noodbehandeling', 'trepanatie', 'drainage', 'spoed endo', 'acute pulpitis', 'nood', 'spoedhulp'],
-    companions: ['A01', 'X10'],
+    companions: ['A10', 'X10'],
   },
   {
     code: 'E31',
@@ -377,7 +377,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'herbehandeling endo 33, GP removal + herprep + afvulling',
     ],
     keywords: ['herbehandeling', 'herbeh', 're-endo', 'revisie', 'opnieuw', 'herprep', 'retreatment'],
-    companions: ['A01', 'E60', 'X10'],
+    companions: ['A10', 'E60', 'X10'],
   },
   {
     code: 'E32',
@@ -392,7 +392,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'revisie endo 15 2k, kanalen herprepped + GP',
     ],
     keywords: ['herbehandeling', 'herbeh', 're-endo', 'revisie', '2k', '2 kanalen', 'retreatment'],
-    companions: ['A01', 'E60', 'X10'],
+    companions: ['A10', 'E60', 'X10'],
   },
   {
     code: 'E33',
@@ -407,7 +407,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'herbehandeling 46 3k + extra kanaal gevonden MB2',
     ],
     keywords: ['herbehandeling', 'herbeh', 're-endo', 'revisie', '3k', '4k', '3+ kanalen', 'retreatment'],
-    companions: ['A01', 'E60', 'X10'],
+    companions: ['A10', 'E60', 'X10'],
   },
   {
     code: 'E34',
@@ -437,7 +437,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'fiber post 21 + comp core opbouw',
     ],
     keywords: ['wortelstift', 'stift', 'glasvezelstift', 'fiber post', 'stiftopbouw', 'post', 'parapulpaire'],
-    companions: ['E02', 'E03', 'E04'],
+    companions: ['E13', 'E14', 'E16'],
   },
   {
     code: 'E50',
@@ -452,7 +452,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'opbouw element 26 voor kroon na E04',
     ],
     keywords: ['kroonopbouw', 'opbouw kroon', 'core opbouw', 'tbv kroon', 'opbouw tbv', 'stompopbouw'],
-    companions: ['E04', 'E40', 'R24'],
+    companions: ['E16', 'E40', 'R24'],
   },
   {
     code: 'E55',
@@ -467,7 +467,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'hemisectie molaar 36, mesiale wortel niet te redden',
     ],
     keywords: ['hemisectie', 'wortelamputatie', 'helft verwijderd', 'hemisect'],
-    companions: ['A01', 'X10'],
+    companions: ['A10', 'X10'],
   },
   {
     code: 'E56',
@@ -482,7 +482,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'premolarisatie molaar 36, roots gescheiden tbv behoud',
     ],
     keywords: ['premolarisatie', 'furcatie', 'wortelsplitsing', 'doorgezaagd'],
-    companions: ['A01', 'X10'],
+    companions: ['A10', 'X10'],
   },
   {
     code: 'E57',
@@ -497,7 +497,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'apexres 22, flap, osteotomie, retrograde vulling MTA',
     ],
     keywords: ['apexresectie', 'apicoectomie', 'wortelresectie', 'wortelpunt', 'retrograde', 'apexres', 'apico'],
-    companions: ['A01', 'A15', 'X10'],
+    companions: ['A10', 'A10', 'X10'],
   },
   {
     code: 'E60',
@@ -512,7 +512,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'EKB 46, lengte bepaald met apex locator',
     ],
     keywords: ['apex locator', 'EKB', 'lengtebepaling', 'elektronische', 'Root ZX', 'apexlocator', 'kanaallengte'],
-    companions: ['E02', 'E03', 'E04'],
+    companions: ['E13', 'E14', 'E16'],
   },
   {
     code: 'E77',
@@ -527,7 +527,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'trepanatie 26, cavum open voor afvloed',
     ],
     keywords: ['open cavum', 'trepanatie', 'drainage', 'cavum geopend', 'open gelaten', 'afvloed'],
-    companions: ['A01'],
+    companions: ['A10'],
   },
   {
     code: 'E80',
@@ -542,7 +542,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'resorptie intern 12 behandeld, thermafil + MTA seal',
     ],
     keywords: ['interne resorptie', 'resorptie', 'int resorptie', 'resorptiebehandeling'],
-    companions: ['A01', 'E60', 'X10'],
+    companions: ['A10', 'E60', 'X10'],
   },
   {
     code: 'E85',
@@ -557,7 +557,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'MTA barrier 45 na onvolgroeid element',
     ],
     keywords: ['MTA', 'afsluiting', 'plug', 'apexificatie', 'barriere', 'barrier', 'mineral trioxide'],
-    companions: ['A01', 'E60'],
+    companions: ['A10', 'E60'],
   },
   {
     code: 'E86',
@@ -572,7 +572,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'revascularisatie immatuur element 45, regeneratieve endo',
     ],
     keywords: ['revascularisatie', 'revasc', 'regeneratief', 'bloedclot', 'immatuur', 'regeneratieve endo'],
-    companions: ['A01', 'E85'],
+    companions: ['A10', 'E85'],
   },
   {
     code: 'E97',
@@ -587,7 +587,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'spoedbehandeling 26, irreversibele pulpitis, extirpatie gestart',
     ],
     keywords: ['spoed endo', 'spoedbehandeling', 'acute', 'endo spoed', 'nood endo'],
-    companions: ['A01', 'X10'],
+    companions: ['A10', 'X10'],
   },
 
   // ─────────────────────────────────────────────
@@ -730,7 +730,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'plaatsing implantaat regio 21, Straumann BLX 3.75x12mm',
     ],
     keywords: ['implantaat', 'impl', 'plaatsen', 'geplaatst', 'Straumann', 'Nobel', 'fixture', 'inserteren'],
-    companions: ['A01', 'A15', 'G70', 'X24'],
+    companions: ['A10', 'A10', 'G70', 'X24'],
   },
   {
     code: 'G11',
@@ -760,7 +760,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'post-extractie implantaat 36, direct geplaatst in alveole',
     ],
     keywords: ['directe implantatie', 'immediate', 'post-extractie', 'direct geplaatst', 'alveole', 'immediaat'],
-    companions: ['A01', 'A15', 'G70', 'G25'],
+    companions: ['A10', 'A10', 'G70', 'G25'],
   },
   {
     code: 'G20',
@@ -805,7 +805,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'int. sinuslift re boven, botverhoging via implantaatbed',
     ],
     keywords: ['sinuslift intern', 'interne sinuslift', 'osteotoom', 'crestal', 'sinusbodemlift', 'sinus intern'],
-    companions: ['G10', 'A01', 'A15'],
+    companions: ['G10', 'A10', 'A10'],
   },
   {
     code: 'G31',
@@ -820,7 +820,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'ext sinuslift OK re, botverhoging met autoloog bot + xenograft',
     ],
     keywords: ['sinuslift extern', 'externe sinuslift', 'laterale benadering', 'venster', 'Schneider', 'sinus extern'],
-    companions: ['A01', 'A15', 'G70'],
+    companions: ['A10', 'A10', 'G70'],
   },
   {
     code: 'G35',
@@ -835,7 +835,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'onlay graft regio 36, corticospongeus blok + membraan',
     ],
     keywords: ['botblok', 'onlay graft', 'autoloog blok', 'ramus', 'botbloktransplantaat', 'augmentatie blok'],
-    companions: ['A01', 'A15', 'G70'],
+    companions: ['A10', 'A10', 'G70'],
   },
   {
     code: 'G40',
@@ -850,7 +850,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'weke delen augmentatie impl 46, subepithelial connective tissue graft',
     ],
     keywords: ['bindweefseltransplantaat', 'CTG', 'connective tissue', 'donorsite', 'weke delen', 'keratinisatie'],
-    companions: ['A01', 'G20'],
+    companions: ['A10', 'G20'],
   },
   {
     code: 'G50',
@@ -865,7 +865,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'chirurgische peri-implantitis beh impl 21, regeneratief',
     ],
     keywords: ['peri-implantitis', 'decontaminatie', 'debridement', 'periimplantitis', 'peri-impl', 'botverlies impl'],
-    companions: ['A01'],
+    companions: ['A10'],
   },
   {
     code: 'G60',
@@ -880,7 +880,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'impl 21 verwijderd, peri-implantitis niet behandelbaar',
     ],
     keywords: ['explantatie', 'verwijdering implantaat', 'impl verwijderd', 'trephine', 'desintegratie', 'gefaald impl'],
-    companions: ['A01', 'A15'],
+    companions: ['A10', 'A10'],
   },
   {
     code: 'G70',
@@ -910,7 +910,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'sinuslift MKA, ernstige atrofie maxilla re',
     ],
     keywords: ['sinuslift MKA', 'kaakchirurgisch', 'sinusbodemlift MKA', 'MKA sinuslift', 'atrofie maxilla'],
-    companions: ['A01', 'A15'],
+    companions: ['A10', 'A10'],
   },
 
   // ─────────────────────────────────────────────
@@ -1079,7 +1079,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       'ortho miniscrew interradikulair 15-16, 1.6x8mm',
     ],
     keywords: ['minischroef', 'TAD', 'miniscrew', 'temporary anchorage', 'skeletal anchorage'],
-    companions: ['A01'],
+    companions: ['A10'],
   },
   {
     code: 'H60',
@@ -2468,7 +2468,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "gegoten",
       "endodontisch",
     ],
-    companions: ["R34", "E01", "E04"],
+    companions: ["R34", "E60", "E16"],
   },
   {
     code: "R31",
@@ -2490,7 +2490,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "chairside",
       "stift",
     ],
-    companions: ["R34", "E01", "E04", "V50"],
+    companions: ["R34", "E60", "E16", "V50"],
   },
   {
     code: "R34",
@@ -3080,7 +3080,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "infectie",
       "AB",
     ],
-    companions: ["X03", "E01", "T91"],
+    companions: ["X03", "E60", "T91"],
   },
   {
     code: "T70",
@@ -3200,7 +3200,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
 
   // ==================== VULLING ====================
   {
-    code: "V01",
+    code: "V71",
     category: "Vulling",
     description: "Amalgaam 1 vlak",
     maxTariff: 51.44,
@@ -3223,7 +3223,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
     companions: ["C11", "X01"],
   },
   {
-    code: "V02",
+    code: "V72",
     category: "Vulling",
     description: "Amalgaam 2 vlakken",
     maxTariff: 71.15,
@@ -3246,7 +3246,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
     companions: ["C11", "X01"],
   },
   {
-    code: "V03",
+    code: "V73",
     category: "Vulling",
     description: "Amalgaam 3 of meer vlakken",
     maxTariff: 89.0,
@@ -3289,7 +3289,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "temp",
       "voorlopig",
     ],
-    companions: ["E01", "V21", "V22"],
+    companions: ["E60", "V91", "V92"],
   },
   {
     code: "V12",
@@ -3312,7 +3312,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "calciumhydroxide",
       "selectief",
     ],
-    companions: ["V10", "V15", "V21", "V22"],
+    companions: ["V10", "V15", "V91", "V92"],
   },
   {
     code: "V15",
@@ -3335,10 +3335,10 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "isolatie",
       "pulpa",
     ],
-    companions: ["V12", "V21", "V22", "V23"],
+    companions: ["V12", "V91", "V92", "V93"],
   },
   {
-    code: "V21",
+    code: "V91",
     category: "Vulling",
     description: "Composiet 1 vlak",
     maxTariff: 64.3,
@@ -3361,7 +3361,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
     companions: ["C11", "X01"],
   },
   {
-    code: "V22",
+    code: "V92",
     category: "Vulling",
     description: "Composiet 2 vlakken",
     maxTariff: 89.0,
@@ -3384,7 +3384,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
     companions: ["C11", "X01"],
   },
   {
-    code: "V23",
+    code: "V93",
     category: "Vulling",
     description: "Composiet 3 vlakken",
     maxTariff: 110.6,
@@ -3407,7 +3407,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
     companions: ["C11", "X01", "X03"],
   },
   {
-    code: "V24",
+    code: "V94",
     category: "Vulling",
     description: "Composiet 4 of meer vlakken",
     maxTariff: 128.6,
@@ -3492,7 +3492,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "verankering",
       "pin",
     ],
-    companions: ["V23", "V24", "V50"],
+    companions: ["V93", "V94", "V50"],
   },
   {
     code: "V45",
@@ -3514,7 +3514,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "stift",
       "endodontisch",
     ],
-    companions: ["E01", "E04", "R01", "R02", "R03", "V50"],
+    companions: ["E60", "E16", "R01", "R02", "R03", "V50"],
   },
   {
     code: "V50",
@@ -3537,7 +3537,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "kroon",
       "build-up",
     ],
-    companions: ["R01", "R02", "R03", "R06", "E01"],
+    companions: ["R01", "R02", "R03", "R06", "E60"],
   },
   {
     code: "V60",
@@ -3628,7 +3628,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "composiet",
       "opbouw",
     ],
-    companions: ["V24", "X03"],
+    companions: ["V94", "X03"],
   },
   {
     code: "V85",
@@ -3677,7 +3677,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "links",
       "rechts",
     ],
-    companions: ["C11", "V21", "V22"],
+    companions: ["C11", "V91", "V92"],
   },
   {
     code: "X02",
@@ -3700,7 +3700,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "röntgen",
       "cariës",
     ],
-    companions: ["C11", "V21", "V22"],
+    companions: ["C11", "V91", "V92"],
   },
   {
     code: "X03",
@@ -3723,7 +3723,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "wortel",
       "foto",
     ],
-    companions: ["E01", "E04", "T01"],
+    companions: ["E60", "E16", "T01"],
   },
   {
     code: "X04",
@@ -3745,7 +3745,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "opnamen",
       "PA",
     ],
-    companions: ["M40", "E01"],
+    companions: ["M40", "E60"],
   },
   {
     code: "X05",
@@ -3974,7 +3974,7 @@ export const NZA_CODE_EXAMPLES: NzaCodeExample[] = [
       "partieel",
       "behouden",
     ],
-    companions: ["X03", "E01", "T70"],
+    companions: ["X03", "E60", "T70"],
   },
 
   // ==================== IMPLANTAAT ====================
