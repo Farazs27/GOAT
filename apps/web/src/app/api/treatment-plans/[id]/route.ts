@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
+import { generateInvoiceNumber } from '@/lib/invoice-number';
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   DRAFT: ['PROPOSED', 'CANCELLED'],
@@ -97,16 +98,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           });
 
           if (treatments.length > 0) {
-            // Generate invoice number
-            const year = new Date().getFullYear();
-            const lastInvoice = await tx.invoice.findFirst({
-              where: { practiceId: user.practiceId, invoiceNumber: { startsWith: `F${year}` } },
-              orderBy: { invoiceNumber: 'desc' },
-            });
-            const seq = lastInvoice
-              ? parseInt(lastInvoice.invoiceNumber.split('-')[1]) + 1
-              : 1;
-            const invoiceNumber = `F${year}-${String(seq).padStart(4, '0')}`;
+            // Generate invoice number using shared utility
+            const invoiceNumber = await generateInvoiceNumber(tx, user.practiceId);
 
             // Build invoice lines
             const lines = treatments.map((t) => {

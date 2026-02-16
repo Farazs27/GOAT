@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
+import { generateInvoiceNumber } from '@/lib/invoice-number';
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,17 +49,6 @@ export async function POST(request: NextRequest) {
 
     if (!patientId) throw new ApiError('Pati\u00ebnt is verplicht', 400);
 
-    // Generate invoice number
-    const year = new Date().getFullYear();
-    const lastInvoice = await prisma.invoice.findFirst({
-      where: { practiceId: user.practiceId, invoiceNumber: { startsWith: `F${year}` } },
-      orderBy: { invoiceNumber: 'desc' },
-    });
-    const seq = lastInvoice
-      ? parseInt(lastInvoice.invoiceNumber.split('-')[1]) + 1
-      : 1;
-    const invoiceNumber = `F${year}-${String(seq).padStart(4, '0')}`;
-
     // Calculate totals
     let subtotal = 0;
     if (lines && Array.isArray(lines)) {
@@ -67,36 +57,42 @@ export async function POST(request: NextRequest) {
     const insAmount = insuranceAmount || 0;
     const patientAmount = subtotal - insAmount;
 
-    const invoice = await prisma.invoice.create({
-      data: {
-        practiceId: user.practiceId,
-        patientId,
-        invoiceNumber,
-        subtotal,
-        total: subtotal,
-        insuranceAmount: insAmount,
-        patientAmount,
-        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 86400000),
-        notes,
-        lines: lines
-          ? {
-              create: lines.map((l: any) => ({
-                practiceId: user.practiceId,
-                description: l.description || '',
-                treatmentId: l.treatmentId,
-                nzaCode: l.nzaCode,
-                toothNumber: l.toothNumber,
-                quantity: l.quantity || 1,
-                unitPrice: l.unitPrice || 0,
-                lineTotal: (l.quantity || 1) * (l.unitPrice || 0),
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        patient: { select: { id: true, firstName: true, lastName: true } },
-        lines: true,
-      },
+    // Atomic invoice creation with transaction to prevent race conditions on number generation
+    const invoice = await prisma.$transaction(async (tx) => {
+      const invoiceNumber = await generateInvoiceNumber(tx, user.practiceId);
+
+      return tx.invoice.create({
+        data: {
+          practiceId: user.practiceId,
+          patientId,
+          invoiceNumber,
+          subtotal,
+          total: subtotal,
+          insuranceAmount: insAmount,
+          patientAmount,
+          dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 86400000),
+          notes,
+          lines: lines
+            ? {
+                create: lines.map((l: any) => ({
+                  practiceId: user.practiceId,
+                  description: l.description || '',
+                  treatmentId: l.treatmentId,
+                  nzaCode: l.nzaCode,
+                  nzaCodeId: l.nzaCodeId || undefined,
+                  toothNumber: l.toothNumber,
+                  quantity: l.quantity || 1,
+                  unitPrice: l.unitPrice || 0,
+                  lineTotal: (l.quantity || 1) * (l.unitPrice || 0),
+                })),
+              }
+            : undefined,
+        },
+        include: {
+          patient: { select: { id: true, firstName: true, lastName: true } },
+          lines: true,
+        },
+      });
     });
 
     return Response.json(invoice, { status: 201 });
