@@ -1,0 +1,136 @@
+# Requirements: Nexiom
+
+**Defined:** 2026-02-16
+**Core Value:** AI-powered declaratie and clinical note generation from natural language, eliminating the most painful part of dental practice management.
+**Approach:** Improve and complete existing implementations — not rebuild. Fix what's broken, complete what's partial, add only where nothing exists.
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Agenda & Scheduling
+
+- [ ] **AGND-01**: Staff can create, edit, and delete appointments with drag-drop
+- [ ] **AGND-02**: Staff can set recurring appointment slots
+- [ ] **AGND-03**: Staff can view multi-practitioner calendar side-by-side
+- [ ] **AGND-04**: Patient receives appointment reminders via SMS/email/WhatsApp
+- [ ] **AGND-05**: Patient can book appointments online through portal
+
+### AI Features
+
+- [ ] **AI-01**: Dentist can type natural language description and AI generates correct NZa declaratie lines
+- [ ] **AI-02**: AI understands NZa combinatie rules (filling auto-includes rubberdam, anesthesia, X-ray, materials)
+- [ ] **AI-03**: AI validates declaratie against NZa opmerkingen before submission
+- [ ] **AI-04**: Dentist can dictate shorthand clinical notes and AI expands to proper documentation
+- [ ] **AI-05**: AI suggests treatment plans based on odontogram diagnosis
+- [ ] **AI-06**: Patient can chat with AI assistant in portal (explains treatment, answers questions in Dutch)
+- [ ] **AI-07**: Patient AI can book appointments on behalf of patient
+- [ ] **AI-08**: Patient AI sends follow-up nudges to motivate treatment completion
+
+### Billing & Declaratie
+
+- [ ] **BILL-01**: Staff can create declaratie lines with NZa code selection
+- [ ] **BILL-02**: Staff can review and approve AI-suggested declaratie lines before submission
+- [ ] **BILL-03**: System generates invoices with correct Dutch formatting as PDF
+- [ ] **BILL-04**: Staff can track invoice status (draft, sent, paid)
+
+### Clinical
+
+- [ ] **CLIN-01**: Complete odontogram with tooth status recording and history
+- [ ] **CLIN-02**: Restoration tracking linked to teeth and surfaces
+- [ ] **CLIN-03**: Treatment plan creation with multiple treatments per plan
+- [ ] **CLIN-04**: Treatment plan approval workflow (create, approve, execute, complete)
+- [ ] **CLIN-05**: Treatment plans link to declaratie for billing
+
+### Patient Portal
+
+- [ ] **PORT-01**: Patient can view upcoming and past appointments
+- [ ] **PORT-02**: Patient can view treatment plans and cost estimates
+- [ ] **PORT-03**: Patient can view and download invoices
+- [ ] **PORT-04**: Patient can send and receive messages with practice
+- [ ] **PORT-05**: Patient can view and update personal information
+- [ ] **PORT-06**: Patient can digitally sign consent forms and treatment approvals
+- [ ] **PORT-07**: Patient can view documents and X-ray images
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Insurance Integration
+
+- **INS-01**: Vecozo COV check (insurance eligibility verification via BSN)
+- **INS-02**: Vecozo electronic declaratie submission to insurers
+- **INS-03**: Real-time declaratie validation before Vecozo submission
+
+### Clinical (Advanced)
+
+- **CLIN-06**: Periodontal charting with probing data entry and tracking
+- **CLIN-07**: DICOM X-ray import and viewer with measurement tools
+
+### Business
+
+- **BUS-01**: Subscription tier system with feature-based access control
+- **BUS-02**: Online payments via Mollie (iDEAL for eigen bijdrage)
+- **BUS-03**: Complete practice settings (working hours, rooms, config)
+- **BUS-04**: Kostenraming (cost estimates per Dutch regulation)
+- **BUS-05**: Smart recall system (AI-powered patient follow-ups)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Lab order management | Labs have own portals; low ROI for v1 |
+| Custom hardware drivers (X-ray sensors) | Manufacturers provide capture software; DICOM import is sufficient |
+| Real-time video consultations | Not core to in-clinic workflow |
+| Full EHR/EPD certification | Expensive, slow; follow GDPR/AVG best practices instead |
+| Mobile native app | Web-first; responsive design sufficient |
+| Multi-country/multi-language | NZa codes are NL-specific; hardcode Dutch |
+| Email marketing campaigns | Dentists don't run campaigns; simple reminders sufficient |
+| Complex BI/reporting dashboard | Simple KPI widgets sufficient |
+| Plugin/integration marketplace | Premature abstraction |
+| Inventory/stock management | Handled by separate systems |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| AGND-01 | TBD | Pending |
+| AGND-02 | TBD | Pending |
+| AGND-03 | TBD | Pending |
+| AGND-04 | TBD | Pending |
+| AGND-05 | TBD | Pending |
+| AI-01 | TBD | Pending |
+| AI-02 | TBD | Pending |
+| AI-03 | TBD | Pending |
+| AI-04 | TBD | Pending |
+| AI-05 | TBD | Pending |
+| AI-06 | TBD | Pending |
+| AI-07 | TBD | Pending |
+| AI-08 | TBD | Pending |
+| BILL-01 | TBD | Pending |
+| BILL-02 | TBD | Pending |
+| BILL-03 | TBD | Pending |
+| BILL-04 | TBD | Pending |
+| CLIN-01 | TBD | Pending |
+| CLIN-02 | TBD | Pending |
+| CLIN-03 | TBD | Pending |
+| CLIN-04 | TBD | Pending |
+| CLIN-05 | TBD | Pending |
+| PORT-01 | TBD | Pending |
+| PORT-02 | TBD | Pending |
+| PORT-03 | TBD | Pending |
+| PORT-04 | TBD | Pending |
+| PORT-05 | TBD | Pending |
+| PORT-06 | TBD | Pending |
+| PORT-07 | TBD | Pending |
+
+**Coverage:**
+- v1 requirements: 29 total
+- Mapped to phases: 0
+- Unmapped: 29
+
+---
+*Requirements defined: 2026-02-16*
+*Last updated: 2026-02-16 after initial definition*
