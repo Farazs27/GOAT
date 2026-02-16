@@ -77,12 +77,11 @@ Plans:
   3. AI validates suggestions against NZa opmerkingen and flags potential rejection risks
   4. Dentist reviews and confirms AI suggestions before they become actual declaratie lines
   5. No patient PII is sent to the AI provider
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — Extract shared category-triggers, build opmerkingen validator, add PII guard
+- [ ] 04-02-PLAN.md — AI declaratie review panel integrated into billing page
 
 ### Phase 5: AI Clinical Intelligence
 **Goal**: AI assists the dentist with clinical documentation and treatment planning
