@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 3 of 9 (Billing & Declaratie)
-Plan: 1 of N in current phase
-Status: Plan 03-01 complete
-Last activity: 2026-02-16 — Executed 03-01 Billing Backend Fixes
+Plan: 2 of N in current phase
+Status: Plan 03-02 complete
+Last activity: 2026-02-16 — Executed 03-02 Billing Frontend Enhancements
 
-Progress: [███░░░░░░░] 28%
+Progress: [████░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 3min
 - Total execution time: 0.2 hours
 
@@ -29,7 +29,7 @@ Progress: [███░░░░░░░] 28%
 |-------|-------|-------|----------|
 | 01-clinical-foundation | 1 | 2min | 2min |
 | 02-treatment-planning | 2 | 7min | 3.5min |
-| 03-billing-declaratie | 1 | 3min | 3min |
+| 03-billing-declaratie | 2 | 6min | 3min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -57,6 +57,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Extracted shared generateInvoiceNumber utility for atomic invoice numbering
 - [Phase 03]: Invoice ALLOWED_TRANSITIONS state machine mirrors treatment plan pattern
 - [Phase 03]: Payment completion checks patientAmount (not total) with fallback
+- [Phase 03]: CodeBrowserPanel replaces inline NZa search in invoice modal for full category browsing
+- [Phase 03]: PDF billingConfig fallback shows "IBAN niet geconfigureerd" when not set
 
 ### Pending Todos
 
@@ -70,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 03-01-PLAN.md (Billing Backend Fixes)
+Stopped at: Completed 03-02-PLAN.md (Billing Frontend Enhancements)
 Resume file: None
