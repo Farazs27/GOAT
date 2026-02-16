@@ -46,11 +46,11 @@ Plans:
   2. Treatment plan moves through statuses: draft, approved, in-progress, completed
   3. Patient can see and approve treatment plans (approval workflow)
   4. Completed treatments automatically create linked declaratie lines ready for billing
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Status workflow enforcement, side effects, patient approval endpoint, auto-invoice on completion
+- [ ] 02-02-PLAN.md — Fix overlay to create single plan with multiple treatments, add status action buttons
 
 ### Phase 3: Billing & Declaratie
 **Goal**: Staff can create complete declaraties with NZa codes and generate correct Dutch invoices
