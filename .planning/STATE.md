@@ -10,24 +10,24 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 1 of 9 (Clinical Foundation)
-Plan: 0 of 0 in current phase (not yet planned)
-Status: Ready to plan
-Last activity: 2026-02-16 — Roadmap created
+Plan: 1 of 1 in current phase (complete)
+Status: Plan 01-01 complete
+Last activity: 2026-02-17 — Executed 01-01 Treatment Record Wiring
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 11%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 2min
+- Total execution time: 0.03 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-clinical-foundation | 1 | 2min | 2min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -42,6 +42,8 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- 01-01: Used prisma.$transaction for atomic Treatment + ToothSurface creation in odontogram POST
+- 01-01: Added fallback surface-grouping in treatments GET for backward compatibility with pre-Treatment data
 - Roadmap: Clinical foundation first (odontogram/restorations), then treatment plans, then billing, then AI on top
 - Roadmap: Phase 6 (Agenda) is independent and can be parallelized with clinical/AI track
 - Research: Start Vecozo admin process now (deferred to v2 but long lead time)
@@ -57,6 +59,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Roadmap created, ready to plan Phase 1
+Last session: 2026-02-17
+Stopped at: Completed 01-01-PLAN.md (Treatment Record Wiring)
 Resume file: None
