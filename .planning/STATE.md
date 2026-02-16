@@ -51,6 +51,8 @@ Recent decisions affecting current work:
 - Roadmap: Clinical foundation first (odontogram/restorations), then treatment plans, then billing, then AI on top
 - Roadmap: Phase 6 (Agenda) is independent and can be parallelized with clinical/AI track
 - Research: Start Vecozo admin process now (deferred to v2 but long lead time)
+- [Phase 02]: Used ALLOWED_TRANSITIONS state machine pattern for status validation
+- [Phase 02]: Auto-invoice on COMPLETED uses same F{year}-{seq} pattern as manual invoice creation
 
 ### Pending Todos
 
@@ -64,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 02-02-PLAN.md (Treatment Plan UI)
+Stopped at: Completed 02-01-PLAN.md (Treatment Plan Status Workflow)
 Resume file: None
