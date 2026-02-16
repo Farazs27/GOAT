@@ -91,11 +91,12 @@ Plans:
   1. Dentist can type shorthand clinical notes and AI expands them into proper clinical documentation
   2. AI suggests treatment plans based on recorded odontogram diagnoses
   3. AI-generated content is clearly marked as suggestions, not auto-applied
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Shared Gemini client, expand-notes endpoint, suggest-treatment endpoint
+- [ ] 05-02-PLAN.md — AI shorthand expansion UI in SOAP note form
+- [ ] 05-03-PLAN.md — AI treatment suggestion panel on patient page
 
 ### Phase 6: Agenda & Scheduling
 **Goal**: Practice has a complete, functional scheduling system with automated patient reminders
@@ -190,7 +191,7 @@ Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other t
 | 2. Treatment Planning | 0/0 | Not started | - |
 | 3. Billing & Declaratie | 0/0 | Not started | - |
 | 4. AI Declaratie Engine | 0/0 | Not started | - |
-| 5. AI Clinical Intelligence | 0/0 | Not started | - |
+| 5. AI Clinical Intelligence | 0/3 | Not started | - |
 | 6. Agenda & Scheduling | 0/0 | Not started | - |
 | 7. Patient Portal Core | 0/0 | Not started | - |
 | 8. Patient Portal Advanced | 0/0 | Not started | - |
