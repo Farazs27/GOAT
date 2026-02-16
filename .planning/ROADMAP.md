@@ -61,11 +61,11 @@ Plans:
   2. System generates PDF invoices with correct Dutch formatting (BTW, practice details, patient info)
   3. Staff can track invoice lifecycle: draft, sent, paid, overdue
   4. Declaratie lines show correct NZa code, description, and tariff
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Backend fixes: atomic invoice numbers, nzaCodeId on lines, status transition validation, payment fix
+- [ ] 03-02-PLAN.md — Frontend: CodeBrowserPanel in invoice modal, billingConfig in PDF, overdue detection
 
 ### Phase 4: AI Declaratie Engine
 **Goal**: Dentist types what they did in plain Dutch and gets correct, complete NZa declaratie lines
