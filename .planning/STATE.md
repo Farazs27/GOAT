@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 2: Treatment Planning
+**Current focus:** Phase 3: Billing & Declaratie
 
 ## Current Position
 
-Phase: 2 of 9 (Treatment Planning)
-Plan: 2 of 2 in current phase (complete)
-Status: Plan 02-02 complete
-Last activity: 2026-02-16 — Executed 02-02 Treatment Plan UI
+Phase: 3 of 9 (Billing & Declaratie)
+Plan: 1 of N in current phase
+Status: Plan 03-01 complete
+Last activity: 2026-02-16 — Executed 03-01 Billing Backend Fixes
 
-Progress: [██░░░░░░░░] 22%
+Progress: [███░░░░░░░] 28%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 3min
-- Total execution time: 0.15 hours
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
@@ -29,6 +29,7 @@ Progress: [██░░░░░░░░] 22%
 |-------|-------|-------|----------|
 | 01-clinical-foundation | 1 | 2min | 2min |
 | 02-treatment-planning | 2 | 7min | 3.5min |
+| 03-billing-declaratie | 1 | 3min | 3min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -53,6 +54,9 @@ Recent decisions affecting current work:
 - Research: Start Vecozo admin process now (deferred to v2 but long lead time)
 - [Phase 02]: Used ALLOWED_TRANSITIONS state machine pattern for status validation
 - [Phase 02]: Auto-invoice on COMPLETED uses same F{year}-{seq} pattern as manual invoice creation
+- [Phase 03]: Extracted shared generateInvoiceNumber utility for atomic invoice numbering
+- [Phase 03]: Invoice ALLOWED_TRANSITIONS state machine mirrors treatment plan pattern
+- [Phase 03]: Payment completion checks patientAmount (not total) with fallback
 
 ### Pending Todos
 
@@ -66,5 +70,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 02-01-PLAN.md (Treatment Plan Status Workflow)
+Stopped at: Completed 03-01-PLAN.md (Billing Backend Fixes)
 Resume file: None
