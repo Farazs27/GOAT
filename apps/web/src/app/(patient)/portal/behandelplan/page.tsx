@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { ClipboardList, Loader2, Euro, ArrowRight } from "lucide-react";
+import { ClipboardList, Loader2, Euro, ArrowRight, Check, XIcon } from "lucide-react";
 import { TreatmentTimeline } from "@/components/patient-portal/treatment-timeline";
 import { getTreatmentModelPath } from "@/lib/treatment-models";
 import Link from "next/link";
@@ -46,7 +46,7 @@ interface TreatmentPlan {
   id: string;
   title: string;
   description?: string;
-  status: "ACCEPTED" | "IN_PROGRESS" | "COMPLETED";
+  status: "DRAFT" | "PROPOSED" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   createdAt: string;
   acceptedAt?: string;
   totalEstimate?: string;
@@ -57,7 +57,19 @@ interface TreatmentPlan {
   treatments: Treatment[];
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  DRAFT: {
+    label: "Concept",
+    color: "text-gray-400",
+    bgColor: "bg-gray-500/10",
+    borderColor: "border-gray-500/20",
+  },
+  PROPOSED: {
+    label: "Voorgesteld",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/20",
+  },
   ACCEPTED: {
     label: "Geaccepteerd",
     color: "text-emerald-400",
@@ -76,6 +88,12 @@ const statusConfig = {
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500/20",
   },
+  CANCELLED: {
+    label: "Geannuleerd",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+    borderColor: "border-red-500/20",
+  },
 };
 
 function formatCurrency(val: number | string | undefined) {
@@ -91,32 +109,56 @@ export default function BehandelplanPage() {
   const [loading, setLoading] = useState(true);
   const [activePlanIndex, setActivePlanIndex] = useState(0);
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const fetchPlans = async () => {
+    const token = localStorage.getItem("patient_token");
+    if (!token) return;
+
+    try {
+      const response = await fetch("/api/patient-portal/treatment-plans", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setPlans(data);
+
+      // Auto-select first treatment of first plan
+      if (data.length > 0 && data[0].treatments.length > 0) {
+        setSelectedTreatmentId(data[0].treatments[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching treatment plans:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPlans = async () => {
-      const token = localStorage.getItem("patient_token");
-      if (!token) return;
-
-      try {
-        const response = await fetch("/api/patient-portal/treatment-plans", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        setPlans(data);
-
-        // Auto-select first treatment of first plan
-        if (data.length > 0 && data[0].treatments.length > 0) {
-          setSelectedTreatmentId(data[0].treatments[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching treatment plans:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPlans();
   }, []);
+
+  const handlePlanAction = async (planId: string, action: "accept" | "reject") => {
+    const token = localStorage.getItem("patient_token");
+    if (!token) return;
+    setActionLoading(planId);
+    try {
+      const response = await fetch(`/api/patient-portal/treatment-plans/${planId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+      });
+      if (response.ok) {
+        await fetchPlans();
+      }
+    } catch (error) {
+      console.error("Error updating treatment plan:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -254,18 +296,46 @@ export default function BehandelplanPage() {
             </div>
           </div>
 
-          {activePlan.totalEstimate && (
-            <div className="flex items-center gap-2 px-4 py-3 bg-white/[0.06] border border-white/[0.12] backdrop-blur-2xl rounded-2xl shadow-xl shadow-black/10">
-              <Euro className="w-4 h-4 text-[#e8945a]" />
-              <div className="text-right">
-                <p className="text-xs text-white/40">Schatting</p>
-                <p className="text-lg font-semibold text-white/90">
-                  {formatCurrency(activePlan.totalEstimate)}
-                </p>
+          <div className="flex items-center gap-3">
+            {activePlan.totalEstimate && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-white/[0.06] border border-white/[0.12] backdrop-blur-2xl rounded-2xl shadow-xl shadow-black/10">
+                <Euro className="w-4 h-4 text-[#e8945a]" />
+                <div className="text-right">
+                  <p className="text-xs text-white/40">Schatting</p>
+                  <p className="text-lg font-semibold text-white/90">
+                    {formatCurrency(activePlan.totalEstimate)}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Accept / Reject buttons for PROPOSED plans */}
+        {activePlan.status === "PROPOSED" && (
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/[0.08]">
+            <button
+              onClick={() => handlePlanAction(activePlan.id, "accept")}
+              disabled={actionLoading === activePlan.id}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#e8945a] hover:bg-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all disabled:opacity-50"
+            >
+              {actionLoading === activePlan.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+              Akkoord
+            </button>
+            <button
+              onClick={() => handlePlanAction(activePlan.id, "reject")}
+              disabled={actionLoading === activePlan.id}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.09] text-white/70 font-medium transition-all disabled:opacity-50"
+            >
+              <XIcon className="w-4 h-4" />
+              Afwijzen
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Two-column layout: Timeline + 3D preview */}

@@ -155,14 +155,33 @@ export default function TreatmentPlanBuilder({ patientId, patientName }: Treatme
     }
   };
 
-  const getNextStatus = (current: string): { status: string; label: string } | null => {
-    const flow: Record<string, { status: string; label: string }> = {
-      DRAFT: { status: 'PROPOSED', label: 'Voorstellen' },
-      PROPOSED: { status: 'ACCEPTED', label: 'Accepteren' },
-      ACCEPTED: { status: 'IN_PROGRESS', label: 'Start behandeling' },
-      IN_PROGRESS: { status: 'COMPLETED', label: 'Afronden' },
+  const getStatusActions = (current: string): { status: string; label: string; style: 'primary' | 'secondary' | 'danger' }[] => {
+    const actions: Record<string, { status: string; label: string; style: 'primary' | 'secondary' | 'danger' }[]> = {
+      DRAFT: [
+        { status: 'PROPOSED', label: 'Voorstellen', style: 'primary' },
+        { status: 'CANCELLED', label: 'Annuleren', style: 'danger' },
+      ],
+      PROPOSED: [
+        { status: 'ACCEPTED', label: 'Goedkeuren', style: 'primary' },
+        { status: 'DRAFT', label: 'Terug naar concept', style: 'secondary' },
+        { status: 'CANCELLED', label: 'Annuleren', style: 'danger' },
+      ],
+      ACCEPTED: [
+        { status: 'IN_PROGRESS', label: 'Start behandeling', style: 'primary' },
+        { status: 'CANCELLED', label: 'Annuleren', style: 'danger' },
+      ],
+      IN_PROGRESS: [
+        { status: 'COMPLETED', label: 'Afronden', style: 'primary' },
+        { status: 'CANCELLED', label: 'Annuleren', style: 'danger' },
+      ],
     };
-    return flow[current] || null;
+    return actions[current] || [];
+  };
+
+  const actionButtonStyles = {
+    primary: 'bg-blue-500/80 hover:bg-blue-500 text-white',
+    secondary: 'bg-white/[0.06] hover:bg-white/10 text-white/60 border border-white/10',
+    danger: 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20',
   };
 
   if (loading) {
@@ -213,7 +232,6 @@ export default function TreatmentPlanBuilder({ patientId, patientName }: Treatme
       )}
 
       {plans.map((plan) => {
-        const next = getNextStatus(plan.status);
         return (
           <div key={plan.id} className="glass-card rounded-2xl overflow-hidden">
             <div className="p-5 pb-3">
@@ -350,12 +368,15 @@ export default function TreatmentPlanBuilder({ patientId, patientName }: Treatme
                   )}
                   Offerte
                 </button>
-                {next && (
-                  <button className="px-3 py-1.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-xs font-medium text-white transition-colors"
-                    onClick={() => updatePlanStatus(plan.id, next.status)}>
-                    {next.label}
+                {getStatusActions(plan.status).map(action => (
+                  <button
+                    key={action.status}
+                    className={`px-2 py-1 rounded-xl text-xs font-medium transition-colors ${actionButtonStyles[action.style]}`}
+                    onClick={() => updatePlanStatus(plan.id, action.status)}
+                  >
+                    {action.label}
                   </button>
-                )}
+                ))}
               </div>
             </div>
           </div>
