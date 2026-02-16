@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 4: AI Declaratie Engine
+**Current focus:** Phase 5: AI Clinical Intelligence
 
 ## Current Position
 
-Phase: 4 of 9 (AI Declaratie Engine) -- PHASE COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 04 complete
-Last activity: 2026-02-16 — Executed 04-02 AI Declaratie Review Panel
+Phase: 5 of 9 (AI Clinical Intelligence)
+Plan: 1 of 1 in current phase
+Status: Phase 05 in progress
+Last activity: 2026-02-16 — Executed 05-01 AI Clinical Intelligence Backend
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 55%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 3min
-- Total execution time: 0.35 hours
+- Total execution time: 0.40 hours
 
 **By Phase:**
 
@@ -31,6 +31,7 @@ Progress: [█████░░░░░] 50%
 | 02-treatment-planning | 2 | 7min | 3.5min |
 | 03-billing-declaratie | 2 | 6min | 3min |
 | 04-ai-declaratie-engine | 2 | 8min | 4min |
+| 05-ai-clinical-intelligence | 1 | 3min | 3min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - [Phase 04]: PII guard with regex-based BSN/email/phone detection before Gemini calls
 - [Phase 04]: enrichSuggestionsWithWarnings pattern preserves existing response shape
 - [Phase 04]: AI/manual toggle in invoice modal left panel; high confidence auto-selected, confirmed lines merge into invoice
+- [Phase 05]: Extracted shared Gemini client (callGemini/parseGeminiJson) for reuse across AI endpoints
+- [Phase 05]: suggest-treatment filters recent 6-month treatments to avoid re-suggesting
+- [Phase 05]: NZa code validation filters out AI-hallucinated codes not in active DB
 
 ### Pending Todos
 
@@ -77,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 04-02-PLAN.md (AI Declaratie Review Panel) — Phase 04 complete
+Stopped at: Completed 05-01-PLAN.md (AI Clinical Intelligence Backend)
 Resume file: None
