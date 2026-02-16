@@ -33,6 +33,19 @@ export async function PATCH(
       },
     });
 
+    // Create a Treatment record documenting the status change
+    await prisma.treatment.create({
+      data: {
+        practiceId: user.practiceId,
+        patientId: id,
+        performedBy: user.id,
+        toothId: tooth.id,
+        description: `Status: ${body.status}`,
+        status: 'COMPLETED',
+        performedAt: new Date(),
+      },
+    });
+
     return Response.json({ tooth });
   } catch (error) {
     return handleError(error);

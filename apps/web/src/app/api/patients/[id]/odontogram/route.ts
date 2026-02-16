@@ -60,45 +60,65 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const body = await request.json();
     const { toothNumber, treatmentType, surfaces, status, restorationType, material } = body;
 
-    // Upsert the tooth
-    const tooth = await prisma.tooth.upsert({
-      where: { patientId_toothNumber: { patientId: id, toothNumber } },
-      create: {
-        practiceId: user.practiceId,
-        patientId: id,
-        toothNumber,
-        status: status || 'PRESENT',
-      },
-      update: {
-        ...(status ? { status } : {}),
-      },
-    });
+    // Use a transaction to create Tooth, Treatment, and ToothSurface records atomically
+    const { tooth, treatment } = await prisma.$transaction(async (tx) => {
+      // Upsert the tooth
+      const tooth = await tx.tooth.upsert({
+        where: { patientId_toothNumber: { patientId: id, toothNumber } },
+        create: {
+          practiceId: user.practiceId,
+          patientId: id,
+          toothNumber,
+          status: status || 'PRESENT',
+        },
+        update: {
+          ...(status ? { status } : {}),
+        },
+      });
 
-    // Create surface records if surfaces provided
-    if (surfaces?.length) {
-      for (const surf of surfaces) {
-        await prisma.toothSurface.create({
-          data: {
-            practiceId: user.practiceId,
-            toothId: tooth.id,
-            surface: surf,
-            condition: (
-              treatmentType === 'FILLING' ? 'FILLING'
-              : treatmentType === 'CROWN_RESTORATION' || treatmentType === 'CROWN' ? 'CROWN'
-              : treatmentType === 'INLAY' ? 'INLAY'
-              : treatmentType === 'ONLAY' ? 'ONLAY'
-              : treatmentType === 'VENEER' ? 'VENEER'
-              : treatmentType === 'PARTIAL_CROWN' ? 'PARTIAL_CROWN'
-              : treatmentType === 'CARIES' ? 'CARIES'
-              : 'FILLING'
-            ) as any,
-            material: material || null,
-            restorationType: restorationType || null,
-            recordedBy: user.id,
-          },
-        });
+      // Create a Treatment record for this action
+      const description = `${restorationType || treatmentType} \u2014 ${(surfaces || []).join(',')}`;
+      const treatment = await tx.treatment.create({
+        data: {
+          practiceId: user.practiceId,
+          patientId: id,
+          performedBy: user.id,
+          toothId: tooth.id,
+          description,
+          status: 'COMPLETED',
+          performedAt: new Date(),
+        },
+      });
+
+      // Create surface records linked to the Treatment
+      if (surfaces?.length) {
+        for (const surf of surfaces) {
+          await tx.toothSurface.create({
+            data: {
+              practiceId: user.practiceId,
+              toothId: tooth.id,
+              treatmentId: treatment.id,
+              surface: surf,
+              condition: (
+                treatmentType === 'FILLING' ? 'FILLING'
+                : treatmentType === 'CROWN_RESTORATION' || treatmentType === 'CROWN' ? 'CROWN'
+                : treatmentType === 'INLAY' ? 'INLAY'
+                : treatmentType === 'ONLAY' ? 'ONLAY'
+                : treatmentType === 'VENEER' ? 'VENEER'
+                : treatmentType === 'PARTIAL_CROWN' ? 'PARTIAL_CROWN'
+                : treatmentType === 'CARIES' ? 'CARIES'
+                : 'FILLING'
+              ) as any,
+              material: material || null,
+              restorationType: restorationType || null,
+              recordedBy: user.id,
+            },
+          });
+        }
       }
-    }
+
+      return { tooth, treatment };
+    });
 
     // Fetch updated tooth with surfaces
     const updated = await prisma.tooth.findUnique({
