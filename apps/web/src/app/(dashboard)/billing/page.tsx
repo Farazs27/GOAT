@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Plus, Euro, AlertTriangle, Search, ChevronDown, ChevronUp, X, CreditCard, Download, Loader2 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
+import { CodeBrowserPanel } from '@/components/declaratie/code-browser-panel';
 
 interface InvoiceLine {
   id: string;
@@ -111,7 +112,35 @@ export default function BillingPage() {
       const invData = await invRes.json();
       const statsData = await statsRes.json();
       const invoicesList = invData.data || (Array.isArray(invData) ? invData : []);
-      setInvoices(invoicesList);
+
+      // Auto-detect overdue invoices
+      const now = new Date();
+      const overdueUpdates: Promise<Response>[] = [];
+      for (const inv of invoicesList) {
+        if (
+          (inv.status === 'SENT' || inv.status === 'PARTIALLY_PAID') &&
+          new Date(inv.dueDate) < now
+        ) {
+          overdueUpdates.push(
+            authFetch(`/api/invoices/${inv.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ status: 'OVERDUE' }),
+            })
+          );
+        }
+      }
+
+      if (overdueUpdates.length > 0) {
+        await Promise.allSettled(overdueUpdates);
+        // Re-fetch to get updated statuses
+        const refreshRes = await authFetch(`/api/invoices${queryStr ? `?${queryStr}` : ''}`);
+        const refreshData = await refreshRes.json();
+        const refreshedList = refreshData.data || (Array.isArray(refreshData) ? refreshData : []);
+        setInvoices(refreshedList);
+      } else {
+        setInvoices(invoicesList);
+      }
+
       setStats({
         outstanding: statsData.outstandingAmount || 0,
         monthTotal: statsData.monthTotal || 0,
@@ -543,13 +572,10 @@ function NewInvoiceModal({
 }) {
   const [patients, setPatients] = useState<any[]>([]);
   const [patientId, setPatientId] = useState('');
-  const [lines, setLines] = useState([{ description: '', nzaCode: '', unitPrice: '', quantity: '1', toothNumber: '' }]);
+  const [lines, setLines] = useState<Array<{ description: string; nzaCode: string; nzaCodeId: string; unitPrice: string; quantity: string; toothNumber: string }>>([]);
   const [insuranceAmount, setInsuranceAmount] = useState('0');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [nzaResults, setNzaResults] = useState<any[]>([]);
-  const [activeNzaField, setActiveNzaField] = useState<number | null>(null);
-  const [nzaSearchQuery, setNzaSearchQuery] = useState('');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -559,7 +585,6 @@ function NewInvoiceModal({
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  const addLine = () => setLines([...lines, { description: '', nzaCode: '', unitPrice: '', quantity: '1', toothNumber: '' }]);
   const removeLine = (i: number) => setLines(lines.filter((_, idx) => idx !== i));
   const updateLine = (i: number, field: string, value: string) => {
     const updated = [...lines];
@@ -567,35 +592,15 @@ function NewInvoiceModal({
     setLines(updated);
   };
 
-  const searchNzaCodes = async (query: string) => {
-    if (query.length < 1) {
-      setNzaResults([]);
-      return;
-    }
-    try {
-      const res = await authFetch(`/api/nza-codes?search=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setNzaResults(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error('Failed to search NZa codes', e);
-      setNzaResults([]);
-    }
-  };
-
-  const handleNzaCodeChange = (i: number, value: string) => {
-    updateLine(i, 'nzaCode', value);
-    setActiveNzaField(i);
-    setNzaSearchQuery(value);
-    searchNzaCodes(value);
-  };
-
-  const selectNzaCode = (i: number, code: any) => {
-    updateLine(i, 'nzaCode', code.code);
-    updateLine(i, 'description', code.descriptionNl);
-    updateLine(i, 'unitPrice', String(code.maxTariff));
-    setActiveNzaField(null);
-    setNzaResults([]);
-    setNzaSearchQuery('');
+  const handleCodeSelect = (code: { code: string; description: string; tariff: number; nzaCodeId?: string }) => {
+    setLines(prev => [...prev, {
+      nzaCode: code.code,
+      nzaCodeId: code.nzaCodeId || '',
+      description: code.description,
+      unitPrice: String(code.tariff),
+      quantity: '1',
+      toothNumber: '',
+    }]);
   };
 
   const subtotal = lines.reduce((sum, l) => sum + (parseFloat(l.unitPrice) || 0) * (parseInt(l.quantity) || 1), 0);
@@ -614,6 +619,7 @@ function NewInvoiceModal({
           .map((l) => ({
             description: l.description,
             nzaCode: l.nzaCode || undefined,
+            nzaCodeId: l.nzaCodeId || undefined,
             unitPrice: parseFloat(l.unitPrice),
             quantity: parseInt(l.quantity) || 1,
             toothNumber: l.toothNumber ? parseInt(l.toothNumber) : undefined,
@@ -627,137 +633,121 @@ function NewInvoiceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+      <div className="glass-card rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden m-4 flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 border-b border-white/10 flex items-center justify-between shrink-0">
           <h2 className="text-lg font-semibold text-white/90">Nieuwe factuur</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white"><X className="h-5 w-5" /></button>
         </div>
-        <div className="p-6 space-y-4">
-          {/* Patient */}
-          <div>
-            <label className="text-xs text-white/40 uppercase tracking-wider">Patiënt</label>
-            <select
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              className="w-full glass-input rounded-xl px-3 py-2.5 text-sm mt-1 outline-none bg-transparent text-white/70"
-            >
-              <option value="">Selecteer patiënt...</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.patientNumber})</option>
-              ))}
-            </select>
+
+        {/* Patient selector */}
+        <div className="px-6 pt-4 shrink-0">
+          <label className="text-xs text-white/40 uppercase tracking-wider">Patiënt</label>
+          <select
+            value={patientId}
+            onChange={(e) => setPatientId(e.target.value)}
+            className="w-full glass-input rounded-xl px-3 py-2.5 text-sm mt-1 outline-none bg-transparent text-white/70"
+          >
+            <option value="">Selecteer patiënt...</option>
+            {patients.map((p) => (
+              <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.patientNumber})</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Two-column layout: CodeBrowserPanel (left) + Line items (right) */}
+        <div className="flex-1 flex min-h-0 px-6 py-4 gap-4">
+          {/* Left: Code Browser */}
+          <div className="w-[340px] shrink-0 h-full">
+            <CodeBrowserPanel onSelectCode={handleCodeSelect} />
           </div>
 
-          {/* Lines */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-white/40 uppercase tracking-wider">Regels</label>
-              <button onClick={addLine} className="text-xs text-blue-400 hover:text-blue-300">+ Regel toevoegen</button>
-            </div>
-            <div className="space-y-2">
-              {lines.map((line, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-2 relative">
-                    <input
-                      placeholder="NZa code"
-                      value={line.nzaCode}
-                      onChange={(e) => handleNzaCodeChange(i, e.target.value)}
-                      onFocus={() => {
-                        setActiveNzaField(i);
-                        if (line.nzaCode) {
-                          setNzaSearchQuery(line.nzaCode);
-                          searchNzaCodes(line.nzaCode);
-                        }
-                      }}
-                      onBlur={() => setTimeout(() => setActiveNzaField(null), 200)}
-                      className="w-full glass-input rounded-xl px-3 py-2 text-sm outline-none"
-                    />
-                    {activeNzaField === i && nzaResults.length > 0 && (
-                      <div className="absolute z-50 mt-1 w-64 glass-card rounded-xl border border-white/10 max-h-48 overflow-y-auto">
-                        {nzaResults.map((code) => (
-                          <div
-                            key={code.id}
-                            onClick={() => selectNzaCode(i, code)}
-                            className="px-3 py-2 hover:bg-white/10 cursor-pointer text-sm"
-                          >
-                            <div className="font-mono text-blue-300">{code.code}</div>
-                            <div className="text-white/60 text-xs">{code.descriptionNl}</div>
-                            <div className="text-white/50 text-xs text-right">
-                              {new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(code.maxTariff)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    placeholder="Omschrijving"
-                    value={line.description}
-                    onChange={(e) => updateLine(i, 'description', e.target.value)}
-                    className="col-span-4 glass-input rounded-xl px-3 py-2 text-sm outline-none"
-                  />
-                  <input
-                    placeholder="Element"
-                    value={line.toothNumber}
-                    onChange={(e) => updateLine(i, 'toothNumber', e.target.value)}
-                    className="col-span-1 glass-input rounded-xl px-3 py-2 text-sm outline-none"
-                  />
-                  <input
-                    placeholder="Aantal"
-                    value={line.quantity}
-                    onChange={(e) => updateLine(i, 'quantity', e.target.value)}
-                    className="col-span-1 glass-input rounded-xl px-3 py-2 text-sm outline-none"
-                  />
-                  <input
-                    placeholder="Prijs"
-                    value={line.unitPrice}
-                    onChange={(e) => updateLine(i, 'unitPrice', e.target.value)}
-                    className="col-span-2 glass-input rounded-xl px-3 py-2 text-sm outline-none"
-                  />
-                  <div className="col-span-1 text-right text-sm text-white/50">
-                    {formatLineTotal(line)}
-                  </div>
-                  <button onClick={() => removeLine(i)} className="col-span-1 text-white/30 hover:text-red-400 text-center">
-                    <X className="h-4 w-4 mx-auto" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Totals */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Right: Line items + totals */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-y-auto space-y-4">
             <div>
-              <label className="text-xs text-white/40 uppercase tracking-wider">Verzekeringsdeel</label>
-              <input
-                type="number"
-                step="0.01"
-                value={insuranceAmount}
-                onChange={(e) => setInsuranceAmount(e.target.value)}
-                className="w-full glass-input rounded-xl px-3 py-2 text-sm mt-1 outline-none"
+              <label className="text-xs text-white/40 uppercase tracking-wider mb-2 block">
+                Regels ({lines.length})
+              </label>
+              {lines.length === 0 ? (
+                <div className="text-center py-8 text-white/30 text-sm border border-dashed border-white/10 rounded-xl">
+                  Klik op een code links om regels toe te voegen
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {lines.map((line, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-xl p-2.5">
+                      <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-mono shrink-0">
+                        {line.nzaCode || '-'}
+                      </span>
+                      <input
+                        placeholder="Omschrijving"
+                        value={line.description}
+                        onChange={(e) => updateLine(i, 'description', e.target.value)}
+                        className="flex-1 min-w-0 bg-transparent text-sm text-white/70 outline-none"
+                      />
+                      <input
+                        placeholder="El."
+                        value={line.toothNumber}
+                        onChange={(e) => updateLine(i, 'toothNumber', e.target.value)}
+                        className="w-12 glass-input rounded-lg px-2 py-1 text-sm text-center outline-none"
+                      />
+                      <input
+                        placeholder="Qty"
+                        value={line.quantity}
+                        onChange={(e) => updateLine(i, 'quantity', e.target.value)}
+                        className="w-12 glass-input rounded-lg px-2 py-1 text-sm text-center outline-none"
+                      />
+                      <input
+                        placeholder="Prijs"
+                        value={line.unitPrice}
+                        onChange={(e) => updateLine(i, 'unitPrice', e.target.value)}
+                        className="w-20 glass-input rounded-lg px-2 py-1 text-sm text-right outline-none"
+                      />
+                      <span className="w-20 text-right text-sm text-white/50 shrink-0">
+                        {formatLineTotal(line)}
+                      </span>
+                      <button onClick={() => removeLine(i)} className="text-white/30 hover:text-red-400 shrink-0">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Totals */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-white/40 uppercase tracking-wider">Verzekeringsdeel</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={insuranceAmount}
+                  onChange={(e) => setInsuranceAmount(e.target.value)}
+                  className="w-full glass-input rounded-xl px-3 py-2 text-sm mt-1 outline-none"
+                />
+              </div>
+              <div className="flex flex-col justify-end">
+                <p className="text-xs text-white/40 uppercase tracking-wider">Subtotaal</p>
+                <p className="text-lg font-semibold text-white/90 mt-1">
+                  {new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(subtotal)}
+                </p>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-xs text-white/40 uppercase tracking-wider">Notities</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className="w-full glass-input rounded-xl px-3 py-2 text-sm mt-1 outline-none resize-none"
               />
             </div>
-            <div className="flex flex-col justify-end">
-              <p className="text-xs text-white/40 uppercase tracking-wider">Subtotaal</p>
-              <p className="text-lg font-semibold text-white/90 mt-1">
-                {new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(subtotal)}
-              </p>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="text-xs text-white/40 uppercase tracking-wider">Notities</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              className="w-full glass-input rounded-xl px-3 py-2 text-sm mt-1 outline-none resize-none"
-            />
           </div>
         </div>
 
-        <div className="p-6 border-t border-white/10 flex justify-end gap-3">
+        <div className="p-6 border-t border-white/10 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-4 py-2.5 glass rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/10 transition-all">
             Annuleren
           </button>
