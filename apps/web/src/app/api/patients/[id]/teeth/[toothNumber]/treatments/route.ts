@@ -23,7 +23,32 @@ export async function GET(
       return Response.json({ treatments: [] });
     }
 
-    // Get surface records grouped by recordedAt as treatment entries
+    // Query actual Treatment records with linked surfaces
+    const treatments = await prisma.treatment.findMany({
+      where: { toothId: tooth.id, practiceId: user.practiceId },
+      include: {
+        performer: { select: { firstName: true, lastName: true } },
+        toothSurfaces: { select: { surface: true, condition: true, material: true, restorationType: true } },
+      },
+      orderBy: { performedAt: 'desc' },
+    });
+
+    if (treatments.length > 0) {
+      const result = treatments.map((t) => ({
+        id: t.id,
+        date: (t.performedAt || t.createdAt).toISOString(),
+        description: t.description,
+        nzaCode: '', // Will be populated in Phase 3 (billing)
+        performedBy: t.performer
+          ? `${t.performer.firstName ?? ''} ${t.performer.lastName ?? ''}`.trim()
+          : 'Onbekend',
+        surfaces: t.toothSurfaces.map((s) => s.surface),
+      }));
+
+      return Response.json({ treatments: result });
+    }
+
+    // Fallback: legacy surface-grouping for old data without Treatment records
     const surfaces = await prisma.toothSurface.findMany({
       where: { toothId: tooth.id },
       include: {
@@ -32,7 +57,6 @@ export async function GET(
       orderBy: { recordedAt: 'desc' },
     });
 
-    // Group surfaces by recordedAt timestamp (same timestamp = same treatment action)
     const grouped = new Map<string, typeof surfaces>();
     for (const s of surfaces) {
       const key = s.recordedAt.toISOString();
@@ -40,7 +64,7 @@ export async function GET(
       grouped.get(key)!.push(s);
     }
 
-    const treatments = Array.from(grouped.entries()).map(([dateStr, items]) => {
+    const fallbackTreatments = Array.from(grouped.entries()).map(([dateStr, items]) => {
       const first = items[0];
       const recorderName = first.recorder
         ? `${first.recorder.firstName ?? ''} ${first.recorder.lastName ?? ''}`.trim()
@@ -49,14 +73,14 @@ export async function GET(
       return {
         id: first.id,
         date: dateStr,
-        description: `${first.restorationType || first.condition} — ${first.material || ''}`.trim(),
+        description: `${first.restorationType || first.condition} \u2014 ${first.material || ''}`.trim(),
         nzaCode: '',
         performedBy: recorderName,
         surfaces: items.map((i) => i.surface),
       };
     });
 
-    return Response.json({ treatments });
+    return Response.json({ treatments: fallbackTreatments });
   } catch (error) {
     return handleError(error);
   }
