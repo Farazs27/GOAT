@@ -300,43 +300,50 @@ export default function TreatmentPlanOverlay({ patientId, patientName, onClose, 
   const handleSave = async () => {
     if (queue.length === 0) return;
     setSaving(true);
-    const created: CreatedPlan[] = [];
 
     try {
-      for (const entry of queue) {
-        // 1. Create treatment plan
-        const planRes = await authFetch('/api/treatment-plans', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            patientId,
-            title: entry.description,
-            description: entry.diagnosis || null,
-          }),
-        });
-        if (!planRes.ok) continue;
-        const plan = await planRes.json();
+      // 1. Create ONE treatment plan for all queued treatments
+      const planTitle = queue.length === 1
+        ? queue[0].description
+        : `Behandelplan: ${queue.length} behandelingen`;
+      const planDescription = queue.length === 1
+        ? (queue[0].diagnosis || null)
+        : queue.map(e => e.description).join(', ');
 
-        // 2. Create treatment(s) — one per tooth or a single one if no teeth
+      const planRes = await authFetch('/api/treatment-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId,
+          title: planTitle,
+          description: planDescription,
+        }),
+      });
+      if (!planRes.ok) {
+        console.error('Failed to create treatment plan');
+        return;
+      }
+      const plan = await planRes.json();
+
+      // 2. Add each queued treatment to the single plan
+      for (const entry of queue) {
         const toothCount = Math.max(entry.toothNumbers.length, 1);
         const combinedNotes = [entry.notes, entry.followUp ? `Follow-up: ${entry.followUp}` : ''].filter(Boolean).join('\n\n') || null;
 
-        await authFetch(`/api/treatment-plans/${plan.id}/treatments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            description: `${entry.description}${entry.toothNumbers.length > 0 ? ` (elementen: ${entry.toothNumbers.join(', ')})` : ''}`,
-            nzaCodeId: entry.nzaCodeId,
-            quantity: toothCount,
-            notes: combinedNotes,
-          }),
-        });
-
-        created.push({
-          id: plan.id,
-          title: plan.title,
-          totalEstimate: plan.totalEstimate,
-        });
+        try {
+          await authFetch(`/api/treatment-plans/${plan.id}/treatments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              description: `${entry.description}${entry.toothNumbers.length > 0 ? ` (elementen: ${entry.toothNumbers.join(', ')})` : ''}`,
+              nzaCodeId: entry.nzaCodeId,
+              quantity: toothCount,
+              notes: combinedNotes,
+            }),
+          });
+        } catch (err) {
+          console.error(`Failed to add treatment: ${entry.description}`, err);
+        }
       }
 
       // Create follow-up appointment if booked
@@ -357,7 +364,11 @@ export default function TreatmentPlanOverlay({ patientId, patientName, onClose, 
         }).catch(err => console.error('Failed to create follow-up appointment', err));
       }
 
-      setCreatedPlans(created);
+      setCreatedPlans([{
+        id: plan.id,
+        title: plan.title,
+        totalEstimate: plan.totalEstimate,
+      }]);
       setShowSummary(true);
     } catch (err) {
       console.error('Failed to save treatments', err);
@@ -480,6 +491,15 @@ export default function TreatmentPlanOverlay({ patientId, patientName, onClose, 
 
   const totalPrice = queue.reduce((sum, e) => sum + (e.unitPrice * Math.max(e.toothNumbers.length, 1)), 0);
 
+  // All teeth referenced in queue + manually selected teeth — for 3D chart sync
+  const allSelectedTeeth = useMemo(() => {
+    const set = new Set(selectedTeeth);
+    for (const entry of queue) {
+      for (const t of entry.toothNumbers) set.add(t);
+    }
+    return Array.from(set).sort((a, b) => a - b);
+  }, [selectedTeeth, queue]);
+
   // ─── Portal wrapper ──────────────────────────────────────────────────────
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
 
@@ -495,7 +515,7 @@ export default function TreatmentPlanOverlay({ patientId, patientName, onClose, 
             </div>
             <div>
               <h2 className="text-lg font-semibold" style={{ color: 'rgba(245,230,211,0.95)' }}>Behandelplannen opgeslagen</h2>
-              <p className="text-sm" style={{ color: 'rgba(234,216,192,0.4)' }}>{createdPlans.length} plan(nen) aangemaakt</p>
+              <p className="text-sm" style={{ color: 'rgba(234,216,192,0.4)' }}>1 plan met {queue.length} behandeling{queue.length !== 1 ? 'en' : ''} aangemaakt</p>
             </div>
           </div>
 
@@ -708,6 +728,7 @@ export default function TreatmentPlanOverlay({ patientId, patientName, onClose, 
               teeth={[]}
               surfaces={[]}
               selectedTooth={null}
+              selectedTeeth={allSelectedTeeth}
               onToothSelect={handleToothSelect}
               pendingRestoration={null}
             />
