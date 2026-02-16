@@ -1,6 +1,14 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+interface BillingConfig {
+  iban?: string;
+  btwNumber?: string;
+  bankName?: string;
+  paymentTermDays?: number;
+  defaultFooterText?: string;
+}
+
 interface PdfPractice {
   name: string;
   agbCode?: string | null;
@@ -11,6 +19,7 @@ interface PdfPractice {
   addressPostal?: string | null;
   phone?: string | null;
   email?: string | null;
+  billingConfig?: BillingConfig | Record<string, unknown> | null;
 }
 
 interface PdfPatient {
@@ -109,6 +118,13 @@ export function generateInvoicePdf(invoice: PdfInvoice, practice: PdfPractice): 
   const margin = 20;
   let y = 0;
 
+  // Parse billingConfig
+  const bc: BillingConfig = (practice.billingConfig && typeof practice.billingConfig === 'object')
+    ? practice.billingConfig as BillingConfig
+    : {};
+  const ibanDisplay = bc.iban || 'IBAN niet geconfigureerd';
+  const paymentTermDays = bc.paymentTermDays || 30;
+
   // ─── 1. Top accent border ───
   doc.setFillColor(...ACCENT);
   doc.rect(0, 0, pageWidth, 3, 'F');
@@ -161,6 +177,7 @@ export function generateInvoicePdf(invoice: PdfInvoice, practice: PdfPractice): 
   if (practice.kvkNumber) regParts.push(`KvK: ${practice.kvkNumber}`);
   if (practice.agbCode) regParts.push(`AGB: ${practice.agbCode}`);
   if (practice.avgCode) regParts.push(`AVG: ${practice.avgCode}`);
+  if (bc.btwNumber) regParts.push(`BTW: ${bc.btwNumber}`);
 
   if (regParts.length > 0) {
     const regText = regParts.join('  |  ');
@@ -471,14 +488,18 @@ export function generateInvoicePdf(invoice: PdfInvoice, practice: PdfPractice): 
     doc.setTextColor(...GRAY_TEXT);
 
     const footerLine1Y = footerTop + 4;
-    doc.text('Betalingstermijn: 30 dagen', margin, footerLine1Y);
+    doc.text(`Betalingstermijn: ${paymentTermDays} dagen`, margin, footerLine1Y);
     doc.text(`Pagina ${i} van ${pageCount}`, pageWidth - margin, footerLine1Y, { align: 'right' });
 
     const footerLine2Y = footerTop + 8;
-    doc.text('IBAN: NL00 XXXX 0000 0000 00  |  t.n.v. ' + practice.name, margin, footerLine2Y);
+    const ibanLine = bc.bankName
+      ? `${bc.bankName} - ${ibanDisplay}  |  t.n.v. ${practice.name}`
+      : `IBAN: ${ibanDisplay}  |  t.n.v. ${practice.name}`;
+    doc.text(ibanLine, margin, footerLine2Y);
 
     const footerLine3Y = footerTop + 12;
-    doc.text('Bij vragen kunt u contact opnemen met de praktijk.', margin, footerLine3Y);
+    const footerText = bc.defaultFooterText || 'Bij vragen kunt u contact opnemen met de praktijk.';
+    doc.text(footerText, margin, footerLine3Y);
 
     if (outstanding > 0) {
       const footerLine4Y = footerTop + 16;
