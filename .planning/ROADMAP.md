@@ -32,11 +32,10 @@ Nexiom is 40% complete -- UI exists across most areas but functionality is incom
   2. Dentist can record restorations linked to specific teeth and surfaces
   3. Dentist can view the full history of status changes and restorations for any tooth
   4. Tooth status visually updates in the odontogram after recording
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Wire Treatment record creation into save flows and fix treatment history endpoint
 
 ### Phase 2: Treatment Planning
 **Goal**: Dentist can create, approve, and execute treatment plans that connect clinical findings to billing
