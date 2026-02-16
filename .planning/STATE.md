@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 3: Billing & Declaratie
+**Current focus:** Phase 4: AI Declaratie Engine
 
 ## Current Position
 
-Phase: 3 of 9 (Billing & Declaratie)
-Plan: 2 of N in current phase
-Status: Plan 03-02 complete
-Last activity: 2026-02-16 — Executed 03-02 Billing Frontend Enhancements
+Phase: 4 of 9 (AI Declaratie Engine)
+Plan: 1 of 2 in current phase
+Status: Plan 04-01 complete
+Last activity: 2026-02-16 — Executed 04-01 AI Shared Utilities
 
-Progress: [████░░░░░░] 33%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 3min
-- Total execution time: 0.2 hours
+- Total execution time: 0.3 hours
 
 **By Phase:**
 
@@ -30,6 +30,7 @@ Progress: [████░░░░░░] 33%
 | 01-clinical-foundation | 1 | 2min | 2min |
 | 02-treatment-planning | 2 | 7min | 3.5min |
 | 03-billing-declaratie | 2 | 6min | 3min |
+| 04-ai-declaratie-engine | 1 | 5min | 5min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -59,6 +60,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Payment completion checks patientAmount (not total) with fallback
 - [Phase 03]: CodeBrowserPanel replaces inline NZa search in invoice modal for full category browsing
 - [Phase 03]: PDF billingConfig fallback shows "IBAN niet geconfigureerd" when not set
+- [Phase 04]: 12 hard-coded NZa opmerkingen rules for rejection risk flagging
+- [Phase 04]: PII guard with regex-based BSN/email/phone detection before Gemini calls
+- [Phase 04]: enrichSuggestionsWithWarnings pattern preserves existing response shape
 
 ### Pending Todos
 
@@ -72,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 03-02-PLAN.md (Billing Frontend Enhancements)
+Stopped at: Completed 04-01-PLAN.md (AI Shared Utilities)
 Resume file: None
