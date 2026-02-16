@@ -36,11 +36,21 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Clinical
 
-- [ ] **CLIN-01**: Complete odontogram with tooth status recording and history
+- [ ] **CLIN-01**: Odontogram is reactive — clicking teeth records status, visually updates (do NOT change existing design)
 - [ ] **CLIN-02**: Restoration tracking linked to teeth and surfaces
 - [ ] **CLIN-03**: Treatment plan creation with multiple treatments per plan
 - [ ] **CLIN-04**: Treatment plan approval workflow (create, approve, execute, complete)
 - [ ] **CLIN-05**: Treatment plans link to declaratie for billing
+- [ ] **CLIN-06**: Complete periodontogram with probing depths, bleeding, recession, mobility
+- [ ] **CLIN-07**: Periodontogram improvements for hygienist workflow (fast data entry, visual charting)
+
+### Hygienist Portal
+
+- [ ] **HYG-01**: Dental hygienist has a dedicated portal view (separate from dentist dashboard)
+- [ ] **HYG-02**: Hygienist can view and record periodontal data on the periodontogram
+- [ ] **HYG-03**: Hygienist and dentist can see each other's clinical notes on the same patient
+- [ ] **HYG-04**: Hygienist portal does NOT include smile design section
+- [ ] **HYG-05**: Hygienist and dentist can communicate within the system (internal notes/messages)
 
 ### Patient Portal
 
@@ -64,8 +74,7 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ### Clinical (Advanced)
 
-- **CLIN-06**: Periodontal charting with probing data entry and tracking
-- **CLIN-07**: DICOM X-ray import and viewer with measurement tools
+- **CLIN-08**: DICOM X-ray import and viewer with measurement tools
 
 ### Business
 
@@ -123,12 +132,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PORT-03 | Phase 7 | Pending |
 | PORT-04 | Phase 7 | Pending |
 | PORT-05 | Phase 7 | Pending |
+| CLIN-06 | Phase 10 | Pending |
+| CLIN-07 | Phase 10 | Pending |
+| HYG-01 | Phase 10 | Pending |
+| HYG-02 | Phase 10 | Pending |
+| HYG-03 | Phase 10 | Pending |
+| HYG-04 | Phase 10 | Pending |
+| HYG-05 | Phase 10 | Pending |
 | PORT-06 | Phase 8 | Pending |
 | PORT-07 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 29 total
-- Mapped to phases: 29
+- v1 requirements: 36 total
+- Mapped to phases: 36
 - Unmapped: 0
 
 ---

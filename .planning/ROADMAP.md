@@ -19,6 +19,7 @@ Nexiom is 40% complete -- UI exists across most areas but functionality is incom
 - [ ] **Phase 7: Patient Portal Core** - All basic patient-facing features functional
 - [ ] **Phase 8: Patient Portal Advanced** - Digital signatures, online booking, consent workflows
 - [ ] **Phase 9: Patient AI Assistant** - Patient-facing AI chatbot with booking and follow-up capabilities
+- [ ] **Phase 10: Hygienist Portal & Periodontogram** - Dedicated hygienist view with improved periodontogram and shared clinical notes
 
 ## Phase Details
 
@@ -162,11 +163,28 @@ Plans:
 - [ ] 09-01: TBD
 - [ ] 09-02: TBD
 
+### Phase 10: Hygienist Portal & Periodontogram
+**Goal**: Dental hygienist has a dedicated portal with an excellent periodontogram and shared notes with the dentist
+**Depends on**: Phase 1 (clinical foundation)
+**Requirements**: CLIN-06, CLIN-07, HYG-01, HYG-02, HYG-03, HYG-04, HYG-05
+**Success Criteria** (what must be TRUE):
+  1. Hygienist can log in and see a dedicated view without smile design section
+  2. Hygienist can record full periodontal data (probing depths, bleeding, recession, mobility) with fast data entry
+  3. Periodontogram visually displays perio data clearly and professionally
+  4. Hygienist and dentist can see each other's clinical notes on the same patient
+  5. Hygienist and dentist can communicate via internal notes/messages within the system
+**Plans**: TBD
+
+Plans:
+- [ ] 10-01: TBD
+- [ ] 10-02: TBD
+- [ ] 10-03: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
-Note: Phase 6 (Agenda) has no dependency on Phases 1-5 and can be parallelized.
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
+Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other tracks.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -179,3 +197,4 @@ Note: Phase 6 (Agenda) has no dependency on Phases 1-5 and can be parallelized.
 | 7. Patient Portal Core | 0/0 | Not started | - |
 | 8. Patient Portal Advanced | 0/0 | Not started | - |
 | 9. Patient AI Assistant | 0/0 | Not started | - |
+| 10. Hygienist Portal & Perio | 0/0 | Not started | - |
