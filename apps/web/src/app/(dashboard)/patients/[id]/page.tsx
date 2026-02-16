@@ -44,6 +44,7 @@ const Odontogram = dynamic(() => import('@/components/odontogram/odontogram'), {
   ),
 });
 const SoapNoteForm = dynamic(() => import('@/components/clinical/soap-note-form'));
+const AiTreatmentSuggestions = dynamic(() => import('@/components/clinical/ai-treatment-suggestions'));
 const TreatmentPlanBuilder = dynamic(() => import('@/components/treatments/treatment-plan-builder'));
 const PrescriptionList = dynamic(() => import('@/components/prescriptions/prescription-list'));
 const MedicalHistoryPanel = dynamic(() => import('@/components/patient-history/medical-history-panel'));
@@ -715,10 +716,13 @@ export default function PatientDetailPage() {
       {/* Behandelingen & Notities — Side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div id="section-behandelingen" className="glass-card rounded-2xl p-6 scroll-mt-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ClipboardList className="h-4 w-4 text-emerald-400" />
-            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Behandelingen</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-emerald-400" />
+              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Behandelingen</h3>
+            </div>
           </div>
+          <AiTreatmentSuggestions patientId={patientId} />
           <TreatmentPlanBuilder patientId={patientId} patientName={`${patient.firstName} ${patient.lastName}`} />
         </div>
 
