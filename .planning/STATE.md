@@ -5,29 +5,30 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 1: Clinical Foundation
+**Current focus:** Phase 2: Treatment Planning
 
 ## Current Position
 
-Phase: 1 of 9 (Clinical Foundation)
-Plan: 1 of 1 in current phase (complete)
-Status: Plan 01-01 complete
-Last activity: 2026-02-17 — Executed 01-01 Treatment Record Wiring
+Phase: 2 of 9 (Treatment Planning)
+Plan: 2 of 2 in current phase (complete)
+Status: Plan 02-02 complete
+Last activity: 2026-02-16 — Executed 02-02 Treatment Plan UI
 
-Progress: [█░░░░░░░░░] 11%
+Progress: [██░░░░░░░░] 22%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2min
-- Total execution time: 0.03 hours
+- Total plans completed: 3
+- Average duration: 3min
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-clinical-foundation | 1 | 2min | 2min |
+| 02-treatment-planning | 2 | 7min | 3.5min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -42,6 +43,9 @@ Progress: [█░░░░░░░░░] 11%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- 02-02: Overlay creates 1 plan then loops N treatment POSTs (partial save on failure)
+- 02-02: Patient reject maps to CANCELLED status (no new enum)
+- 02-02: Builder uses per-status action arrays with style variants
 - 01-01: Used prisma.$transaction for atomic Treatment + ToothSurface creation in odontogram POST
 - 01-01: Added fallback surface-grouping in treatments GET for backward compatibility with pre-Treatment data
 - Roadmap: Clinical foundation first (odontogram/restorations), then treatment plans, then billing, then AI on top
@@ -59,6 +63,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Completed 01-01-PLAN.md (Treatment Record Wiring)
+Last session: 2026-02-16
+Stopped at: Completed 02-02-PLAN.md (Treatment Plan UI)
 Resume file: None
