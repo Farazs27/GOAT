@@ -29,13 +29,16 @@ export async function POST(request: NextRequest) {
 
     // Recalculate paid amount
     const totalPaid = invoice.payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0) + amount;
-    const invoiceTotal = Number(invoice.total);
+    // Compare against patientAmount (what patient actually owes after insurance), fall back to total
+    const amountOwed = (invoice.patientAmount && Number(invoice.patientAmount) > 0)
+      ? Number(invoice.patientAmount)
+      : Number(invoice.total);
 
     await prisma.invoice.update({
       where: { id: invoiceId },
       data: {
         paidAmount: totalPaid,
-        status: totalPaid >= invoiceTotal ? 'PAID' : 'PARTIALLY_PAID',
+        status: totalPaid >= amountOwed ? 'PAID' : 'PARTIALLY_PAID',
       },
     });
 
