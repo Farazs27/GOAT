@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 ## Current Position
 
-Phase: 4 of 9 (AI Declaratie Engine)
-Plan: 1 of 2 in current phase
-Status: Plan 04-01 complete
-Last activity: 2026-02-16 — Executed 04-01 AI Shared Utilities
+Phase: 4 of 9 (AI Declaratie Engine) -- PHASE COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase 04 complete
+Last activity: 2026-02-16 — Executed 04-02 AI Declaratie Review Panel
 
-Progress: [████░░░░░░] 44%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 3min
-- Total execution time: 0.3 hours
+- Total execution time: 0.35 hours
 
 **By Phase:**
 
@@ -30,7 +30,7 @@ Progress: [████░░░░░░] 44%
 | 01-clinical-foundation | 1 | 2min | 2min |
 | 02-treatment-planning | 2 | 7min | 3.5min |
 | 03-billing-declaratie | 2 | 6min | 3min |
-| 04-ai-declaratie-engine | 1 | 5min | 5min |
+| 04-ai-declaratie-engine | 2 | 8min | 4min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -63,6 +63,7 @@ Recent decisions affecting current work:
 - [Phase 04]: 12 hard-coded NZa opmerkingen rules for rejection risk flagging
 - [Phase 04]: PII guard with regex-based BSN/email/phone detection before Gemini calls
 - [Phase 04]: enrichSuggestionsWithWarnings pattern preserves existing response shape
+- [Phase 04]: AI/manual toggle in invoice modal left panel; high confidence auto-selected, confirmed lines merge into invoice
 
 ### Pending Todos
 
@@ -76,5 +77,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 04-01-PLAN.md (AI Shared Utilities)
+Stopped at: Completed 04-02-PLAN.md (AI Declaratie Review Panel) — Phase 04 complete
 Resume file: None
