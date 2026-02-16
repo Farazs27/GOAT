@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Plus, Euro, AlertTriangle, Search, ChevronDown, ChevronUp, X, CreditCard, Download, Loader2 } from 'lucide-react';
+import { FileText, Plus, Euro, AlertTriangle, Search, ChevronDown, ChevronUp, X, CreditCard, Download, Loader2, Sparkles } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { CodeBrowserPanel } from '@/components/declaratie/code-browser-panel';
+import { AIDeclaratiePanel, ConfirmedLine } from '@/components/declaratie/ai-declaratie-panel';
 
 interface InvoiceLine {
   id: string;
@@ -576,6 +577,7 @@ function NewInvoiceModal({
   const [insuranceAmount, setInsuranceAmount] = useState('0');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [codeMode, setCodeMode] = useState<'manual' | 'ai'>('manual');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -602,6 +604,23 @@ function NewInvoiceModal({
       toothNumber: '',
     }]);
   };
+
+  const handleAIConfirm = (confirmedLines: ConfirmedLine[]) => {
+    setLines(prev => [
+      ...prev,
+      ...confirmedLines.map(cl => ({
+        nzaCode: cl.nzaCode,
+        nzaCodeId: cl.nzaCodeId,
+        description: cl.description,
+        unitPrice: cl.unitPrice,
+        quantity: String(cl.quantity),
+        toothNumber: cl.tooth || '',
+      })),
+    ]);
+    setCodeMode('manual');
+  };
+
+  const selectedPatient = patients.find((p: any) => p.id === patientId);
 
   const subtotal = lines.reduce((sum, l) => sum + (parseFloat(l.unitPrice) || 0) * (parseInt(l.quantity) || 1), 0);
 
@@ -656,9 +675,48 @@ function NewInvoiceModal({
 
         {/* Two-column layout: CodeBrowserPanel (left) + Line items (right) */}
         <div className="flex-1 flex min-h-0 px-6 py-4 gap-4">
-          {/* Left: Code Browser */}
-          <div className="w-[340px] shrink-0 h-full">
-            <CodeBrowserPanel onSelectCode={handleCodeSelect} />
+          {/* Left: Code Browser / AI Panel */}
+          <div className="w-[340px] shrink-0 h-full flex flex-col">
+            {/* Mode toggle */}
+            <div className="flex mb-3 rounded-xl bg-white/[0.04] border border-white/[0.08] p-0.5">
+              <button
+                onClick={() => setCodeMode('manual')}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  codeMode === 'manual'
+                    ? 'bg-white/10 text-white/90 shadow-sm'
+                    : 'text-white/40 hover:text-white/60'
+                }`}
+              >
+                <Search className="h-3.5 w-3.5" />
+                Handmatig
+              </button>
+              <button
+                onClick={() => setCodeMode('ai')}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  codeMode === 'ai'
+                    ? 'bg-purple-500/20 text-purple-300 shadow-sm'
+                    : 'text-white/40 hover:text-white/60'
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                AI Assistent
+              </button>
+            </div>
+
+            {/* Panel content */}
+            <div className="flex-1 min-h-0">
+              {codeMode === 'manual' ? (
+                <CodeBrowserPanel onSelectCode={handleCodeSelect} />
+              ) : (
+                <AIDeclaratiePanel
+                  patientId={patientId}
+                  patientName={selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : 'Selecteer patiënt'}
+                  patientAge={selectedPatient?.dateOfBirth ? Math.floor((Date.now() - new Date(selectedPatient.dateOfBirth).getTime()) / 31557600000) : undefined}
+                  onConfirm={handleAIConfirm}
+                  onClose={() => setCodeMode('manual')}
+                />
+              )}
+            </div>
           </div>
 
           {/* Right: Line items + totals */}
