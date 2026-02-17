@@ -58,6 +58,7 @@ import { TechnicianBrowserPanel } from '@/components/declaratie/technician-brows
 import { ScheduleManager } from './schedule-manager';
 import { AppointmentBlock } from '@/components/agenda/appointment-block';
 import { TimeGrid } from '@/components/agenda/time-grid';
+import { MultiPractitionerGrid } from '@/components/agenda/multi-practitioner-grid';
 
 interface PatientImage {
   id: string;
@@ -211,6 +212,7 @@ function formatDutchDate(date: Date): string {
 
 export default function AgendaPage() {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [teamView, setTeamView] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [weekAppointments, setWeekAppointments] = useState<Record<string, Appointment[]>>({});
@@ -915,6 +917,19 @@ export default function AgendaPage() {
               Week
             </button>
           </div>
+          {/* Enkel / Team toggle (day view only) */}
+          {viewMode === 'day' && (
+            <div className="flex glass rounded-xl overflow-hidden">
+              <button onClick={() => setTeamView(false)}
+                className={`px-3 py-2 text-xs font-medium transition-colors ${!teamView ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}>
+                Enkel
+              </button>
+              <button onClick={() => setTeamView(true)}
+                className={`px-3 py-2 text-xs font-medium transition-colors ${teamView ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}>
+                Team
+              </button>
+            </div>
+          )}
           <button onClick={goToToday}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/20' : 'glass text-white/60 hover:text-white hover:bg-white/10'}`}>
             Vandaag
@@ -1211,6 +1226,8 @@ export default function AgendaPage() {
             })}
           </div>
         </div>
+      ) : teamView ? (
+        <MultiPractitionerGrid date={selectedDate} onAppointmentClick={openPanel} />
       ) : appointments.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <Calendar className="h-12 w-12 mx-auto mb-4 text-white/20" />
