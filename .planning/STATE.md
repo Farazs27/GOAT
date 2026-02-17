@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 7 of 9 (Patient Portal Core)
-Plan: 2 of 5 in current phase
-Status: Executing phase 07
-Last activity: 2026-02-17 — Executed 07-02 Appointment Self-Service
+Plan: 5 of 5 in current phase
+Status: Verifying phase 07
+Last activity: 2026-02-17 — Executed 07-05 Staff Messaging Dashboard
 
-Progress: [███████░░░] 70%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 17
 - Average duration: 3min
 - Total execution time: 0.50 hours
 
@@ -45,6 +45,9 @@ Progress: [███████░░░] 70%
 | Phase 06 P02 | 4min | 1 tasks | 4 files |
 | Phase 07 P01 | 4min | 2 tasks | 4 files |
 | Phase 07 P02 | 4min | 2 tasks | 4 files |
+| Phase 07 P04 | 5min | 2 tasks | 5 files |
+| Phase 07 P03 | 5min | 2 tasks | 5 files |
+| Phase 07 P05 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +91,11 @@ Recent decisions affecting current work:
 - [Phase 07]: Replaced inline SVGs with lucide-react icons for portal sidebar
 - [Phase 07]: Reschedule scans next 14 days for same-practitioner availability
 - [Phase 07]: 24h modification rule enforced on both client and server
+- [Phase 07]: Vercel Blob for patient document uploads with PENDING_REVIEW approval workflow
+- [Phase 07]: Computed totalEstimate from treatment prices when not set on plan
+- [Phase 07]: Staff conversations scoped to practitioner's own patients only
+- [Phase 07]: Reassign transfers conversation to another practitioner in same practice
+- [Phase 07]: Attachment flow sends message first then attaches file to message ID
 
 ### Pending Todos
 
@@ -101,5 +109,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 07-01-PLAN.md (Portal Shell & Schema)
+Stopped at: Completed 07-05-PLAN.md (Staff Messaging Dashboard) — all 5 plans done, verifying
 Resume file: None
