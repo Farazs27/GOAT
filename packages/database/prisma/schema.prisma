@@ -71,6 +71,8 @@ model Practice {
   dentistTasks          DentistTask[]
   conversations         Conversation[]
   consentTemplates      ConsentTemplate[]
+  aiChatSessions        AiChatSession[]
+  patientNudges         PatientNudge[]
 
   @@map("practices")
 }
@@ -205,6 +207,8 @@ model Patient {
   dentistTasks          DentistTask[]
   conversations         Conversation[]
   uploadedDocuments     Document[]     @relation("PatientDocumentUploader")
+  aiChatSessions        AiChatSession[]
+  patientNudges         PatientNudge[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -1479,4 +1483,59 @@ model DentistTask {
   @@index([userId, status])
   @@index([userId, dueDate])
   @@map("dentist_tasks")
+}
+
+// ============================================================
+// AI CHAT & PATIENT NUDGES
+// ============================================================
+
+model AiChatSession {
+  id         String   @id @default(uuid())
+  practiceId String   @map("practice_id")
+  patientId  String   @map("patient_id")
+  title      String?
+  metadata   Json?    @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  practice Practice        @relation(fields: [practiceId], references: [id])
+  patient  Patient         @relation(fields: [patientId], references: [id])
+  messages AiChatMessage[]
+
+  @@index([patientId, updatedAt])
+  @@map("ai_chat_sessions")
+}
+
+model AiChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  role      String
+  content   String   @db.Text
+  richCards Json?    @map("rich_cards")
+  feedback  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session AiChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@map("ai_chat_messages")
+}
+
+model PatientNudge {
+  id         String    @id @default(uuid())
+  practiceId String    @map("practice_id")
+  patientId  String    @map("patient_id")
+  nudgeType  String    @map("nudge_type")
+  channel    String
+  message    String    @db.Text
+  sentAt     DateTime  @default(now()) @map("sent_at")
+  clickedAt  DateTime? @map("clicked_at")
+  bookedAt   DateTime? @map("booked_at")
+  metadata   Json?     @default("{}")
+
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+
+  @@index([patientId, nudgeType, sentAt])
+  @@map("patient_nudges")
 }
