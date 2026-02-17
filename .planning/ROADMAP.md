@@ -107,11 +107,13 @@ Plans:
   2. Staff can set recurring time slots (e.g., weekly checkup blocks)
   3. Staff can view multiple practitioners side-by-side in the calendar
   4. Patients automatically receive appointment reminders via SMS, email, or WhatsApp
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Extract agenda components and add multi-practitioner column view
+- [ ] 06-02-PLAN.md — Add drag-drop appointment rescheduling with @dnd-kit
+- [ ] 06-03-PLAN.md — Build recurring schedule slot management UI
+- [ ] 06-04-PLAN.md — Add SMS/WhatsApp reminders via Twilio
 
 ### Phase 7: Patient Portal Core
 **Goal**: Patients can view all their dental information and communicate with the practice
