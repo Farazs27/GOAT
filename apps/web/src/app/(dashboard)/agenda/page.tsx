@@ -55,6 +55,9 @@ const MedicalHistoryPanel = dynamic(() => import('@/components/patient-history/m
 const TreatmentHistoryDropdown = dynamic(() => import('@/components/treatments/treatment-history-dropdown'), { ssr: false });
 import { CodeBrowserPanel } from '@/components/declaratie/code-browser-panel';
 import { TechnicianBrowserPanel } from '@/components/declaratie/technician-browser-panel';
+import { ScheduleManager } from './schedule-manager';
+import { AppointmentBlock } from '@/components/agenda/appointment-block';
+import { TimeGrid } from '@/components/agenda/time-grid';
 
 interface PatientImage {
   id: string;
@@ -213,6 +216,7 @@ export default function AgendaPage() {
   const [weekAppointments, setWeekAppointments] = useState<Record<string, Appointment[]>>({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showScheduleManager, setShowScheduleManager] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientSearch, setPatientSearch] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -885,6 +889,9 @@ export default function AgendaPage() {
 
   return (
     <div className="space-y-6">
+      {/* Schedule Manager Panel */}
+      <ScheduleManager open={showScheduleManager} onClose={() => setShowScheduleManager(false)} />
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -911,6 +918,10 @@ export default function AgendaPage() {
           <button onClick={goToToday}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isToday ? 'bg-blue-500/20 text-blue-300 border border-blue-500/20' : 'glass text-white/60 hover:text-white hover:bg-white/10'}`}>
             Vandaag
+          </button>
+          <button onClick={() => setShowScheduleManager(true)}
+            className="px-4 py-2 glass rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-2">
+            <Clock className="h-4 w-4" /> Roosters
           </button>
           <button onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/80 hover:bg-blue-500 rounded-xl text-sm font-medium text-white transition-colors shadow-lg shadow-blue-500/20">
@@ -1192,17 +1203,7 @@ export default function AgendaPage() {
                     </div>
                   ) : (
                     dayAppts.map(a => (
-                      <button key={a.id} onClick={() => openPanel(a)}
-                        className="w-full text-left p-2 rounded-lg hover:bg-white/10 transition-all"
-                        style={{ backgroundColor: `rgba(${a.appointmentType === 'EMERGENCY' ? '239,68,68' : a.appointmentType === 'TREATMENT' ? '168,85,247' : a.appointmentType === 'HYGIENE' ? '34,197,94' : a.appointmentType === 'CONSULTATION' ? '245,158,11' : '96,165,250'}, 0.15)` }}>
-                        <p className="text-[10px] font-mono text-white/50">
-                          {new Date(a.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                        <p className="text-xs font-medium text-white/80 truncate">
-                          {a.patient.firstName} {a.patient.lastName[0]}.
-                        </p>
-                        <p className="text-[9px] text-white/35 truncate">{typeLabels[a.appointmentType]}</p>
-                      </button>
+                      <AppointmentBlock key={a.id} appointment={a} onClick={openPanel} compact />
                     ))
                   )}
                 </div>
@@ -1217,67 +1218,18 @@ export default function AgendaPage() {
           <p className="text-sm text-white/30 mt-1">Klik op &quot;Nieuwe afspraak&quot; om te beginnen</p>
         </div>
       ) : (
-        <div className="glass-card rounded-2xl overflow-hidden">
-          <div className="divide-y divide-white/5">
-            {hours.map(hour => {
-              const hourStr = `${String(hour).padStart(2, '0')}`;
-              const slotsThisHour = Object.entries(timeSlots).filter(([key]) => key.startsWith(hourStr));
-              const hasAppointments = slotsThisHour.length > 0;
-
-              return (
-                <div key={hour} className="flex min-h-[60px]">
-                  {/* Time label */}
-                  <div className="w-20 flex-shrink-0 p-3 text-right border-r border-white/5">
-                    <span className={`text-sm font-mono ${hasAppointments ? 'text-white/60' : 'text-white/20'}`}>
-                      {hourStr}:00
-                    </span>
-                  </div>
-                  {/* Appointments */}
-                  <div className="flex-1 p-2">
-                    {slotsThisHour.length > 0 ? (
-                      <div className="space-y-2">
-                        {slotsThisHour.flatMap(([, apps]) => apps).map(a => (
-                          <button key={a.id} onClick={() => openPanel(a)}
-                            className="w-full text-left p-3 glass-light rounded-xl hover:bg-white/10 transition-all group">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[a.appointmentType] || 'from-gray-400 to-gray-600'} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                                <span className="text-[10px] font-bold text-white">
-                                  {a.patient.firstName[0]}{a.patient.lastName[0]}
-                                </span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm text-white/90">
-                                    {a.patient.firstName} {a.patient.lastName}
-                                  </span>
-                                  <span className={`px-2 py-0.5 rounded-lg text-[10px] border ${statusColors[a.status]}`}>
-                                    {statusLabels[a.status]}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-white/40 mt-0.5">
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {new Date(a.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                                    {' - '}
-                                    {new Date(a.endTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] border ${typeBadgeColors[a.appointmentType]}`}>
-                                    {typeLabels[a.appointmentType]}
-                                  </span>
-                                  {a.room && <span>Kamer {a.room}</span>}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <TimeGrid
+          renderHourContent={(hour, hourStr) => {
+            const slotsThisHour = Object.entries(timeSlots).filter(([key]) => key.startsWith(hourStr));
+            return slotsThisHour.length > 0 ? (
+              <div className="space-y-2">
+                {slotsThisHour.flatMap(([, apps]) => apps).map(a => (
+                  <AppointmentBlock key={a.id} appointment={a} onClick={openPanel} />
+                ))}
+              </div>
+            ) : null;
+          }}
+        />
       )}
 
       {/* Slide-out appointment detail panel */}

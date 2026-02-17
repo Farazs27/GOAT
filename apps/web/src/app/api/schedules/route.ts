@@ -8,7 +8,19 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const practitionerId = url.searchParams.get('practitionerId') || undefined;
 
-    const where: any = { practiceId: user.practiceId, isActive: true };
+    // Return practitioners list for schedule manager dropdown
+    if (url.searchParams.get('listPractitioners') === 'true') {
+      const practitioners = await prisma.user.findMany({
+        where: { practiceId: user.practiceId, isActive: true, role: { in: ['DENTIST', 'HYGIENIST', 'PRACTICE_ADMIN'] } },
+        select: { id: true, firstName: true, lastName: true, role: true },
+        orderBy: { lastName: 'asc' },
+      });
+      return Response.json(practitioners);
+    }
+
+    const includeInactive = url.searchParams.get('includeInactive') === 'true';
+    const where: any = { practiceId: user.practiceId };
+    if (!includeInactive) where.isActive = true;
     if (practitionerId) where.practitionerId = practitionerId;
 
     const schedules = await prisma.practitionerSchedule.findMany({
