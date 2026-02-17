@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { FileCheck, ChevronLeft, ChevronRight, CheckCircle2, Clock, XCircle, PenLine, X, Eraser } from 'lucide-react';
+import { FileCheck, ChevronLeft, ChevronRight, CheckCircle2, Clock, XCircle, PenLine, X, Download, AlertCircle } from 'lucide-react';
+import { SignatureWidget, type SignerRelation } from '@/components/patient/signature-widget';
 
 interface ConsentForm {
     id: string;
@@ -12,136 +13,6 @@ interface ConsentForm {
     signedAt: string | null;
     signedByName: string | null;
     createdAt: string;
-}
-
-// ─── Signature Canvas ───
-
-function SignatureCanvas({
-    onSave,
-    onCancel,
-}: {
-    onSave: (dataUrl: string) => void;
-    onCancel: () => void;
-}) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [drawing, setDrawing] = useState(false);
-    const [hasDrawn, setHasDrawn] = useState(false);
-
-    const getCoords = (
-        e: React.TouchEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>,
-    ) => {
-        const canvas = canvasRef.current!;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-
-        if ('touches' in e) {
-            const touch = e.touches[0];
-            return {
-                x: (touch.clientX - rect.left) * scaleX,
-                y: (touch.clientY - rect.top) * scaleY,
-            };
-        }
-        return {
-            x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY,
-        };
-    };
-
-    const startDraw = (
-        e: React.TouchEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>,
-    ) => {
-        e.preventDefault();
-        const ctx = canvasRef.current!.getContext('2d')!;
-        const { x, y } = getCoords(e);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        setDrawing(true);
-        setHasDrawn(true);
-    };
-
-    const draw = (
-        e: React.TouchEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>,
-    ) => {
-        if (!drawing) return;
-        e.preventDefault();
-        const ctx = canvasRef.current!.getContext('2d')!;
-        const { x, y } = getCoords(e);
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#e8945a';
-        ctx.lineTo(x, y);
-        ctx.stroke();
-    };
-
-    const endDraw = () => setDrawing(false);
-
-    const clear = () => {
-        const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        setHasDrawn(false);
-    };
-
-    return (
-        <div className="space-y-5">
-            <p className="text-sm text-white/50">
-                Teken uw handtekening in het vak hieronder
-            </p>
-            <div className="relative rounded-2xl border-2 border-dashed border-[#e8945a]/30 overflow-hidden bg-white/[0.06]">
-                <canvas
-                    ref={canvasRef}
-                    width={800}
-                    height={250}
-                    className="w-full touch-none cursor-crosshair"
-                    style={{ height: 180 }}
-                    onMouseDown={startDraw}
-                    onMouseMove={draw}
-                    onMouseUp={endDraw}
-                    onMouseLeave={endDraw}
-                    onTouchStart={startDraw}
-                    onTouchMove={draw}
-                    onTouchEnd={endDraw}
-                />
-                {!hasDrawn && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="flex items-center gap-2 text-white/15">
-                            <PenLine className="w-5 h-5" />
-                            <p className="text-base select-none">Teken hier uw handtekening</p>
-                        </div>
-                    </div>
-                )}
-            </div>
-            <div className="flex gap-3 flex-wrap">
-                <button
-                    onClick={clear}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/[0.12] text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-medium"
-                >
-                    <Eraser className="w-4 h-4" />
-                    Wissen
-                </button>
-                <button
-                    onClick={onCancel}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/[0.12] text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-medium"
-                >
-                    <X className="w-4 h-4" />
-                    Annuleren
-                </button>
-                <button
-                    disabled={!hasDrawn}
-                    onClick={() => {
-                        const dataUrl = canvasRef.current!.toDataURL('image/png');
-                        onSave(dataUrl);
-                    }}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-sm shadow-lg shadow-[#e8945a]/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[#e8945a]/40 active:scale-[0.98]"
-                >
-                    <PenLine className="w-4 h-4" />
-                    Ondertekenen
-                </button>
-            </div>
-        </div>
-    );
 }
 
 // ─── Status Badge ───
@@ -163,6 +34,11 @@ function StatusBadge({ status }: { status: string }) {
             icon: <XCircle className="w-3.5 h-3.5" />,
             label: 'Ingetrokken',
         },
+        EXPIRED: {
+            classes: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+            icon: <XCircle className="w-3.5 h-3.5" />,
+            label: 'Verlopen',
+        },
     };
     const c = config[status] || config.PENDING;
     return (
@@ -173,13 +49,12 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-// ─── Card border style by status ───
-
 function cardBorderClass(status: string): string {
     const map: Record<string, string> = {
         PENDING: 'border-[#e8945a]/20 shadow-[#e8945a]/5',
         SIGNED: 'border-emerald-500/20 shadow-emerald-500/5',
         REVOKED: 'border-red-500/20 shadow-red-500/5',
+        EXPIRED: 'border-gray-500/20 shadow-gray-500/5',
     };
     return map[status] || map.PENDING;
 }
@@ -191,14 +66,17 @@ export default function ConsentPage() {
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState<ConsentForm | null>(null);
     const [signing, setSigning] = useState(false);
-    const [signName, setSignName] = useState('');
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState('');
+    const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     const token =
         typeof window !== 'undefined'
             ? localStorage.getItem('patient_token')
             : null;
+
+    const pendingCount = forms.filter((f) => f.status === 'PENDING').length;
 
     const fetchForms = useCallback(async () => {
         try {
@@ -219,6 +97,24 @@ export default function ConsentPage() {
         fetchForms();
     }, [fetchForms]);
 
+    // Check if content fits without scrolling on mount/select
+    useEffect(() => {
+        if (selected && scrollRef.current) {
+            const el = scrollRef.current;
+            if (el.scrollHeight <= el.clientHeight) {
+                setHasScrolledToBottom(true);
+            }
+        }
+    }, [selected]);
+
+    const handleScroll = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+        if (el.scrollHeight - el.scrollTop - el.clientHeight < 20) {
+            setHasScrolledToBottom(true);
+        }
+    };
+
     const openForm = async (form: ConsentForm) => {
         try {
             const res = await fetch(
@@ -229,14 +125,15 @@ export default function ConsentPage() {
                 setSelected(await res.json());
                 setSigning(false);
                 setSuccess('');
+                setHasScrolledToBottom(false);
             }
         } catch (e) {
             console.error(e);
         }
     };
 
-    const handleSign = async (signatureData: string) => {
-        if (!selected || !signName.trim()) return;
+    const handleSign = async (data: { signatureData: string; signedByName: string; signerRelation: SignerRelation }) => {
+        if (!selected) return;
         setSaving(true);
         try {
             const res = await fetch(
@@ -247,16 +144,11 @@ export default function ConsentPage() {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        signatureData,
-                        signedByName: signName.trim(),
-                    }),
+                    body: JSON.stringify(data),
                 },
             );
             if (res.ok) {
-                setSuccess(
-                    'Toestemmingsformulier ondertekend! U ontvangt een bevestiging per e-mail.',
-                );
+                setSuccess('Toestemmingsformulier ondertekend!');
                 setSigning(false);
                 setSelected(null);
                 fetchForms();
@@ -265,6 +157,28 @@ export default function ConsentPage() {
             console.error(e);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleDownloadPdf = async (formId: string) => {
+        try {
+            const res = await fetch(
+                `/api/patient-portal/consent/${formId}/pdf`,
+                { headers: { Authorization: `Bearer ${token}` } },
+            );
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `consent-${formId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -296,74 +210,74 @@ export default function ConsentPage() {
                         <StatusBadge status={selected.status} />
                     </div>
 
-                    {/* Consent content */}
-                    <div className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-6 max-h-[50vh] overflow-y-auto">
+                    {/* Consent content with scroll tracking */}
+                    <div
+                        ref={scrollRef}
+                        onScroll={handleScroll}
+                        className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-6 max-h-[60vh] overflow-y-auto"
+                    >
                         <pre className="whitespace-pre-wrap text-sm text-white/70 font-sans leading-relaxed">
                             {selected.content}
                         </pre>
                     </div>
 
-                    {/* Already signed */}
-                    {selected.status === 'SIGNED' && (
-                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/20">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                            <div>
-                                <p className="text-sm font-medium text-emerald-300">
-                                    Ondertekend door {selected.signedByName}
-                                </p>
-                                <p className="text-xs text-emerald-400/60">
-                                    {selected.signedAt &&
-                                        new Date(selected.signedAt).toLocaleDateString('nl-NL', {
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                </p>
-                            </div>
+                    {/* Scroll prompt */}
+                    {selected.status === 'PENDING' && !hasScrolledToBottom && (
+                        <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#e8945a]/[0.08] border border-[#e8945a]/20 text-[#e8945a] text-sm">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                            Scroll naar beneden om te ondertekenen
                         </div>
                     )}
 
-                    {/* Sign actions */}
-                    {selected.status === 'PENDING' && !signing && (
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-white/50 mb-2">
-                                    Uw volledige naam
-                                </label>
-                                <input
-                                    type="text"
-                                    value={signName}
-                                    onChange={(e) => setSignName(e.target.value)}
-                                    placeholder="Volledige naam"
-                                    className="w-full bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl px-5 py-4 text-base text-white/90 outline-none focus:border-[#e8945a]/40 focus:ring-1 focus:ring-[#e8945a]/20 transition-all placeholder:text-white/20"
-                                />
+                    {/* Already signed */}
+                    {selected.status === 'SIGNED' && (
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/20">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                                <div>
+                                    <p className="text-sm font-medium text-emerald-300">
+                                        Ondertekend door {selected.signedByName}
+                                    </p>
+                                    <p className="text-xs text-emerald-400/60">
+                                        {selected.signedAt &&
+                                            new Date(selected.signedAt).toLocaleDateString('nl-NL', {
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
+                                    </p>
+                                </div>
                             </div>
                             <button
-                                disabled={!signName.trim()}
-                                onClick={() => setSigning(true)}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-base shadow-lg shadow-[#e8945a]/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[#e8945a]/40 active:scale-[0.99] flex items-center justify-center gap-2"
+                                onClick={() => handleDownloadPdf(selected.id)}
+                                className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/[0.06] border border-white/[0.12] text-white/70 hover:bg-white/[0.09] hover:text-white transition-all text-sm font-medium"
                             >
-                                <PenLine className="w-5 h-5" />
-                                Ga verder naar ondertekening
+                                <Download className="w-4 h-4" />
+                                Download PDF
                             </button>
                         </div>
                     )}
 
-                    {/* Signature canvas */}
-                    {selected.status === 'PENDING' && signing && (
-                        <SignatureCanvas
-                            onSave={handleSign}
-                            onCancel={() => setSigning(false)}
-                        />
+                    {/* Sign actions - only when scrolled to bottom */}
+                    {selected.status === 'PENDING' && hasScrolledToBottom && !signing && (
+                        <button
+                            onClick={() => setSigning(true)}
+                            className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-semibold text-base shadow-lg shadow-[#e8945a]/25 transition-all hover:shadow-[#e8945a]/40 active:scale-[0.99] flex items-center justify-center gap-2"
+                        >
+                            <PenLine className="w-5 h-5" />
+                            Ga verder naar ondertekening
+                        </button>
                     )}
 
-                    {saving && (
-                        <div className="flex items-center justify-center gap-2 text-white/50 py-4">
-                            <div className="w-5 h-5 border-2 border-[#e8945a] border-t-transparent rounded-full animate-spin" />
-                            <span className="text-sm">Opslaan...</span>
-                        </div>
+                    {/* Signature widget */}
+                    {selected.status === 'PENDING' && signing && (
+                        <SignatureWidget
+                            onSign={handleSign}
+                            onCancel={() => setSigning(false)}
+                            loading={saving}
+                        />
                     )}
                 </div>
             </div>
@@ -380,9 +294,16 @@ export default function ConsentPage() {
                         <FileCheck className="w-5 h-5 text-[#e8945a]" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-semibold text-white/90">
-                            Toestemmingsformulieren
-                        </h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-2xl font-semibold text-white/90">
+                                Toestemmingsformulieren
+                            </h1>
+                            {pendingCount > 0 && (
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#e8945a] text-white text-xs font-bold">
+                                    {pendingCount}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-sm text-white/40">
                             Bekijk en onderteken uw toestemmingsformulieren
                         </p>
@@ -425,7 +346,7 @@ export default function ConsentPage() {
                                     <div className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center flex-shrink-0">
                                         {form.status === 'SIGNED' ? (
                                             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                                        ) : form.status === 'REVOKED' ? (
+                                        ) : form.status === 'REVOKED' || form.status === 'EXPIRED' ? (
                                             <XCircle className="w-5 h-5 text-red-400" />
                                         ) : (
                                             <Clock className="w-5 h-5 text-[#e8945a]" />
@@ -436,11 +357,9 @@ export default function ConsentPage() {
                                             {form.title}
                                         </h3>
                                         <p className="text-xs text-white/30 mt-1">
-                                            {new Date(form.createdAt).toLocaleDateString('nl-NL', {
-                                                day: 'numeric',
-                                                month: 'long',
-                                                year: 'numeric',
-                                            })}
+                                            {form.status === 'SIGNED' && form.signedAt
+                                                ? `Ondertekend op ${new Date(form.signedAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                                                : new Date(form.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </p>
                                     </div>
                                 </div>

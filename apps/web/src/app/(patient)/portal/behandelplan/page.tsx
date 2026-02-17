@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { ClipboardList, Loader2, Euro, ArrowRight, Check, XIcon } from "lucide-react";
+import { ClipboardList, Loader2, Euro, ArrowRight, Check, XIcon, PenLine, AlertCircle, CheckCircle2 } from "lucide-react";
 import { TreatmentTimeline } from "@/components/patient-portal/treatment-timeline";
 import { getTreatmentModelPath } from "@/lib/treatment-models";
+import { SignatureWidget } from "@/components/patient/signature-widget";
 import Link from "next/link";
 
 // Dynamically import 3D component with no SSR
@@ -28,6 +29,7 @@ interface Treatment {
   tooth?: {
     toothNumber: number;
   };
+  estimatedCost?: number | null;
   nzaCode?: {
     code: string;
     descriptionNl: string;
@@ -46,7 +48,7 @@ interface TreatmentPlan {
   id: string;
   title: string;
   description?: string;
-  status: "DRAFT" | "PROPOSED" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "DRAFT" | "PROPOSED" | "ACCEPTED" | "APPROVED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   createdAt: string;
   acceptedAt?: string;
   totalEstimate?: string;
@@ -72,6 +74,12 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
   },
   ACCEPTED: {
     label: "Geaccepteerd",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/20",
+  },
+  APPROVED: {
+    label: "Goedgekeurd",
     color: "text-emerald-400",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500/20",
@@ -110,6 +118,11 @@ export default function BehandelplanPage() {
   const [activePlanIndex, setActivePlanIndex] = useState(0);
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [signingPlanId, setSigningPlanId] = useState<string | null>(null);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const [signLoading, setSignLoading] = useState(false);
+  const [signSuccess, setSignSuccess] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchPlans = async () => {
     const token = localStorage.getItem("patient_token");
@@ -137,6 +150,24 @@ export default function BehandelplanPage() {
     fetchPlans();
   }, []);
 
+  // Scroll detection for signing flow
+  useEffect(() => {
+    if (signingPlanId && scrollRef.current) {
+      const el = scrollRef.current;
+      if (el.scrollHeight <= el.clientHeight) {
+        setHasScrolledToBottom(true);
+      }
+    }
+  }, [signingPlanId]);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 20) {
+      setHasScrolledToBottom(true);
+    }
+  };
+
   const handlePlanAction = async (planId: string, action: "accept" | "reject") => {
     const token = localStorage.getItem("patient_token");
     if (!token) return;
@@ -158,6 +189,37 @@ export default function BehandelplanPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleSignPlan = async (planId: string, data: { signatureData: string; signedByName: string; signerRelation: string }) => {
+    const token = localStorage.getItem("patient_token");
+    if (!token) return;
+    setSignLoading(true);
+    try {
+      const response = await fetch(`/api/patient-portal/treatment-plans/${planId}/sign`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.ok) {
+        setSignSuccess("Behandelplan goedgekeurd!");
+        setSigningPlanId(null);
+        await fetchPlans();
+        setTimeout(() => setSignSuccess(''), 5000);
+      }
+    } catch (error) {
+      console.error("Error signing treatment plan:", error);
+    } finally {
+      setSignLoading(false);
+    }
+  };
+
+  const openSigningFlow = (planId: string) => {
+    setSigningPlanId(planId);
+    setHasScrolledToBottom(false);
   };
 
   if (loading) {
@@ -207,13 +269,93 @@ export default function BehandelplanPage() {
     (t) => t.id === selectedTreatmentId
   );
 
-  // Get 3D model path — check selected treatment first, then fall back to plan name
+  // Get 3D model path
   const modelPath = selectedTreatment
     ? (getTreatmentModelPath(selectedTreatment.description, selectedTreatment.nzaCode?.code)
       ?? getTreatmentModelPath(activePlan.title))
     : getTreatmentModelPath(activePlan.title);
 
-  const statusInfo = statusConfig[activePlan.status];
+  const statusInfo = statusConfig[activePlan.status] || statusConfig.DRAFT;
+
+  // Signing flow view
+  if (signingPlanId === activePlan.id) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <button
+          onClick={() => setSigningPlanId(null)}
+          className="flex items-center gap-2 text-white/50 hover:text-[#e8945a] transition-colors text-sm group"
+        >
+          <XIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          Terug naar behandelplan
+        </button>
+
+        <div className="bg-white/[0.06] backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-xl shadow-black/10 p-8 space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold text-white/90">
+              Akkoord & Ondertekenen
+            </h2>
+            <p className="text-sm text-white/40 mt-1">{activePlan.title}</p>
+          </div>
+
+          {/* Treatment summary with scroll tracking */}
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-6 max-h-[60vh] overflow-y-auto space-y-4"
+          >
+            {activePlan.description && (
+              <p className="text-sm text-white/70 leading-relaxed">{activePlan.description}</p>
+            )}
+
+            <h3 className="text-sm font-semibold text-white/80">Behandelingen</h3>
+            <div className="space-y-2">
+              {activePlan.treatments.map((t) => (
+                <div key={t.id} className="flex justify-between items-center py-2 border-b border-white/[0.06] last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white/80 truncate">{t.description}</p>
+                    {t.nzaCode && (
+                      <p className="text-xs text-white/40 font-mono">{t.nzaCode.code}</p>
+                    )}
+                  </div>
+                  {t.estimatedCost ? (
+                    <span className="text-sm text-[#e8945a] font-medium ml-4">
+                      {formatCurrency(t.estimatedCost)}
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            {activePlan.totalEstimate && (
+              <div className="flex justify-between items-center pt-3 border-t border-white/[0.12]">
+                <span className="text-sm font-medium text-white/60">Totaal geschat</span>
+                <span className="text-lg font-semibold text-[#e8945a]">
+                  {formatCurrency(activePlan.totalEstimate)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Scroll prompt */}
+          {!hasScrolledToBottom && (
+            <div className="flex items-center gap-2 p-3 rounded-2xl bg-[#e8945a]/[0.08] border border-[#e8945a]/20 text-[#e8945a] text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              Scroll naar beneden om te ondertekenen
+            </div>
+          )}
+
+          {/* Signature widget - only after scroll */}
+          {hasScrolledToBottom && (
+            <SignatureWidget
+              onSign={(data) => handleSignPlan(activePlan.id, data)}
+              onCancel={() => setSigningPlanId(null)}
+              loading={signLoading}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -230,6 +372,14 @@ export default function BehandelplanPage() {
         </div>
       </div>
 
+      {/* Success toast */}
+      {signSuccess && (
+        <div className="p-4 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/20 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <p className="text-sm text-emerald-300">{signSuccess}</p>
+        </div>
+      )}
+
       {/* Plan selector tabs (if multiple plans) */}
       {plans.length > 1 && (
         <div className="flex gap-2 flex-wrap">
@@ -240,7 +390,6 @@ export default function BehandelplanPage() {
                 key={plan.id}
                 onClick={() => {
                   setActivePlanIndex(index);
-                  // Auto-select first treatment when switching plans
                   if (plan.treatments.length > 0) {
                     setSelectedTreatmentId(plan.treatments[0].id);
                   }
@@ -282,9 +431,9 @@ export default function BehandelplanPage() {
               </span>
               {activePlan.acceptedAt && (
                 <>
-                  <span className="text-white/20">•</span>
+                  <span className="text-white/20">&#8226;</span>
                   <span>
-                    Geaccepteerd op{" "}
+                    Goedgekeurd op{" "}
                     {new Date(activePlan.acceptedAt).toLocaleDateString("nl-NL", {
                       day: "numeric",
                       month: "long",
@@ -311,20 +460,15 @@ export default function BehandelplanPage() {
           </div>
         </div>
 
-        {/* Accept / Reject buttons for PROPOSED plans */}
+        {/* Sign button for PROPOSED plans */}
         {activePlan.status === "PROPOSED" && (
           <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/[0.08]">
             <button
-              onClick={() => handlePlanAction(activePlan.id, "accept")}
-              disabled={actionLoading === activePlan.id}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#e8945a] hover:bg-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all disabled:opacity-50"
+              onClick={() => openSigningFlow(activePlan.id)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#e8945a] hover:bg-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all"
             >
-              {actionLoading === activePlan.id ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Check className="w-4 h-4" />
-              )}
-              Akkoord
+              <PenLine className="w-4 h-4" />
+              Akkoord & Ondertekenen
             </button>
             <button
               onClick={() => handlePlanAction(activePlan.id, "reject")}
@@ -334,6 +478,25 @@ export default function BehandelplanPage() {
               <XIcon className="w-4 h-4" />
               Afwijzen
             </button>
+          </div>
+        )}
+
+        {/* Approved label */}
+        {activePlan.status === "APPROVED" && (
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/[0.08]">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/20">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-medium text-emerald-300">
+                Goedgekeurd op{" "}
+                {activePlan.acceptedAt
+                  ? new Date(activePlan.acceptedAt).toLocaleDateString("nl-NL", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : ""}
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -393,6 +556,14 @@ export default function BehandelplanPage() {
                     </span>
                   </div>
                 )}
+                {selectedTreatment.estimatedCost ? (
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Kosten</span>
+                    <span className="text-[#e8945a] font-medium">
+                      {formatCurrency(selectedTreatment.estimatedCost)}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between">
                   <span className="text-white/40">Behandelaar</span>
                   <span className="text-white/80">
@@ -424,7 +595,7 @@ export default function BehandelplanPage() {
           </div>
           <Link
             href="/portal/kostenraming"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#e8945a] to-[#d4783e] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all"
           >
             <span className="text-sm font-medium">Bekijk</span>
             <ArrowRight className="w-4 h-4" />
