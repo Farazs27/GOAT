@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 9 of 9 (Patient AI Assistant)
-Plan: 1 of 5 in current phase
+Plan: 5 of 6 in current phase
 Status: Executing phase 09
-Last activity: 2026-02-18 — Completed 09-01 AI Data Layer & System Prompt
+Last activity: 2026-02-18 — Completed 09-05 Follow-up Nudge System
 
 Progress: [█████████░] 97%
 
@@ -103,6 +103,10 @@ Recent decisions affecting current work:
 - [Phase 08]: Re-signing consent creates new versioned ConsentForm record
 - [Phase 08]: APPROVED added to TreatmentPlanStatus for patient-signed approval
 - [Phase 08]: Signature PNG uploaded to Vercel Blob with signatureData fallback
+- [Phase 09]: CRON_SECRET Bearer auth for nudge cron endpoint (not patient/staff JWT)
+- [Phase 09]: PII-safe Gemini prompts: patient name never sent to AI, prepended after generation
+- [Phase 09]: Dual nudge records per patient (whatsapp + in_app channels tracked separately)
+- [Phase 09]: hasBookedSince outcome computed from appointments created after nudge sentAt
 
 ### Pending Todos
 
@@ -116,5 +120,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 09-01-PLAN.md (AI Data Layer & System Prompt)
+Stopped at: Completed 09-05-PLAN.md (Follow-up Nudge System)
 Resume file: None
