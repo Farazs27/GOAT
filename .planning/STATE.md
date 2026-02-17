@@ -12,14 +12,14 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 Phase: 6 of 9 (Agenda & Scheduling)
 Plan: 4 of 4 in current phase
 Status: Executing phase 06
-Last activity: 2026-02-17 — Executed 06-03 Recurring Schedule Slot Management
+Last activity: 2026-02-17 — Executed 06-01 Multi-Practitioner Agenda View
 
 Progress: [██████░░░░] 65%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 3min
 - Total execution time: 0.50 hours
 
@@ -41,6 +41,7 @@ Progress: [██████░░░░] 65%
 *Updated after each plan completion*
 | Phase 05 P02 | 2min | 1 tasks | 1 files |
 | Phase 06 P03 | 3min | 1 tasks | 3 files |
+| Phase 06 P01 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 06]: SMS from number stored in Credential config.smsNumber field
 - [Phase 06]: SMS/WhatsApp failures logged but do not block email sending
 - [Phase 06]: Added listPractitioners param to schedules API to avoid admin-only users endpoint
+- [Phase 06]: MultiPractitionerGrid fetches practitioners via /api/schedules?listPractitioners=true
+- [Phase 06]: AppointmentBlock compact prop for week/multi-practitioner views
 
 ### Pending Todos
 
@@ -90,5 +93,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-03-PLAN.md (Recurring Schedule Slot Management)
+Stopped at: Completed 06-01-PLAN.md (Multi-Practitioner Agenda View)
 Resume file: None
