@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 5: AI Clinical Intelligence
+**Current focus:** Phase 6: Agenda & Scheduling
 
 ## Current Position
 
-Phase: 5 of 9 (AI Clinical Intelligence)
-Plan: 3 of 3 in current phase
-Status: Phase 05 complete
-Last activity: 2026-02-16 — Executed 05-03 AI Treatment Suggestions UI
+Phase: 6 of 9 (Agenda & Scheduling)
+Plan: 4 of 4 in current phase
+Status: Executing 06-04
+Last activity: 2026-02-17 — Executed 06-04 SMS/WhatsApp Appointment Reminders
 
-Progress: [██████░░░░] 62%
+Progress: [██████░░░░] 65%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 3min
-- Total execution time: 0.40 hours
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
@@ -32,6 +32,7 @@ Progress: [██████░░░░] 62%
 | 03-billing-declaratie | 2 | 6min | 3min |
 | 04-ai-declaratie-engine | 2 | 8min | 4min |
 | 05-ai-clinical-intelligence | 3 | 8min | 2.7min |
+| 06-agenda-scheduling | 1 | 3min | 3min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - [Phase 05]: AI suggestion accept flow lazy-creates treatment plan, reuses for subsequent accepts
 - [Phase 05]: Shorthand mode as toggle rather than separate tab to keep single form component
 - [Phase 05]: Amber color scheme for AI UI elements to distinguish from standard blue
+- [Phase 06]: SMS from number stored in Credential config.smsNumber field
+- [Phase 06]: SMS/WhatsApp failures logged but do not block email sending
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Completed 05-03-PLAN.md (AI Treatment Suggestions UI)
+Last session: 2026-02-17
+Stopped at: Completed 06-04-PLAN.md (SMS/WhatsApp Appointment Reminders)
 Resume file: None
