@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 6: Agenda & Scheduling
+**Current focus:** Phase 7: Patient Portal Core
 
 ## Current Position
 
-Phase: 6 of 9 (Agenda & Scheduling)
-Plan: 4 of 4 in current phase
-Status: Executing phase 06
-Last activity: 2026-02-17 — Executed 06-02 Drag-Drop Rescheduling
+Phase: 7 of 9 (Patient Portal Core)
+Plan: 1 of 5 in current phase
+Status: Executing phase 07
+Last activity: 2026-02-17 — Executed 07-01 Portal Shell & Schema
 
-Progress: [██████░░░░] 65%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 3min
 - Total execution time: 0.50 hours
 
@@ -43,6 +43,7 @@ Progress: [██████░░░░] 65%
 | Phase 06 P03 | 3min | 1 tasks | 3 files |
 | Phase 06 P01 | 7min | 2 tasks | 4 files |
 | Phase 06 P02 | 4min | 1 tasks | 4 files |
+| Phase 07 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,9 @@ Recent decisions affecting current work:
 - [Phase 06]: Added listPractitioners param to schedules API to avoid admin-only users endpoint
 - [Phase 06]: MultiPractitionerGrid fetches practitioners via /api/schedules?listPractitioners=true
 - [Phase 06]: AppointmentBlock compact prop for week/multi-practitioner views
+- [Phase 07]: Used ConversationMessage for unread count instead of legacy Message model
+- [Phase 07]: Added DocumentApprovalStatus enum to Document model for patient uploads
+- [Phase 07]: Replaced inline SVGs with lucide-react icons for portal sidebar
 
 ### Pending Todos
 
@@ -94,5 +98,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-02-PLAN.md (Drag-Drop Rescheduling)
+Stopped at: Completed 07-01-PLAN.md (Portal Shell & Schema)
 Resume file: None
