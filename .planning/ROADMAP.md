@@ -163,11 +163,15 @@ Plans:
   3. AI can book appointments on behalf of the patient
   4. AI sends follow-up nudges to patients who have pending treatments
   5. AI never provides medical diagnoses or advice beyond explaining existing treatment plans
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 09-01-PLAN.md — Schema (AiChatSession, AiChatMessage, PatientNudge) + patient data fetcher + system prompt builder
+- [ ] 09-02-PLAN.md — Streaming chat API with Gemini SSE + session/feedback/handoff endpoints
+- [ ] 09-03-PLAN.md — Chat UI: floating bubble, dedicated assistant page, voice controls, session history
+- [ ] 09-04-PLAN.md — Booking orchestrator state machine + rich cards + booking confirmation
+- [ ] 09-05-PLAN.md — Follow-up nudge cron system + WhatsApp + click tracking + staff nudge log API
+- [ ] 09-06-PLAN.md — Staff AI logs page, nudge log UI, practice config, end-to-end verification
 
 ### Phase 10: Hygienist Portal & Periodontogram
 **Goal**: Dental hygienist has a dedicated portal with an excellent periodontogram and shared notes with the dentist
