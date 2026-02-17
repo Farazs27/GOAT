@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Bot,
 } from "lucide-react";
 import AiChat from "@/components/AiChat";
 import { SidebarBadges } from "@/components/dashboard/sidebar-badges";
@@ -31,6 +32,7 @@ const navItems = [
   { icon: CreditCard, label: "Betalingen", href: "/payments" },
   { icon: BarChart3, label: "Rapportage", href: "/reports" },
   { icon: Sparkles, label: "Smile Design", href: "/smile-design" },
+  { icon: Bot, label: "AI Logs", href: "/dashboard/ai-logs" },
   { icon: Settings, label: "Instellingen", href: "/settings" },
 ];
 
