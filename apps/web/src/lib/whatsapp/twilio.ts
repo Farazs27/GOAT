@@ -5,6 +5,7 @@ interface TwilioCredentials {
   accountSid: string;
   authToken: string;
   whatsappNumber: string;
+  smsNumber: string;
 }
 
 async function getTwilioCredentials(
@@ -22,13 +23,14 @@ async function getTwilioCredentials(
     return null;
   }
 
-  // Parse config for WhatsApp number
-  const config = credential.config as { whatsappNumber?: string } | null;
+  // Parse config for WhatsApp and SMS numbers
+  const config = credential.config as { whatsappNumber?: string; smsNumber?: string } | null;
 
   return {
     accountSid: credential.apiKey,
     authToken: credential.apiSecret,
     whatsappNumber: config?.whatsappNumber || "",
+    smsNumber: config?.smsNumber || "",
   };
 }
 
@@ -42,6 +44,7 @@ export async function getTwilioClient(practiceId: string) {
   return {
     client: twilio(credentials.accountSid, credentials.authToken),
     whatsappNumber: credentials.whatsappNumber,
+    smsNumber: credentials.smsNumber,
     accountSid: credentials.accountSid,
   };
 }
@@ -151,6 +154,71 @@ function normalizePhoneNumber(phone: string): string {
   }
 
   return cleaned;
+}
+
+export async function sendSms(
+  practiceId: string,
+  to: string,
+  body: string,
+): Promise<{ success: boolean; twilioSid?: string; error?: string }> {
+  try {
+    const { client, smsNumber } = await getTwilioClient(practiceId);
+
+    if (!smsNumber) {
+      return { success: false, error: "SMS number not configured for this practice" };
+    }
+
+    const normalizedTo = normalizePhoneNumber(to);
+    const message = await client.messages.create({
+      body,
+      to: normalizedTo,
+      from: smsNumber,
+    });
+
+    return { success: true, twilioSid: message.sid };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function sendAppointmentReminderSms(
+  practiceId: string,
+  patientName: string,
+  appointmentTime: string,
+  practiceName: string,
+  phone: string,
+): Promise<{ success: boolean; twilioSid?: string; error?: string }> {
+  const body = `Beste ${patientName}, u heeft morgen om ${appointmentTime} een afspraak bij ${practiceName}. Neem contact op als u wilt afzeggen.`;
+  return sendSms(practiceId, phone, body);
+}
+
+export async function sendAppointmentReminderWhatsApp(
+  practiceId: string,
+  patientName: string,
+  appointmentTime: string,
+  practiceName: string,
+  phone: string,
+): Promise<{ success: boolean; twilioSid?: string; error?: string }> {
+  const body = `Beste ${patientName}, u heeft morgen om ${appointmentTime} een afspraak bij ${practiceName}. Neem contact op als u wilt afzeggen.`;
+  try {
+    const result = await sendWhatsAppMessage(practiceId, phone, body);
+    return { success: result.success, twilioSid: result.twilioSid };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function isSmsConfigured(
+  practiceId: string,
+): Promise<boolean> {
+  const credentials = await getTwilioCredentials(practiceId);
+  return !!credentials && !!credentials.smsNumber;
 }
 
 export async function isWhatsAppConfigured(
