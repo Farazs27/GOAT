@@ -18,6 +18,7 @@ interface AiChatPanelProps {
   onSessionCreated?: (id: string) => void;
   currentPage?: string;
   initialMessages?: ChatMessage[];
+  autoSendText?: string | null;
 }
 
 export default function AiChatPanel({
@@ -25,6 +26,7 @@ export default function AiChatPanel({
   onSessionCreated,
   currentPage,
   initialMessages,
+  autoSendText,
 }: AiChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages || []);
   const [input, setInput] = useState("");
@@ -142,6 +144,15 @@ export default function AiChatPanel({
     },
     [input, isStreaming, sessionId, currentPage, onSessionCreated, tts]
   );
+
+  // Auto-send on mount if autoSendText provided
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    if (autoSendText && !autoSentRef.current) {
+      autoSentRef.current = true;
+      sendMessage(autoSendText);
+    }
+  }, [autoSendText, sendMessage]);
 
   const handleFeedback = async (messageId: string, type: "thumbs_up" | "thumbs_down") => {
     const token = localStorage.getItem("patient_token");

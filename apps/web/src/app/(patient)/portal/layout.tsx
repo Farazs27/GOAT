@@ -11,6 +11,7 @@ import {
   Receipt,
   FileText,
   ClipboardSignature,
+  Bot,
   UserCircle,
   LogOut,
   Menu,
@@ -32,6 +33,7 @@ const navItems = [
   { label: "Facturen", href: "/portal/invoices", icon: Receipt, badgeKey: "unpaidInvoices" as const },
   { label: "Toestemming", href: "/portal/consent", icon: ClipboardSignature, badgeKey: "unsignedConsent" as const },
   { label: "Documenten", href: "/portal/documents", icon: FileText, badgeKey: null },
+  { label: "Assistent", href: "/portal/assistant", icon: Bot, badgeKey: null },
   { label: "Profiel", href: "/portal/profile", icon: UserCircle, badgeKey: null },
 ];
 
