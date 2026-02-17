@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         take: 20,
         include: {
           practitioner: { select: { firstName: true, lastName: true } },
+          treatments: { select: { description: true, toothId: true, status: true } },
         },
       }),
     ]);
