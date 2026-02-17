@@ -11,17 +11,17 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 Phase: 6 of 9 (Agenda & Scheduling)
 Plan: 4 of 4 in current phase
-Status: Executing 06-04
-Last activity: 2026-02-17 — Executed 06-04 SMS/WhatsApp Appointment Reminders
+Status: Executing phase 06
+Last activity: 2026-02-17 — Executed 06-03 Recurring Schedule Slot Management
 
 Progress: [██████░░░░] 65%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 3min
-- Total execution time: 0.45 hours
+- Total execution time: 0.50 hours
 
 **By Phase:**
 
@@ -32,7 +32,7 @@ Progress: [██████░░░░] 65%
 | 03-billing-declaratie | 2 | 6min | 3min |
 | 04-ai-declaratie-engine | 2 | 8min | 4min |
 | 05-ai-clinical-intelligence | 3 | 8min | 2.7min |
-| 06-agenda-scheduling | 1 | 3min | 3min |
+| 06-agenda-scheduling | 2 | 6min | 3min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -40,6 +40,7 @@ Progress: [██████░░░░] 65%
 
 *Updated after each plan completion*
 | Phase 05 P02 | 2min | 1 tasks | 1 files |
+| Phase 06 P03 | 3min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Amber color scheme for AI UI elements to distinguish from standard blue
 - [Phase 06]: SMS from number stored in Credential config.smsNumber field
 - [Phase 06]: SMS/WhatsApp failures logged but do not block email sending
+- [Phase 06]: Added listPractitioners param to schedules API to avoid admin-only users endpoint
 
 ### Pending Todos
 
@@ -88,5 +90,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-04-PLAN.md (SMS/WhatsApp Appointment Reminders)
+Stopped at: Completed 06-03-PLAN.md (Recurring Schedule Slot Management)
 Resume file: None
