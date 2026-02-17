@@ -69,6 +69,7 @@ model Practice {
   customCodeCategories  CustomCodeCategory[]
   dsdDesigns            DsdDesign[]
   dentistTasks          DentistTask[]
+  conversations         Conversation[]
 
   @@map("practices")
 }
@@ -113,6 +114,8 @@ model User {
   whatsappMessagesSent       WhatsAppMessage[]      @relation("WhatsAppSender")
   dsdDesignsCreated          DsdDesign[]            @relation("DsdDesignCreator")
   assignedTasks              DentistTask[]          @relation("AssignedTasks")
+  conversations              Conversation[]         @relation("ConversationPractitioner")
+  conversationMessages       ConversationMessage[]  @relation("ConversationMessageSender")
 
   @@map("users")
 }
@@ -199,6 +202,8 @@ model Patient {
   patientCategories     PatientCategory[]
   dsdDesigns            DsdDesign[]
   dentistTasks          DentistTask[]
+  conversations         Conversation[]
+  uploadedDocuments     Document[]     @relation("PatientDocumentUploader")
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -732,13 +737,16 @@ model Document {
   mimeType     String?  @map("mime_type")
   toothNumber  Int?     @map("tooth_number")
   imageType    String?  @map("image_type")
-  isArchived   Boolean  @default(false) @map("is_archived")
-  createdAt    DateTime @default(now()) @map("created_at")
+  isArchived          Boolean          @default(false) @map("is_archived")
+  uploadedByPatientId String?          @map("uploaded_by_patient_id")
+  approvalStatus      DocumentApprovalStatus? @map("approval_status")
+  createdAt           DateTime         @default(now()) @map("created_at")
 
   // Relations
-  practice Practice @relation(fields: [practiceId], references: [id])
-  patient  Patient? @relation(fields: [patientId], references: [id])
-  uploader User?    @relation("UploadedBy", fields: [uploadedBy], references: [id])
+  practice        Practice @relation(fields: [practiceId], references: [id])
+  patient         Patient? @relation(fields: [patientId], references: [id])
+  uploader        User?    @relation("UploadedBy", fields: [uploadedBy], references: [id])
+  uploadedByPatient Patient? @relation("PatientDocumentUploader", fields: [uploadedByPatientId], references: [id])
 
   @@map("documents")
 }
@@ -1322,6 +1330,72 @@ model DsdDesignVersion {
 
   @@unique([designId, versionNumber])
   @@map("dsd_design_versions")
+}
+
+// ============================================================
+// CONVERSATIONS (Threaded Patient-Staff Messaging)
+// ============================================================
+
+enum DocumentApprovalStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+model Conversation {
+  id             String             @id @default(uuid())
+  practiceId     String             @map("practice_id")
+  patientId      String             @map("patient_id")
+  practitionerId String             @map("practitioner_id")
+  subject        String
+  status         ConversationStatus @default(OPEN)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  practice     Practice              @relation(fields: [practiceId], references: [id])
+  patient      Patient               @relation(fields: [patientId], references: [id])
+  practitioner User                  @relation("ConversationPractitioner", fields: [practitionerId], references: [id])
+  messages     ConversationMessage[]
+
+  @@index([patientId, updatedAt])
+  @@index([practitionerId, status])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String     @id @default(uuid())
+  conversationId String     @map("conversation_id")
+  senderType     SenderType @map("sender_type")
+  senderId       String?    @map("sender_id")
+  content        String
+  isRead         Boolean    @default(false) @map("is_read")
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id])
+  sender       User?               @relation("ConversationMessageSender", fields: [senderId], references: [id])
+  attachments  MessageAttachment[]
+
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url")
+  fileSize  Int      @map("file_size")
+  mimeType  String   @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message ConversationMessage @relation(fields: [messageId], references: [id])
+
+  @@map("message_attachments")
 }
 
 // ============================================================
