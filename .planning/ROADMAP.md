@@ -144,11 +144,14 @@ Plans:
   2. Patient can digitally approve treatment plans with a signature
   3. Patient can browse available time slots and book appointments online
   4. Signed documents are stored with audit trail (who, when, what)
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Schema additions (ConsentTemplate, ConsentForm fields) + enhanced signing APIs + PDF download
+- [ ] 08-02-PLAN.md — Patient consent signing UI with scroll-to-bottom gating and treatment plan signing
+- [ ] 08-03-PLAN.md — Online booking flow with practitioner-first selection and business rules
+- [ ] 08-04-PLAN.md — Staff consent management: templates, global overview, bulk send, export
+- [ ] 08-05-PLAN.md — Staff booking approval, badge integration, and end-to-end verification
 
 ### Phase 9: Patient AI Assistant
 **Goal**: Patients have an AI assistant that explains treatments, answers questions, and helps with appointments
