@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 Phase: 6 of 9 (Agenda & Scheduling)
 Plan: 4 of 4 in current phase
 Status: Executing phase 06
-Last activity: 2026-02-17 — Executed 06-01 Multi-Practitioner Agenda View
+Last activity: 2026-02-17 — Executed 06-02 Drag-Drop Rescheduling
 
 Progress: [██████░░░░] 65%
 
@@ -42,6 +42,7 @@ Progress: [██████░░░░] 65%
 | Phase 05 P02 | 2min | 1 tasks | 1 files |
 | Phase 06 P03 | 3min | 1 tasks | 3 files |
 | Phase 06 P01 | 7min | 2 tasks | 4 files |
+| Phase 06 P02 | 4min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -93,5 +94,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06-01-PLAN.md (Multi-Practitioner Agenda View)
+Stopped at: Completed 06-02-PLAN.md (Drag-Drop Rescheduling)
 Resume file: None
