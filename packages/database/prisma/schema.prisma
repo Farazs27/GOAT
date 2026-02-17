@@ -70,6 +70,7 @@ model Practice {
   dsdDesigns            DsdDesign[]
   dentistTasks          DentistTask[]
   conversations         Conversation[]
+  consentTemplates      ConsentTemplate[]
 
   @@map("practices")
 }
@@ -330,6 +331,7 @@ enum TreatmentPlanStatus {
   DRAFT
   PROPOSED
   ACCEPTED
+  APPROVED
   IN_PROGRESS
   COMPLETED
   CANCELLED
@@ -444,6 +446,7 @@ model Appointment {
   parent        Appointment?   @relation("RecurringAppointments", fields: [parentId], references: [id])
   children      Appointment[]  @relation("RecurringAppointments")
   prescriptions Prescription[]
+  consentForms  ConsentForm[]
 
   @@map("appointments")
 }
@@ -692,6 +695,25 @@ enum ClaimStatus {
 // CONSENT & DOCUMENTS
 // ============================================================
 
+model ConsentTemplate {
+  id          String   @id @default(uuid())
+  practiceId  String   @map("practice_id")
+  title       String
+  contentNl   String   @map("content_nl") @db.Text
+  contentEn   String?  @map("content_en") @db.Text
+  consentType String   @map("consent_type")
+  isActive    Boolean  @default(true) @map("is_active")
+  expiryDays  Int?     @map("expiry_days")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  practice     Practice      @relation(fields: [practiceId], references: [id])
+  consentForms ConsentForm[]
+
+  @@map("consent_templates")
+}
+
 model ConsentForm {
   id              String    @id @default(uuid())
   practiceId      String    @map("practice_id")
@@ -701,24 +723,33 @@ model ConsentForm {
   title           String    @default("")
   content         String    @default("") @db.Text
   treatmentPlanId String?   @map("treatment_plan_id")
+  templateId      String?   @map("template_id")
   description     String
   signedAt        DateTime? @map("signed_at")
   signatureData   String?   @map("signature_data") @db.Text
   signedByName    String?   @map("signed_by_name")
   signedIp        String?   @map("signed_ip")
+  signedUserAgent String?   @map("signed_user_agent")
+  signerRelation  String?   @map("signer_relation") // SELF, PARENT, GUARDIAN
+  signatureUrl    String?   @map("signature_url") // Vercel Blob URL for PNG
   documentUrl     String?   @map("document_url")
   emailSentAt     DateTime? @map("email_sent_at")
   emailAddress    String?   @map("email_address")
-  status          String    @default("PENDING") // PENDING, SIGNED, REVOKED
+  appointmentId   String?   @map("appointment_id")
+  version         Int       @default(1)
+  language        String    @default("nl")
+  status          String    @default("PENDING") // PENDING, SIGNED, REVOKED, EXPIRED
   expiresAt       DateTime? @map("expires_at")
   revokedAt       DateTime? @map("revoked_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  practice      Practice       @relation(fields: [practiceId], references: [id])
-  patient       Patient        @relation(fields: [patientId], references: [id])
-  treatmentPlan TreatmentPlan? @relation(fields: [treatmentPlanId], references: [id])
+  practice      Practice        @relation(fields: [practiceId], references: [id])
+  patient       Patient         @relation(fields: [patientId], references: [id])
+  treatmentPlan TreatmentPlan?  @relation(fields: [treatmentPlanId], references: [id])
+  template      ConsentTemplate? @relation(fields: [templateId], references: [id])
+  appointment   Appointment?    @relation(fields: [appointmentId], references: [id])
 
   @@map("consent_forms")
 }
