@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 9 of 9 (Patient AI Assistant)
-Plan: 5 of 6 in current phase
+Plan: 6 of 6 in current phase
 Status: Executing phase 09
-Last activity: 2026-02-18 — Completed 09-05 Follow-up Nudge System
+Last activity: 2026-02-18 — Completed 09-02 AI Chat API Endpoints
 
 Progress: [█████████░] 97%
 
@@ -107,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 09]: PII-safe Gemini prompts: patient name never sent to AI, prepended after generation
 - [Phase 09]: Dual nudge records per patient (whatsapp + in_app channels tracked separately)
 - [Phase 09]: hasBookedSince outcome computed from appointments created after nudge sentAt
+- [Phase 09]: In-memory rate limiting (30/hr, 200/day) for AI chat; no Redis dependency
+- [Phase 09]: Gemini SSE streaming with ReadableStream transform; messages persisted post-stream
+- [Phase 09]: AI handoff creates IN_APP Notification for most recent practitioner
 
 ### Pending Todos
 
@@ -120,5 +123,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 09-05-PLAN.md (Follow-up Nudge System)
+Stopped at: Completed 09-02-PLAN.md (AI Chat API Endpoints)
 Resume file: None
