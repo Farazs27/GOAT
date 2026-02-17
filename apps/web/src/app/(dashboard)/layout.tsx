@@ -18,11 +18,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import AiChat from "@/components/AiChat";
+import { SidebarBadges } from "@/components/dashboard/sidebar-badges";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "Patiënten", href: "/patients" },
   { icon: Calendar, label: "Agenda", href: "/agenda" },
+  { icon: MessageSquare, label: "Berichten", href: "/dashboard/berichten" },
   { icon: Mail, label: "Email", href: "/email" },
   { icon: MessageSquare, label: "WhatsApp", href: "/whatsapp" },
   { icon: FileText, label: "Facturen", href: "/billing" },
@@ -179,6 +181,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </main>
 
       <AiChat />
+      <SidebarBadges />
     </div>
   );
 }

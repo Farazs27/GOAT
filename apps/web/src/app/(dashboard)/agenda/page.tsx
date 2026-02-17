@@ -256,6 +256,7 @@ export default function AgendaPage() {
   // Odontogram state
   const [odontogramTeeth, setOdontogramTeeth] = useState<ToothData[]>([]);
   const [odontogramSurfaces, setOdontogramSurfaces] = useState<SurfaceData[]>([]);
+  const [unsignedConsentCount, setUnsignedConsentCount] = useState(0);
 
   // codeBrowserOpen removed — panel is always inline
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
@@ -369,10 +370,10 @@ export default function AgendaPage() {
   const handleApproveAppointment = async (id: string) => {
     setPendingLoading(prev => ({ ...prev, [id]: true }));
     try {
-      const res = await authFetch(`/api/appointments/${id}`, {
-        method: 'PATCH',
+      const res = await authFetch('/api/dashboard/appointments/approve', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'SCHEDULED' }),
+        body: JSON.stringify({ appointmentId: id, action: 'approve' }),
       });
       if (res.ok) {
         setPendingAppointments(prev => prev.filter(a => a.id !== id));
@@ -386,10 +387,10 @@ export default function AgendaPage() {
   const handleRejectAppointment = async (id: string) => {
     setPendingLoading(prev => ({ ...prev, [id]: true }));
     try {
-      const res = await authFetch(`/api/appointments/${id}`, {
-        method: 'PATCH',
+      const res = await authFetch('/api/dashboard/appointments/approve', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'CANCELLED', cancelReason: 'Afgewezen door behandelaar' }),
+        body: JSON.stringify({ appointmentId: id, action: 'reject', reason: 'Afgewezen door behandelaar' }),
       });
       if (res.ok) {
         setPendingAppointments(prev => prev.filter(a => a.id !== id));
@@ -537,17 +538,20 @@ export default function AgendaPage() {
     setManualLines([]);
     setRemovedAutoKeys(new Set());
     try {
-      const [appts, plans, imgs, odonto] = await Promise.all([
+      const [appts, plans, imgs, odonto, consentForms] = await Promise.all([
         authFetch(`/api/appointments?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
         authFetch(`/api/treatment-plans?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
         authFetch(`/api/patients/${a.patient.id}/images`).then(r => r.ok ? r.json() : []),
         authFetch(`/api/patients/${a.patient.id}/odontogram`).then(r => r.ok ? r.json() : { teeth: [], surfaces: [] }),
+        authFetch(`/api/consent?patientId=${a.patient.id}`).then(r => r.ok ? r.json() : []),
       ]);
       setPatientAppointments(appts);
       setTreatmentPlans(plans);
       setPatientImages(imgs);
       setOdontogramTeeth(odonto.teeth || []);
       setOdontogramSurfaces(odonto.surfaces || []);
+      const linkedForms = Array.isArray(consentForms) ? consentForms.filter((f: any) => f.appointmentId === a.id && f.status === 'PENDING') : [];
+      setUnsignedConsentCount(linkedForms.length);
     } catch {}
     setPanelLoading(false);
   };
@@ -1405,6 +1409,18 @@ export default function AgendaPage() {
 
                 {/* Status actions */}
                 <div className="flex items-center gap-2">
+                  {selectedAppointment.status === 'PENDING_APPROVAL' && (
+                    <>
+                      <button onClick={() => { handleApproveAppointment(selectedAppointment.id); closePanel(); }}
+                        className="px-3 py-1.5 bg-emerald-500/20 text-emerald-300 rounded-lg text-xs font-medium hover:bg-emerald-500/30 transition-colors">
+                        Goedkeuren
+                      </button>
+                      <button onClick={() => { handleRejectAppointment(selectedAppointment.id); closePanel(); }}
+                        className="px-3 py-1.5 bg-red-500/20 text-red-300 rounded-lg text-xs font-medium hover:bg-red-500/30 transition-colors">
+                        Afwijzen
+                      </button>
+                    </>
+                  )}
                   {selectedAppointment.status === 'SCHEDULED' && (
                     <>
                       <button onClick={() => updateStatus(selectedAppointment.id, 'CONFIRMED')}
@@ -1462,6 +1478,21 @@ export default function AgendaPage() {
                     <span className="text-amber-200">{selectedAppointment.patient.medications!.join(', ')}</span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Unsigned consent warning */}
+            {unsignedConsentCount > 0 && (
+              <div className="mx-4 mt-2 flex gap-2 flex-wrap">
+                <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/15 border border-orange-500/30 rounded-xl text-xs">
+                  <FileCheck className="h-3.5 w-3.5 text-orange-400 flex-shrink-0" />
+                  <span className="text-orange-300 font-medium">Toestemmingsformulier niet ondertekend</span>
+                  <span className="text-orange-200">({unsignedConsentCount} {unsignedConsentCount === 1 ? 'formulier' : 'formulieren'})</span>
+                  <button onClick={() => { setPanelTab('consent'); setSplitView(false); }}
+                    className="ml-1 text-orange-300 hover:text-orange-200 underline">
+                    Bekijken
+                  </button>
+                </div>
               </div>
             )}
 

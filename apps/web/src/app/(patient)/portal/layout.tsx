@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Receipt,
   FileText,
+  ClipboardSignature,
   UserCircle,
   LogOut,
   Menu,
@@ -20,6 +21,7 @@ import {
 interface BadgeCounts {
   unreadMessages: number;
   unpaidInvoices: number;
+  unsignedConsent: number;
 }
 
 const navItems = [
@@ -28,6 +30,7 @@ const navItems = [
   { label: "Berichten", href: "/portal/messages", icon: MessageSquare, badgeKey: "unreadMessages" as const },
   { label: "Behandelplannen", href: "/portal/behandelplan", icon: ClipboardList, badgeKey: null },
   { label: "Facturen", href: "/portal/invoices", icon: Receipt, badgeKey: "unpaidInvoices" as const },
+  { label: "Toestemming", href: "/portal/consent", icon: ClipboardSignature, badgeKey: "unsignedConsent" as const },
   { label: "Documenten", href: "/portal/documents", icon: FileText, badgeKey: null },
   { label: "Profiel", href: "/portal/profile", icon: UserCircle, badgeKey: null },
 ];
@@ -42,7 +45,7 @@ export default function PatientPortalLayout({
   const [patientData, setPatientData] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [badges, setBadges] = useState<BadgeCounts>({ unreadMessages: 0, unpaidInvoices: 0 });
+  const [badges, setBadges] = useState<BadgeCounts>({ unreadMessages: 0, unpaidInvoices: 0, unsignedConsent: 0 });
 
   useEffect(() => {
     setMounted(true);
@@ -62,10 +65,22 @@ export default function PatientPortalLayout({
     })
       .then((res) => res.json())
       .then((d) => {
-        setBadges({
+        setBadges((prev) => ({
+          ...prev,
           unreadMessages: d.unreadMessages || 0,
           unpaidInvoices: d.unpaidInvoices?.count || 0,
-        });
+        }));
+      })
+      .catch(() => {});
+
+    // Fetch unsigned consent count
+    fetch("/api/patient-portal/consent", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((forms: any[]) => {
+        const unsigned = Array.isArray(forms) ? forms.filter((f) => f.status === "PENDING").length : 0;
+        setBadges((prev) => ({ ...prev, unsignedConsent: unsigned }));
       })
       .catch(() => {});
   }, [router]);
@@ -86,7 +101,7 @@ export default function PatientPortalLayout({
     return pathname.startsWith(href);
   };
 
-  const getBadgeCount = (badgeKey: "unreadMessages" | "unpaidInvoices" | null): number => {
+  const getBadgeCount = (badgeKey: "unreadMessages" | "unpaidInvoices" | "unsignedConsent" | null): number => {
     if (!badgeKey) return 0;
     return badges[badgeKey] || 0;
   };
