@@ -126,12 +126,14 @@ Plans:
   4. Patient can send and receive messages with the practice
   5. Patient can view and update their personal information
   6. Patient can view their documents and X-ray images
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [ ] 07-01-PLAN.md — Schema migration (Conversation tables), sidebar nav cleanup, dashboard widgets
+- [ ] 07-02-PLAN.md — Appointments: tabs, cancel/reschedule with 24h rule, .ics export, expandable past cards
+- [ ] 07-03-PLAN.md — Messaging: threaded conversations with WhatsApp-style chat UI
+- [ ] 07-04-PLAN.md — Treatment plans, invoices, profile, and documents with upload
+- [ ] 07-05-PLAN.md — Staff-side messaging dashboard + end-to-end verification
 
 ### Phase 8: Patient Portal Advanced
 **Goal**: Patients can sign documents digitally and book appointments online
@@ -195,7 +197,7 @@ Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other t
 | 4. AI Declaratie Engine | 0/0 | Not started | - |
 | 5. AI Clinical Intelligence | 0/3 | Not started | - |
 | 6. Agenda & Scheduling | 0/0 | Not started | - |
-| 7. Patient Portal Core | 0/0 | Not started | - |
+| 7. Patient Portal Core | 0/5 | Not started | - |
 | 8. Patient Portal Advanced | 0/0 | Not started | - |
 | 9. Patient AI Assistant | 0/0 | Not started | - |
 | 10. Hygienist Portal & Perio | 0/0 | Not started | - |
