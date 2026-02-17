@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Users } from 'lucide-react';
+import { useDroppable } from '@dnd-kit/core';
 import { authFetch } from '@/lib/auth-fetch';
 import { AppointmentBlock, type AppointmentBlockData } from './appointment-block';
-import { TimeGrid } from './time-grid';
 
 interface Practitioner {
   id: string;
@@ -21,9 +21,28 @@ const roleLabels: Record<string, string> = {
   ORTHODONTIST: 'Orthodontist',
 };
 
+function DroppableCell({ practitionerId, hour, minute, children }: { practitionerId: string; hour: number; minute: number; children?: React.ReactNode }) {
+  const hourStr = String(hour).padStart(2, '0');
+  const minStr = String(minute).padStart(2, '0');
+  const { isOver, setNodeRef } = useDroppable({
+    id: `slot-${practitionerId}-${hourStr}-${minStr}`,
+    data: { hour, minute, practitionerId },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[28px] transition-colors duration-150 ${isOver ? 'bg-blue-500/10 ring-1 ring-blue-400/30 rounded-lg' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 interface MultiPractitionerGridProps {
   date: Date;
   onAppointmentClick: (appointment: AppointmentBlockData) => void;
+  droppable?: boolean;
 }
 
 function formatDate(date: Date): string {
@@ -33,7 +52,7 @@ function formatDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export function MultiPractitionerGrid({ date, onAppointmentClick }: MultiPractitionerGridProps) {
+export function MultiPractitionerGrid({ date, onAppointmentClick, droppable = false }: MultiPractitionerGridProps) {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [allAppointments, setAllAppointments] = useState<AppointmentBlockData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,24 +168,38 @@ export function MultiPractitionerGrid({ date, onAppointmentClick }: MultiPractit
               {practitioners.map((practitioner, idx) => {
                 const timeSlots = getTimeSlots(practitioner.id);
                 const slotsThisHour = Object.entries(timeSlots).filter(([key]) => key.startsWith(hourStr));
+                const apptContent = slotsThisHour.length > 0 ? (
+                  <div className="space-y-1">
+                    {slotsThisHour.flatMap(([, apps]) => apps).map(a => (
+                      <AppointmentBlock
+                        key={a.id}
+                        appointment={a}
+                        onClick={onAppointmentClick}
+                        compact
+                        draggable={droppable}
+                      />
+                    ))}
+                  </div>
+                ) : null;
+
                 return (
                   <div
                     key={practitioner.id}
-                    className={`flex-shrink-0 min-h-[60px] p-1.5 ${idx > 0 ? 'border-l border-white/10' : ''}`}
+                    className={`flex-shrink-0 min-h-[60px] ${idx > 0 ? 'border-l border-white/10' : ''}`}
                     style={{ minWidth: '200px', flex: '1 1 0%' }}
                   >
-                    {slotsThisHour.length > 0 ? (
-                      <div className="space-y-1">
-                        {slotsThisHour.flatMap(([, apps]) => apps).map(a => (
-                          <AppointmentBlock
-                            key={a.id}
-                            appointment={a}
-                            onClick={onAppointmentClick}
-                            compact
-                          />
-                        ))}
-                      </div>
-                    ) : null}
+                    {droppable ? (
+                      <>
+                        <DroppableCell practitionerId={practitioner.id} hour={hour} minute={0}>
+                          <div className="p-1.5">{apptContent}</div>
+                        </DroppableCell>
+                        <DroppableCell practitionerId={practitioner.id} hour={hour} minute={30}>
+                          <div className="p-0.5 border-t border-white/[0.03]" />
+                        </DroppableCell>
+                      </>
+                    ) : (
+                      <div className="p-1.5">{apptContent}</div>
+                    )}
                   </div>
                 );
               })}

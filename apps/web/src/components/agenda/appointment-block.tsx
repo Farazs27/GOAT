@@ -1,6 +1,8 @@
 'use client';
 
-import { Clock } from 'lucide-react';
+import { Clock, GripVertical } from 'lucide-react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 const typeColors: Record<string, string> = {
   CHECKUP: 'from-blue-400 to-blue-600',
@@ -80,39 +82,64 @@ interface AppointmentBlockProps {
   style?: React.CSSProperties;
   className?: string;
   compact?: boolean;
+  draggable?: boolean;
+  isOverlay?: boolean;
 }
 
-export function AppointmentBlock({ appointment, onClick, style, className, compact }: AppointmentBlockProps) {
+export function AppointmentBlock({ appointment, onClick, style, className, compact, draggable = false, isOverlay = false }: AppointmentBlockProps) {
   const a = appointment;
+
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `appointment-${a.id}`,
+    data: { appointment: a },
+    disabled: !draggable,
+  });
+
+  const dragStyle: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.4 : 1,
+    cursor: draggable ? 'grab' : undefined,
+    ...style,
+  };
 
   if (compact) {
     return (
-      <button
-        onClick={() => onClick?.(a)}
-        className={`w-full text-left p-2 rounded-lg hover:bg-white/10 transition-all ${className || ''}`}
+      <div
+        ref={draggable ? setNodeRef : undefined}
+        {...(draggable ? { ...listeners, ...attributes } : {})}
         style={{
           backgroundColor: `rgba(${a.appointmentType === 'EMERGENCY' ? '239,68,68' : a.appointmentType === 'TREATMENT' ? '168,85,247' : a.appointmentType === 'HYGIENE' ? '34,197,94' : a.appointmentType === 'CONSULTATION' ? '245,158,11' : '96,165,250'}, 0.15)`,
-          ...style,
+          ...dragStyle,
         }}
+        className={`w-full text-left p-2 rounded-lg hover:bg-white/10 transition-all ${isOverlay ? 'shadow-2xl ring-2 ring-blue-400/50' : ''} ${className || ''}`}
+        onClick={() => !isDragging && onClick?.(a)}
       >
-        <p className="text-[10px] font-mono text-white/50">
-          {new Date(a.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-        </p>
-        <p className="text-xs font-medium text-white/80 truncate">
-          {a.patient.firstName} {a.patient.lastName[0]}.
-        </p>
-        <p className="text-[9px] text-white/35 truncate">{typeLabels[a.appointmentType]}</p>
-      </button>
+        <div className="flex items-center gap-1">
+          {draggable && <GripVertical className="h-3 w-3 text-white/20 flex-shrink-0" />}
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-mono text-white/50">
+              {new Date(a.startTime).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <p className="text-xs font-medium text-white/80 truncate">
+              {a.patient.firstName} {a.patient.lastName[0]}.
+            </p>
+            <p className="text-[9px] text-white/35 truncate">{typeLabels[a.appointmentType]}</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <button
-      onClick={() => onClick?.(a)}
-      className={`w-full text-left p-3 glass-light rounded-xl hover:bg-white/10 transition-all group ${className || ''}`}
-      style={style}
+    <div
+      ref={draggable ? setNodeRef : undefined}
+      {...(draggable ? { ...listeners, ...attributes } : {})}
+      style={dragStyle}
+      className={`w-full text-left p-3 glass-light rounded-xl hover:bg-white/10 transition-all group ${isOverlay ? 'shadow-2xl ring-2 ring-blue-400/50' : ''} ${className || ''}`}
+      onClick={() => !isDragging && onClick?.(a)}
     >
       <div className="flex items-center gap-3">
+        {draggable && <GripVertical className="h-4 w-4 text-white/20 flex-shrink-0" />}
         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${typeColors[a.appointmentType] || 'from-gray-400 to-gray-600'} flex items-center justify-center shadow-lg flex-shrink-0`}>
           <span className="text-[10px] font-bold text-white">
             {a.patient.firstName[0]}{a.patient.lastName[0]}
@@ -141,7 +168,7 @@ export function AppointmentBlock({ appointment, onClick, style, className, compa
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 

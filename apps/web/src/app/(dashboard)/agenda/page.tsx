@@ -43,6 +43,7 @@ import {
   FileCheck,
   Scan,
 } from 'lucide-react';
+import { DndContext, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { authFetch } from '@/lib/auth-fetch';
 import { InformedConsentPanel } from '@/components/consent/informed-consent-panel';
 import type { ToothData, SurfaceData } from '@/components/odontogram/odontogram';
@@ -272,6 +273,56 @@ export default function AgendaPage() {
     room: '',
     notes: '',
   });
+
+  // Drag-drop state
+  const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
+  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 8 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } });
+  const sensors = useSensors(mouseSensor, touchSensor);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const appt = event.active.data.current?.appointment;
+    if (appt) setDraggedAppointment(appt);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setDraggedAppointment(null);
+    const { active, over } = event;
+    if (!over || !active.data.current?.appointment) return;
+
+    const appointment = active.data.current.appointment as Appointment;
+    const dropData = over.data.current as { hour: number; minute: number; practitionerId?: string };
+    if (!dropData || dropData.hour === undefined) return;
+
+    // Calculate new start/end times preserving duration
+    const oldStart = new Date(appointment.startTime);
+    const oldEnd = new Date(appointment.endTime);
+    const durationMs = oldEnd.getTime() - oldStart.getTime();
+
+    const newStart = new Date(selectedDate);
+    newStart.setHours(dropData.hour, dropData.minute, 0, 0);
+    const newEnd = new Date(newStart.getTime() + durationMs);
+
+    const body: any = {
+      startTime: newStart.toISOString(),
+      endTime: newEnd.toISOString(),
+    };
+    if (dropData.practitionerId) {
+      body.practitionerId = dropData.practitionerId;
+    }
+
+    try {
+      const res = await authFetch(`/api/appointments/${appointment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        // Refresh appointments
+        fetchAppointments(selectedDate);
+      }
+    } catch { /* ignore */ }
+  };
 
   const getWeekDays = (date: Date): Date[] => {
     const d = new Date(date);
@@ -1227,7 +1278,14 @@ export default function AgendaPage() {
           </div>
         </div>
       ) : teamView ? (
-        <MultiPractitionerGrid date={selectedDate} onAppointmentClick={openPanel} />
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <MultiPractitionerGrid date={selectedDate} onAppointmentClick={openPanel} droppable />
+          <DragOverlay>
+            {draggedAppointment ? (
+              <AppointmentBlock appointment={draggedAppointment} compact isOverlay />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       ) : appointments.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <Calendar className="h-12 w-12 mx-auto mb-4 text-white/20" />
@@ -1235,18 +1293,26 @@ export default function AgendaPage() {
           <p className="text-sm text-white/30 mt-1">Klik op &quot;Nieuwe afspraak&quot; om te beginnen</p>
         </div>
       ) : (
-        <TimeGrid
-          renderHourContent={(hour, hourStr) => {
-            const slotsThisHour = Object.entries(timeSlots).filter(([key]) => key.startsWith(hourStr));
-            return slotsThisHour.length > 0 ? (
-              <div className="space-y-2">
-                {slotsThisHour.flatMap(([, apps]) => apps).map(a => (
-                  <AppointmentBlock key={a.id} appointment={a} onClick={openPanel} />
-                ))}
-              </div>
-            ) : null;
-          }}
-        />
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <TimeGrid
+            droppable
+            renderHourContent={(hour, hourStr) => {
+              const slotsThisHour = Object.entries(timeSlots).filter(([key]) => key.startsWith(hourStr));
+              return slotsThisHour.length > 0 ? (
+                <div className="space-y-2">
+                  {slotsThisHour.flatMap(([, apps]) => apps).map(a => (
+                    <AppointmentBlock key={a.id} appointment={a} onClick={openPanel} draggable />
+                  ))}
+                </div>
+              ) : null;
+            }}
+          />
+          <DragOverlay>
+            {draggedAppointment ? (
+              <AppointmentBlock appointment={draggedAppointment} isOverlay />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
       {/* Slide-out appointment detail panel */}
