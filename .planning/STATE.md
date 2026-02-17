@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 8: Patient Portal Advanced
+**Current focus:** Phase 9: Patient AI Assistant
 
 ## Current Position
 
-Phase: 8 of 9 (Patient Portal Advanced)
-Plan: 5 of 5 in current phase (PHASE COMPLETE)
-Status: Phase 08 complete
-Last activity: 2026-02-17 — Completed 08-05 Booking Approval & Badge Integration
+Phase: 9 of 9 (Patient AI Assistant)
+Plan: 1 of 5 in current phase
+Status: Executing phase 09
+Last activity: 2026-02-18 — Completed 09-01 AI Data Layer & System Prompt
 
-Progress: [█████████░] 95%
+Progress: [█████████░] 97%
 
 ## Performance Metrics
 
@@ -115,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Completed 08-05-PLAN.md (Booking Approval & Badge Integration) — Phase 08 complete
+Last session: 2026-02-18
+Stopped at: Completed 09-01-PLAN.md (AI Data Layer & System Prompt)
 Resume file: None
