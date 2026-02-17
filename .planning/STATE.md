@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 7: Patient Portal Core
+**Current focus:** Phase 8: Patient Portal Advanced
 
 ## Current Position
 
-Phase: 7 of 9 (Patient Portal Core)
-Plan: 5 of 5 in current phase
-Status: Verifying phase 07
-Last activity: 2026-02-17 — Executed 07-05 Staff Messaging Dashboard
+Phase: 8 of 9 (Patient Portal Advanced)
+Plan: 1 of 3 in current phase
+Status: Executing phase 08
+Last activity: 2026-02-17 — Executed 08-01 Digital Consent & Treatment Plan Signing
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -48,6 +48,8 @@ Progress: [█████████░] 90%
 | Phase 07 P04 | 5min | 2 tasks | 5 files |
 | Phase 07 P03 | 5min | 2 tasks | 5 files |
 | Phase 07 P05 | 3min | 2 tasks | 5 files |
+| Phase 08 P03 | 5min | 2 tasks | 3 files |
+| Phase 08 P01 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -96,6 +98,10 @@ Recent decisions affecting current work:
 - [Phase 07]: Staff conversations scoped to practitioner's own patients only
 - [Phase 07]: Reassign transfers conversation to another practitioner in same practice
 - [Phase 07]: Attachment flow sends message first then attaches file to message ID
+- [Phase 08]: CLEANING maps to HYGIENE enum; booking window defaults 1/90/2
+- [Phase 08]: Re-signing consent creates new versioned ConsentForm record
+- [Phase 08]: APPROVED added to TreatmentPlanStatus for patient-signed approval
+- [Phase 08]: Signature PNG uploaded to Vercel Blob with signatureData fallback
 
 ### Pending Todos
 
@@ -109,5 +115,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 07-05-PLAN.md (Staff Messaging Dashboard) — all 5 plans done, verifying
+Stopped at: Completed 08-01-PLAN.md (Digital Consent & Treatment Plan Signing)
 Resume file: None
