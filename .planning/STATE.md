@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 7 of 9 (Patient Portal Core)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: Executing phase 07
-Last activity: 2026-02-17 — Executed 07-01 Portal Shell & Schema
+Last activity: 2026-02-17 — Executed 07-02 Appointment Self-Service
 
 Progress: [███████░░░] 70%
 
@@ -44,6 +44,7 @@ Progress: [███████░░░] 70%
 | Phase 06 P01 | 7min | 2 tasks | 4 files |
 | Phase 06 P02 | 4min | 1 tasks | 4 files |
 | Phase 07 P01 | 4min | 2 tasks | 4 files |
+| Phase 07 P02 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Used ConversationMessage for unread count instead of legacy Message model
 - [Phase 07]: Added DocumentApprovalStatus enum to Document model for patient uploads
 - [Phase 07]: Replaced inline SVGs with lucide-react icons for portal sidebar
+- [Phase 07]: Reschedule scans next 14 days for same-practitioner availability
+- [Phase 07]: 24h modification rule enforced on both client and server
 
 ### Pending Todos
 
