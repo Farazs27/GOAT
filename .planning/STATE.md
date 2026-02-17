@@ -52,6 +52,7 @@ Progress: [█████████░] 97%
 | Phase 08 P01 | 5min | 2 tasks | 4 files |
 | Phase 08 P05 | 5min | 2 tasks | 5 files |
 | Phase 09 P03 | 4min | 2 tasks | 4 files |
+| Phase 09 P04 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,7 @@ Recent decisions affecting current work:
 - [Phase 09]: Gemini SSE streaming with ReadableStream transform; messages persisted post-stream
 - [Phase 09]: AI handoff creates IN_APP Notification for most recent practitioner
 - [Phase 09]: Quick-action chips auto-send via autoSendText prop on chat panel mount
+- [Phase 09]: Booking state machine with 8 steps persisted in AiChatSession.metadata.bookingState
 
 ### Pending Todos
 
@@ -125,5 +127,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 09-02-PLAN.md (AI Chat API Endpoints)
+Stopped at: Completed 09-04-PLAN.md (Booking Flow & Rich Cards)
 Resume file: None
