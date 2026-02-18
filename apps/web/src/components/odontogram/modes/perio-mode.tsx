@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import type { PerioToothData } from '@/../../packages/shared-types/src/odontogram';
 import IndicatorRows from '../perio/indicator-rows';
 import ProbingPanel from '../perio/probing-panel';
+import VoiceInputButton from '../perio/voice-input';
 
 const Tooth3D = dynamic(() => import('../three/tooth-3d'), { ssr: false });
 
@@ -224,6 +225,21 @@ export default function PerioMode({
     [selectedTooth, onPerioDataChange]
   );
 
+  const handleVoiceResult = useCallback(
+    (result: { tooth: number; values: [number, number, number, number, number, number] }) => {
+      const { tooth, values } = result;
+      // Select the tooth
+      onToothSelect(tooth);
+      // Build data: first 3 = buccal probing depths, last 3 = palatal probing depths
+      const existing = perioData[String(tooth)] ?? createEmptyPerioData();
+      const newData = structuredClone(existing);
+      newData.buccal.probingDepth = [values[0], values[1], values[2]];
+      newData.palatal.probingDepth = [values[3], values[4], values[5]];
+      onPerioDataChange(tooth, newData);
+    },
+    [perioData, onToothSelect, onPerioDataChange]
+  );
+
   const navigateTooth = useCallback(
     (direction: 1 | -1) => {
       if (!selectedTooth) {
@@ -251,6 +267,8 @@ export default function PerioMode({
               Parodontale Sondering
             </h2>
           </div>
+          {/* Voice input */}
+          <VoiceInputButton onResult={handleVoiceResult} />
           {/* Legend */}
           <div className="flex items-center gap-4 text-[10px]">
             <span className="flex items-center gap-1.5">
