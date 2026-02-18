@@ -58,6 +58,7 @@ Last activity: 2026-02-18 — Completed 11-05 Messaging, Reports & Recalls
 | Phase 11 P01 | 3min | 2 tasks | 2 files |
 | Phase 11 P05 | 8min | 2 tasks | 8 files |
 | Phase 11 P03 | 5min | 2 tasks | 4 files |
+| Phase 11 P06 | 13min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Kept existing PeriodontalChart model for backward compatibility alongside new relational schema
 - [Phase 11]: navGroups array with flatMap for grouped desktop and flat mobile sidebar rendering
 - [Phase 11]: Built standalone perio classification rather than importing from odontogram
+- [Phase 11]: Perio preferences stored in localStorage per device, not server-side
+- [Phase 11]: Dashboard rebuilt with 4 top cards + 3 bottom detail sections layout
 
 ### Roadmap Evolution
 
