@@ -304,10 +304,14 @@ export default function PerioEntryPanel({ presentTeeth, sessionId, onSitesChange
 
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved'>('idle');
+  const initialLoadedRef = useRef(false);
+  const onSitesChangeRef = useRef(onSitesChange);
+  onSitesChangeRef.current = onSitesChange;
 
-  // Load initial sites
+  // Load initial sites once
   useEffect(() => {
-    if (initialSites && initialSites.length > 0) {
+    if (!initialLoadedRef.current && initialSites && initialSites.length > 0) {
+      initialLoadedRef.current = true;
       dispatch({ type: 'LOAD_SITES', sites: initialSites });
     }
   }, [initialSites]);
@@ -316,8 +320,8 @@ export default function PerioEntryPanel({ presentTeeth, sessionId, onSitesChange
   const sitesArray = React.useMemo(() => Object.values(state.sites), [state.sites]);
 
   useEffect(() => {
-    onSitesChange(sitesArray);
-  }, [sitesArray, onSitesChange]);
+    onSitesChangeRef.current(sitesArray);
+  }, [sitesArray]);
 
   // Auto-save with debounce
   useEffect(() => {
