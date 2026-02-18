@@ -103,6 +103,10 @@ export interface PerioToothData {
   missing?: boolean;
 }
 
+export function calculateCAL(probingDepth: number, gingivalMargin: number): number {
+  return probingDepth + Math.abs(gingivalMargin);
+}
+
 export interface PerioChartData {
   teeth: Record<string, PerioToothData>;
 }
