@@ -5,16 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 9: Patient AI Assistant
+**Current focus:** Phase 10: Hygienist Portal & Periodontogram
 
 ## Current Position
 
-Phase: 9 of 9 (Patient AI Assistant)
-Plan: 6 of 6 in current phase (COMPLETE)
-Status: Phase 09 complete - ALL PHASES DONE
-Last activity: 2026-02-18 — Completed 09-06 Staff AI Management & Verification
-
-Progress: [██████████] 100%
+Phase: 10 (Hygienist Portal & Periodontogram)
+Plan: 1 of 6 in current phase (COMPLETE)
+Status: Executing Phase 10
+Last activity: 2026-02-18 — Completed 10-01 Schema Extensions & Role-Based Sidebar
 
 ## Performance Metrics
 
@@ -55,6 +53,7 @@ Progress: [██████████] 100%
 | Phase 09 P04 | 3min | 2 tasks | 3 files |
 | Phase 09 P06 | 4min | 2 tasks | 4 files |
 | Phase 10 P02 | 4min | 2 tasks | 4 files |
+| Phase 10 P01 | 7min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -118,6 +117,8 @@ Recent decisions affecting current work:
 - [Phase 09]: Booking state machine with 8 steps persisted in AiChatSession.metadata.bookingState
 - [Phase 10]: Extended PerioToothData with optional fields for backward compatibility
 - [Phase 10]: Voice input parses nl-NL with tooth/tand NN pattern for hands-free charting
+- [Phase 10]: Nav items moved into client component to avoid React serialization of Lucide icons
+- [Phase 10]: Seed cleanup order comprehensively fixed for all FK constraints
 
 ### Pending Todos
 
@@ -131,5 +132,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 09-06-PLAN.md (Staff AI Management & Verification) — ALL PHASES COMPLETE
+Stopped at: Completed 10-01-PLAN.md (Schema Extensions & Role-Based Sidebar)
 Resume file: None
