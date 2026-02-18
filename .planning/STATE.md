@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** AI-powered declaratie and clinical note generation from natural language
-**Current focus:** Phase 10: Hygienist Portal & Periodontogram
+**Current focus:** Phase 11: Hygienist Portal Rebuild
 
 ## Current Position
 
-Phase: 10 (Hygienist Portal & Periodontogram)
-Plan: 5 of 6 in current phase (COMPLETE)
-Status: Executing Phase 10
-Last activity: 2026-02-18 — Completed 10-05 Staff Team Chat
+Phase: 11 (Hygienist Portal Rebuild)
+Plan: 1 of 7 in current phase (COMPLETE)
+Status: Executing Phase 11
+Last activity: 2026-02-18 — Completed 11-01 Schema & Sidebar Foundation
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 3min
 - Total execution time: 0.50 hours
 
@@ -55,6 +55,7 @@ Last activity: 2026-02-18 — Completed 10-05 Staff Team Chat
 | Phase 10 P02 | 4min | 2 tasks | 4 files |
 | Phase 10 P01 | 7min | 2 tasks | 6 files |
 | Phase 10 P03 | 6min | 2 tasks | 4 files |
+| Phase 11 P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Perio classification uses max probing depth + teeth lost as simplified proxy for EFP/AAP staging
 - [Phase 10]: Line graph uses segmented SVG polylines with null gaps for missing teeth
 - [Phase 10]: Historical comparison fetched via staff API using access_token
+- [Phase 11]: Kept existing PeriodontalChart model for backward compatibility alongside new relational schema
+- [Phase 11]: navGroups array with flatMap for grouped desktop and flat mobile sidebar rendering
 
 ### Roadmap Evolution
 
@@ -140,5 +143,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-hygienist-portal-rebuild/11-CONTEXT.md
+Stopped at: Completed 11-01-PLAN.md
+Resume file: .planning/phases/11-hygienist-portal-rebuild/11-01-SUMMARY.md

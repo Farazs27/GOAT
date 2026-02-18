@@ -46,10 +46,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Hygienist Portal
 
-- [ ] **HYG-01**: Dental hygienist has a dedicated portal view (separate from dentist dashboard)
+- [x] **HYG-01**: Dental hygienist has a dedicated portal view (separate from dentist dashboard)
 - [ ] **HYG-02**: Hygienist can view and record periodontal data on the periodontogram
 - [ ] **HYG-03**: Hygienist and dentist can see each other's clinical notes on the same patient
-- [ ] **HYG-04**: Hygienist portal does NOT include smile design section
+- [x] **HYG-04**: Hygienist portal does NOT include smile design section
 - [ ] **HYG-05**: Hygienist and dentist can communicate within the system (internal notes/messages)
 
 ### Patient Portal
@@ -134,10 +134,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PORT-05 | Phase 7 | Pending |
 | CLIN-06 | Phase 10 | Pending |
 | CLIN-07 | Phase 10 | Pending |
-| HYG-01 | Phase 10 | Pending |
+| HYG-01 | Phase 10 | Complete |
 | HYG-02 | Phase 10 | Pending |
 | HYG-03 | Phase 10 | Pending |
-| HYG-04 | Phase 10 | Pending |
+| HYG-04 | Phase 10 | Complete |
 | HYG-05 | Phase 10 | Pending |
 | PORT-06 | Phase 8 | Pending |
 | PORT-07 | Phase 7 | Pending |

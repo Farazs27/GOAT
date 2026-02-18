@@ -236,4 +236,4 @@ Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other t
 | 8. Patient Portal Advanced | 0/0 | Not started | - |
 | 9. Patient AI Assistant | 0/0 | Not started | - |
 | 10. Hygienist Portal & Perio | 0/6 | Complete    | 2026-02-18 |
-| 11. Hygienist Portal Rebuild | 0/7 | Not started | - |
+| 11. Hygienist Portal Rebuild | 1/7 | In Progress|  |
