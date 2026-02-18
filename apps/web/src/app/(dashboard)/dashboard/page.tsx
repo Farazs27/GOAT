@@ -15,6 +15,7 @@ import { WidgetWithoutFollowup } from '@/components/dashboard/WidgetWithoutFollo
 import { AppointmentSlideout } from '@/components/dashboard/AppointmentSlideout';
 import { PatientSlideout } from '@/components/dashboard/PatientSlideout';
 import { WidgetDetailSlideout } from '@/components/dashboard/WidgetDetailSlideout';
+import { HygienistDashboard } from '@/components/dashboard/HygienistDashboard';
 
 interface Appointment {
   id: string;
@@ -45,7 +46,19 @@ interface FollowupPatient {
   firstVisitType: string;
 }
 
+function getUserRole(): string | null {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
 export default function DashboardPage() {
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [followupPatients, setFollowupPatients] = useState<FollowupPatient[]>([]);
@@ -57,6 +70,10 @@ export default function DashboardPage() {
   const [activeWidget, setActiveWidget] = useState<'appointments-today' | 'nog-te-voltooien' | 'completed-today' | 'behandelplannen' | 'without-followup' | null>(null);
   const [loading, setLoading] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setUserRole(getUserRole());
+  }, []);
 
   // Load all dashboard data
   useEffect(() => {
@@ -108,6 +125,10 @@ export default function DashboardPage() {
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--accent)] border-t-transparent" />
       </div>
     );
+  }
+
+  if (userRole === 'HYGIENIST') {
+    return <HygienistDashboard />;
   }
 
   const widgetRenderers: Record<string, React.ReactNode> = {
