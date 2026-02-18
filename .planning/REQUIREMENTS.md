@@ -41,8 +41,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **CLIN-03**: Treatment plan creation with multiple treatments per plan
 - [ ] **CLIN-04**: Treatment plan approval workflow (create, approve, execute, complete)
 - [ ] **CLIN-05**: Treatment plans link to declaratie for billing
-- [ ] **CLIN-06**: Complete periodontogram with probing depths, bleeding, recession, mobility
-- [ ] **CLIN-07**: Periodontogram improvements for hygienist workflow (fast data entry, visual charting)
+- [x] **CLIN-06**: Complete periodontogram with probing depths, bleeding, recession, mobility
+- [x] **CLIN-07**: Periodontogram improvements for hygienist workflow (fast data entry, visual charting)
 
 ### Hygienist Portal
 
@@ -132,8 +132,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PORT-03 | Phase 7 | Pending |
 | PORT-04 | Phase 7 | Pending |
 | PORT-05 | Phase 7 | Pending |
-| CLIN-06 | Phase 10 | Pending |
-| CLIN-07 | Phase 10 | Pending |
+| CLIN-06 | Phase 10 | Complete |
+| CLIN-07 | Phase 10 | Complete |
 | HYG-01 | Phase 10 | Complete |
 | HYG-02 | Phase 10 | Pending |
 | HYG-03 | Phase 10 | Pending |

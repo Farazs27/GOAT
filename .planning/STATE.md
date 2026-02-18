@@ -56,6 +56,7 @@ Last activity: 2026-02-18 — Completed 11-01 Schema & Sidebar Foundation
 | Phase 10 P01 | 7min | 2 tasks | 6 files |
 | Phase 10 P03 | 6min | 2 tasks | 4 files |
 | Phase 11 P01 | 3min | 2 tasks | 2 files |
+| Phase 11 P03 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,7 @@ Recent decisions affecting current work:
 - [Phase 10]: Historical comparison fetched via staff API using access_token
 - [Phase 11]: Kept existing PeriodontalChart model for backward compatibility alongside new relational schema
 - [Phase 11]: navGroups array with flatMap for grouped desktop and flat mobile sidebar rendering
+- [Phase 11]: Built standalone perio classification rather than importing from odontogram
 
 ### Roadmap Evolution
 
