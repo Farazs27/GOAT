@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 const DEFAULT_STEPS = [
   { name: 'Initieel onderzoek', status: 'PENDING' },
