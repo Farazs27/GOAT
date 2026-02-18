@@ -12,12 +12,13 @@ import {
   FileText,
   ClipboardSignature,
   Bot,
+  Heart,
   UserCircle,
   LogOut,
   Menu,
   X,
-  Sun,
 } from "lucide-react";
+import Image from "next/image";
 
 interface BadgeCounts {
   unreadMessages: number;
@@ -33,6 +34,7 @@ const navItems = [
   { label: "Facturen", href: "/portal/invoices", icon: Receipt, badgeKey: "unpaidInvoices" as const },
   { label: "Toestemming", href: "/portal/consent", icon: ClipboardSignature, badgeKey: "unsignedConsent" as const },
   { label: "Documenten", href: "/portal/documents", icon: FileText, badgeKey: null },
+  { label: "Verzorgingsadvies", href: "/portal/care-notes", icon: Heart, badgeKey: null },
   { label: "Assistent", href: "/portal/assistant", icon: Bot, badgeKey: null },
   { label: "Profiel", href: "/portal/profile", icon: UserCircle, badgeKey: null },
 ];
@@ -131,16 +133,8 @@ export default function PatientPortalLayout({
           {/* Logo Section */}
           <div className="p-6 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-105"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #e8945a 0%, #d4864a 100%)",
-                  boxShadow:
-                    "0 4px 16px rgba(232, 148, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-                }}
-              >
-                <Sun className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden transition-transform duration-300 hover:scale-105 shadow-lg shadow-[#e8945a]/30">
+                <Image src="/images/nexiom-logo-sm.png" alt="Nexiom" width={40} height={40} className="w-full h-full object-cover" />
               </div>
               <div>
                 <span className="font-bold text-lg tracking-tight text-white/90">
@@ -265,13 +259,9 @@ export default function PatientPortalLayout({
           <div className="flex items-center justify-between px-5 py-4">
             <div className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(135deg, #e8945a, #d4864a)",
-                  boxShadow: "0 2px 8px rgba(232, 148, 90, 0.3)",
-                }}
+                className="w-9 h-9 rounded-lg overflow-hidden shadow-md shadow-[#e8945a]/30"
               >
-                <Sun className="w-4 h-4 text-white" />
+                <Image src="/images/nexiom-logo-sm.png" alt="Nexiom" width={36} height={36} className="w-full h-full object-cover" />
               </div>
               <span className="font-bold text-white/90 tracking-tight">
                 NEXIOM
