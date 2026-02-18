@@ -12,6 +12,7 @@ import {
   BarChart3,
   Mail,
   MessageSquare,
+  MessagesSquare,
   Sparkles,
   Bot,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const allNavItems: NavItem[] = [
   { icon: Users, label: "Patienten", href: "/patients" },
   { icon: Calendar, label: "Agenda", href: "/agenda" },
   { icon: MessageSquare, label: "Berichten", href: "/dashboard/berichten" },
+  { icon: MessagesSquare, label: "Team Chat", href: "/dashboard/team-chat" },
   { icon: Mail, label: "Email", href: "/email" },
   { icon: MessageSquare, label: "WhatsApp", href: "/whatsapp" },
   { icon: FileText, label: "Facturen", href: "/billing" },
