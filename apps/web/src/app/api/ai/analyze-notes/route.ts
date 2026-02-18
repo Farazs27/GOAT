@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     const codebookSection = buildCodebookPrompt(relevantCategories);
 
     // Build compact all-codes reference
-    const allCodesList = nzaCodes.map(c =>
+    const allCodesList = nzaCodes.map((c) =>
       `${c.code}: ${c.descriptionNl} (€${c.maxTariff})`
     ).join('\n');
 
