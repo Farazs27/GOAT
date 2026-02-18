@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Droplets, Circle, Zap, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X, Droplets, Circle, Zap, Layers, Ban, Wrench } from 'lucide-react';
 import type { PerioToothData } from '@/../../packages/shared-types/src/odontogram';
 
 interface ProbingPanelProps {
@@ -13,7 +13,7 @@ interface ProbingPanelProps {
   onClose: () => void;
 }
 
-type InputMode = 'probingDepth' | 'gingivalMargin';
+type InputMode = 'probingDepth' | 'gingivalMargin' | 'mucogingivalJunction' | 'keratinizedTissueWidth';
 
 const POINT_LABELS = [
   ['Disto Palataal', 'Palataal', 'Mesio Palataal'],
@@ -52,6 +52,13 @@ function getNumpadColor(val: number): string {
   return NUMPAD_COLORS.red;
 }
 
+const INPUT_MODE_LABELS: Record<InputMode, string> = {
+  probingDepth: 'POCKETDIEPTE',
+  gingivalMargin: 'GINGIVALE MARGE',
+  mucogingivalJunction: 'MGJ',
+  keratinizedTissueWidth: 'KTW',
+};
+
 export default function ProbingPanel({
   toothNumber,
   perioData,
@@ -62,6 +69,10 @@ export default function ProbingPanel({
 }: ProbingPanelProps) {
   const [inputMode, setInputMode] = useState<InputMode>('probingDepth');
   const [activePoint, setActivePoint] = useState<[number, number]>([0, 0]);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const isMissing = perioData.missing ?? false;
+  const isImplant = perioData.implant ?? false;
 
   useEffect(() => {
     setActivePoint([0, 0]);
@@ -77,28 +88,55 @@ export default function ProbingPanel({
 
   const handleNumpadClick = useCallback(
     (value: number) => {
+      if (isMissing) return;
       const [row, col] = activePoint;
       const side = POINT_SIDES[row];
-      const field = inputMode;
 
       const newData = structuredClone(perioData);
-      newData[side][field][col] = value;
+
+      if (inputMode === 'probingDepth' || inputMode === 'gingivalMargin') {
+        newData[side][inputMode][col] = value;
+      } else if (inputMode === 'mucogingivalJunction') {
+        if (!newData.mucogingivalJunction) {
+          newData.mucogingivalJunction = { buccal: [0, 0, 0], palatal: [0, 0, 0] };
+        }
+        newData.mucogingivalJunction[side][col] = value;
+      } else if (inputMode === 'keratinizedTissueWidth') {
+        if (!newData.keratinizedTissueWidth) {
+          newData.keratinizedTissueWidth = { buccal: [0, 0, 0], palatal: [0, 0, 0] };
+        }
+        newData.keratinizedTissueWidth[side][col] = value;
+      }
+
       onDataChange(newData);
       advancePoint();
     },
-    [activePoint, inputMode, perioData, onDataChange, advancePoint]
+    [activePoint, inputMode, perioData, onDataChange, advancePoint, isMissing]
   );
 
   const handleToggle = useCallback(
     (field: 'bleeding' | 'plaque' | 'pus' | 'tartar') => {
+      if (isMissing) return;
       const [row, col] = activePoint;
       const side = POINT_SIDES[row];
       const newData = structuredClone(perioData);
       newData[side][field][col] = !newData[side][field][col];
       onDataChange(newData);
     },
-    [activePoint, perioData, onDataChange]
+    [activePoint, perioData, onDataChange, isMissing]
   );
+
+  const handleSuppurationToggle = useCallback(() => {
+    if (isMissing) return;
+    const [row, col] = activePoint;
+    const side = POINT_SIDES[row];
+    const newData = structuredClone(perioData);
+    if (!newData.suppuration) {
+      newData.suppuration = { buccal: [false, false, false], palatal: [false, false, false] };
+    }
+    newData.suppuration[side][col] = !newData.suppuration[side][col];
+    onDataChange(newData);
+  }, [activePoint, perioData, onDataChange, isMissing]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -111,6 +149,16 @@ export default function ProbingPanel({
     return () => window.removeEventListener('keydown', handler);
   }, [handleNumpadClick]);
 
+  // CAL calculation
+  const calValues = {
+    palatal: perioData.palatal.probingDepth.map((pd, i) =>
+      pd + Math.abs(perioData.palatal.gingivalMargin[i])
+    ) as [number, number, number],
+    buccal: perioData.buccal.probingDepth.map((pd, i) =>
+      pd + Math.abs(perioData.buccal.gingivalMargin[i])
+    ) as [number, number, number],
+  };
+
   const numpadValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 13];
 
   const toggleItems = [
@@ -120,8 +168,14 @@ export default function ProbingPanel({
     { field: 'tartar' as const, label: 'Tandsteen', icon: Layers, activeColor: 'bg-slate-400', borderColor: 'border-l-slate-400', textColor: 'text-slate-300', ringColor: 'ring-slate-400/30' },
   ];
 
+  const suppurationOn = (() => {
+    const [row, col] = activePoint;
+    const side = POINT_SIDES[row];
+    return perioData.suppuration?.[side]?.[col] ?? false;
+  })();
+
   return (
-    <div className="w-80 bg-slate-900/80 backdrop-blur-sm border-l border-slate-700/50 flex flex-col h-full overflow-y-auto">
+    <div className={`w-80 bg-slate-900/80 backdrop-blur-sm border-l border-slate-700/50 flex flex-col h-full overflow-y-auto ${isMissing ? 'opacity-60' : ''}`}>
       {/* Header with tooth number */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50 bg-slate-800/50">
         <button
@@ -133,6 +187,14 @@ export default function ProbingPanel({
         <div className="flex flex-col items-center">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Tand</span>
           <span className="text-2xl font-bold text-white leading-tight">{toothNumber}</span>
+          <div className="flex gap-2 mt-1">
+            {isImplant && (
+              <span className="text-[8px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-full font-semibold">IMPLANTAAT</span>
+            )}
+            {isMissing && (
+              <span className="text-[8px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded-full font-semibold">AFWEZIG</span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -150,8 +212,48 @@ export default function ProbingPanel({
         </div>
       </div>
 
+      {/* Implant / Missing toggles */}
+      <div className="px-4 pt-3 pb-2 flex gap-2">
+        <button
+          onClick={() => {
+            const newData = structuredClone(perioData);
+            newData.implant = !(newData.implant ?? false);
+            onDataChange(newData);
+          }}
+          className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
+            isImplant
+              ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
+              : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800/60'
+          }`}
+        >
+          <Wrench className="w-3.5 h-3.5" />
+          Implantaat
+        </button>
+        <button
+          onClick={() => {
+            const newData = structuredClone(perioData);
+            newData.missing = !(newData.missing ?? false);
+            onDataChange(newData);
+          }}
+          className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
+            isMissing
+              ? 'bg-red-500/20 border-red-500/40 text-red-300'
+              : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800/60'
+          }`}
+        >
+          <Ban className="w-3.5 h-3.5" />
+          Afwezig
+        </button>
+      </div>
+
+      {isMissing && (
+        <div className="px-4 pb-2">
+          <p className="text-[10px] text-red-400/80 text-center">Tand is gemarkeerd als afwezig. Invoer uitgeschakeld.</p>
+        </div>
+      )}
+
       {/* Tooth measurement visualization */}
-      <div className="px-4 pt-3 pb-2">
+      <div className="px-4 pt-1 pb-2">
         <div className="flex items-center justify-center gap-1 mb-1">
           {POINT_SHORT[0].map((label, colIdx) => {
             const isActive = activePoint[0] === 0 && activePoint[1] === colIdx;
@@ -258,29 +360,50 @@ export default function ProbingPanel({
         </div>
       </div>
 
+      {/* CAL Display */}
+      <div className="px-4 pb-3">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[9px] font-semibold text-cyan-400/70 uppercase tracking-wider">CAL (berekend)</span>
+          <div className="flex-1 h-px bg-cyan-700/30" />
+        </div>
+        <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-[8px] text-slate-500 font-semibold">Palataal</span>
+              <div className="flex gap-1 mt-0.5">
+                {calValues.palatal.map((v, i) => (
+                  <span key={i} className={`text-xs font-bold w-6 text-center rounded ${getDepthColor(v)}`}>{v}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="text-[8px] text-slate-500 font-semibold">Buccaal</span>
+              <div className="flex gap-1 mt-0.5">
+                {calValues.buccal.map((v, i) => (
+                  <span key={i} className={`text-xs font-bold w-6 text-center rounded ${getDepthColor(v)}`}>{v}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Mode toggle */}
       <div className="px-4 pb-3">
-        <div className="flex rounded-lg overflow-hidden border border-slate-700/50 bg-slate-800/50">
-          <button
-            onClick={() => setInputMode('probingDepth')}
-            className={`flex-1 py-2 text-xs font-semibold transition-all ${
-              inputMode === 'probingDepth'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-            }`}
-          >
-            POCKETDIEPTE
-          </button>
-          <button
-            onClick={() => setInputMode('gingivalMargin')}
-            className={`flex-1 py-2 text-xs font-semibold transition-all ${
-              inputMode === 'gingivalMargin'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-            }`}
-          >
-            GINGIVALE MARGE
-          </button>
+        <div className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden border border-slate-700/50 bg-slate-800/50 p-1">
+          {(['probingDepth', 'gingivalMargin'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setInputMode(mode)}
+              className={`py-1.5 text-[10px] font-semibold transition-all rounded ${
+                inputMode === mode
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+              }`}
+            >
+              {INPUT_MODE_LABELS[mode]}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -291,7 +414,8 @@ export default function ProbingPanel({
             <button
               key={val}
               onClick={() => handleNumpadClick(val)}
-              className={`py-3 rounded-lg text-sm font-bold border transition-all ${getNumpadColor(val)}`}
+              disabled={isMissing}
+              className={`py-3 rounded-lg text-sm font-bold border transition-all ${isMissing ? 'opacity-40 cursor-not-allowed' : ''} ${getNumpadColor(val)}`}
             >
               {val > 12 ? '>12' : val}
             </button>
@@ -299,7 +423,7 @@ export default function ProbingPanel({
         </div>
       </div>
 
-      {/* Toggle buttons */}
+      {/* Toggle buttons - Basic */}
       <div className="px-4 pb-3">
         <div className="grid grid-cols-2 gap-1.5">
           {toggleItems.map(({ field, label, icon: Icon, activeColor, borderColor, textColor, ringColor }) => {
@@ -310,7 +434,8 @@ export default function ProbingPanel({
               <button
                 key={field}
                 onClick={() => handleToggle(field)}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-l-[3px] border border-slate-700/50 text-xs font-semibold transition-all ${
+                disabled={isMissing}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-l-[3px] border border-slate-700/50 text-xs font-semibold transition-all ${isMissing ? 'opacity-40 cursor-not-allowed' : ''} ${
                   isOn
                     ? `${borderColor} ${ringColor} ring-1 bg-slate-800/80 ${textColor}`
                     : `border-l-slate-700 bg-slate-800/40 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300`
@@ -339,12 +464,13 @@ export default function ProbingPanel({
               {[0, 1, 2, 3].map((v) => (
                 <button
                   key={v}
+                  disabled={isMissing}
                   onClick={() => {
                     const newData = structuredClone(perioData);
                     newData.mobility = v;
                     onDataChange(newData);
                   }}
-                  className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all ${
+                  className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all ${isMissing ? 'opacity-40 cursor-not-allowed' : ''} ${
                     perioData.mobility === v
                       ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20'
                       : 'bg-slate-800/60 text-slate-400 border-slate-700/50 hover:bg-slate-700/50 hover:text-slate-200'
@@ -361,12 +487,13 @@ export default function ProbingPanel({
               {[0, 1, 2, 3].map((v) => (
                 <button
                   key={v}
+                  disabled={isMissing}
                   onClick={() => {
                     const newData = structuredClone(perioData);
                     newData.furcation = v;
                     onDataChange(newData);
                   }}
-                  className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all ${
+                  className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all ${isMissing ? 'opacity-40 cursor-not-allowed' : ''} ${
                     perioData.furcation === v
                       ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20'
                       : 'bg-slate-800/60 text-slate-400 border-slate-700/50 hover:bg-slate-700/50 hover:text-slate-200'
@@ -378,6 +505,87 @@ export default function ProbingPanel({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Advanced section (collapsible) */}
+      <div className="px-4 pb-3">
+        <button
+          onClick={() => setAdvancedOpen(!advancedOpen)}
+          className="flex items-center justify-between w-full py-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
+        >
+          <span>Geavanceerd</span>
+          {advancedOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
+
+        {advancedOpen && (
+          <div className="space-y-3 pt-1">
+            {/* Suppuration toggle */}
+            <div>
+              <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Suppuratie</label>
+              <button
+                onClick={handleSuppurationToggle}
+                disabled={isMissing}
+                className={`mt-1 flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-l-[3px] border border-slate-700/50 text-xs font-semibold transition-all w-full ${isMissing ? 'opacity-40 cursor-not-allowed' : ''} ${
+                  suppurationOn
+                    ? 'border-l-orange-500 ring-orange-500/30 ring-1 bg-slate-800/80 text-orange-400'
+                    : 'border-l-slate-700 bg-slate-800/40 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center ${suppurationOn ? 'bg-orange-500' : 'bg-slate-700'}`}>
+                  <Droplets className="w-2.5 h-2.5 text-white" />
+                </span>
+                Suppuratie ({POINT_SHORT[activePoint[0]][activePoint[1]]})
+              </button>
+            </div>
+
+            {/* MGJ & KTW input mode buttons */}
+            <div>
+              <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Mucogingival / Keratinized</label>
+              <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-700/50 bg-slate-800/50 p-1">
+                {(['mucogingivalJunction', 'keratinizedTissueWidth'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setInputMode(mode)}
+                    className={`py-1.5 text-[10px] font-semibold transition-all rounded ${
+                      inputMode === mode
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                    }`}
+                  >
+                    {INPUT_MODE_LABELS[mode]}
+                  </button>
+                ))}
+              </div>
+              {/* Current values display */}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-[8px] text-slate-500 font-semibold">MGJ</span>
+                  <div className="flex gap-1 mt-0.5">
+                    {(() => {
+                      const side = POINT_SIDES[activePoint[0]];
+                      const vals = perioData.mucogingivalJunction?.[side] ?? [0, 0, 0];
+                      return vals.map((v: number, i: number) => (
+                        <span key={i} className="text-[10px] font-bold w-5 text-center text-slate-300 bg-slate-800/60 rounded">{v}</span>
+                      ));
+                    })()}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[8px] text-slate-500 font-semibold">KTW</span>
+                  <div className="flex gap-1 mt-0.5">
+                    {(() => {
+                      const side = POINT_SIDES[activePoint[0]];
+                      const vals = perioData.keratinizedTissueWidth?.[side] ?? [0, 0, 0];
+                      return vals.map((v: number, i: number) => (
+                        <span key={i} className="text-[10px] font-bold w-5 text-center text-slate-300 bg-slate-800/60 rounded">{v}</span>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Next tooth button */}

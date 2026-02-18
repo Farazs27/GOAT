@@ -87,6 +87,20 @@ export interface PerioToothData {
   };
   mobility: number;
   furcation: number;
+  suppuration?: {
+    buccal: [boolean, boolean, boolean];
+    palatal: [boolean, boolean, boolean];
+  };
+  mucogingivalJunction?: {
+    buccal: [number, number, number];
+    palatal: [number, number, number];
+  };
+  keratinizedTissueWidth?: {
+    buccal: [number, number, number];
+    palatal: [number, number, number];
+  };
+  implant?: boolean;
+  missing?: boolean;
 }
 
 export interface PerioChartData {
