@@ -183,12 +183,15 @@ Plans:
   3. Periodontogram visually displays perio data clearly and professionally
   4. Hygienist and dentist can see each other's clinical notes on the same patient
   5. Hygienist and dentist can communicate via internal notes/messages within the system
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
-- [ ] 10-03: TBD
+- [ ] 10-01-PLAN.md — Schema extensions (StaffChat, NoteFlag, HYGIENE noteType, PerioToothData) + role-based sidebar nav + seed
+- [ ] 10-02-PLAN.md — Extended perio data entry panel (all measurements) + voice input
+- [ ] 10-03-PLAN.md — SVG line graph visualization + historical comparison + auto-classification + session notes
+- [ ] 10-04-PLAN.md — Shared clinical notes tabs + hygienist note format + flag system + AI shorthand
+- [ ] 10-05-PLAN.md — Staff team chat with 1-on-1 and group conversations
+- [ ] 10-06-PLAN.md — Hygienist dashboard + patient portal care notes + end-to-end verification
 
 ## Progress
 
@@ -207,4 +210,4 @@ Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other t
 | 7. Patient Portal Core | 0/5 | Not started | - |
 | 8. Patient Portal Advanced | 0/0 | Not started | - |
 | 9. Patient AI Assistant | 0/0 | Not started | - |
-| 10. Hygienist Portal & Perio | 0/0 | Not started | - |
+| 10. Hygienist Portal & Perio | 0/6 | Not started | - |
