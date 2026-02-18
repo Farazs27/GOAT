@@ -831,6 +831,13 @@ export default function PatientDetailPage() {
               {tab.label}
             </button>
           ))}
+          <Link
+            href={`/patients/${patientId}/notes`}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 text-white/50 hover:text-white/80 hover:bg-white/5"
+          >
+            <FileText className="h-4 w-4" />
+            Notities
+          </Link>
         </div>
 
         {/* Tab content */}
