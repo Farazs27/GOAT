@@ -74,6 +74,9 @@ model Practice {
   aiChatSessions        AiChatSession[]
   patientNudges         PatientNudge[]
   staffChats            StaffChat[]
+  perioSessions         PerioSession[]
+  perioProtocols        PerioProtocol[]
+  recallSchedules       RecallSchedule[]
 
   @@map("practices")
 }
@@ -123,6 +126,7 @@ model User {
   noteFlags                  NoteFlag[]             @relation("NoteFlagCreator")
   staffChatMembers           StaffChatMember[]
   staffChatMessages          StaffChatMessage[]
+  perioSessionsAuthored      PerioSession[]     @relation("PerioSessionAuthor")
 
   @@map("users")
 }
@@ -213,6 +217,9 @@ model Patient {
   uploadedDocuments     Document[]     @relation("PatientDocumentUploader")
   aiChatSessions        AiChatSession[]
   patientNudges         PatientNudge[]
+  perioSessions         PerioSession[]
+  perioProtocols        PerioProtocol[]
+  recallSchedules       RecallSchedule[]
 
   @@unique([practiceId, patientNumber])
   @@map("patients")
@@ -471,6 +478,7 @@ model Appointment {
   children      Appointment[]  @relation("RecurringAppointments")
   prescriptions Prescription[]
   consentForms  ConsentForm[]
+  perioSessions PerioSession[]
 
   @@map("appointments")
 }
@@ -1606,4 +1614,107 @@ model StaffChatMessage {
 
   @@index([chatId, createdAt])
   @@map("staff_chat_messages")
+}
+
+// ============================================================
+// PERIODONTAL (Relational — replaces JSON chartData approach)
+// ============================================================
+
+enum PerioSessionType {
+  FULL
+  PARTIAL
+  RE_EVALUATION
+}
+
+enum PerioProtocolStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum RecallStatus {
+  DUE
+  OVERDUE
+  COMPLETED
+  CANCELLED
+}
+
+model PerioSession {
+  id          String           @id @default(uuid())
+  practiceId  String           @map("practice_id")
+  patientId   String           @map("patient_id")
+  appointmentId String?        @map("appointment_id")
+  authorId    String           @map("author_id")
+  sessionType PerioSessionType @map("session_type")
+  sessionNote String?          @map("session_note")
+  protocolId  String?          @map("protocol_id")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  practice    Practice         @relation(fields: [practiceId], references: [id])
+  patient     Patient          @relation(fields: [patientId], references: [id])
+  appointment Appointment?     @relation(fields: [appointmentId], references: [id])
+  author      User             @relation("PerioSessionAuthor", fields: [authorId], references: [id])
+  protocol    PerioProtocol?   @relation(fields: [protocolId], references: [id])
+  sites       PerioSite[]
+
+  @@map("perio_sessions")
+}
+
+model PerioSite {
+  id              String  @id @default(uuid())
+  sessionId       String  @map("session_id")
+  toothNumber     Int     @map("tooth_number")
+  surface         String  // buccal or lingual
+  sitePosition    String  @map("site_position") // mesial, mid, distal
+  probingDepth    Int     @map("probing_depth")
+  gingivalMargin  Int     @map("gingival_margin") // negative = recession
+  bleeding        Boolean @default(false)
+  plaque          Boolean @default(false)
+  suppuration     Boolean @default(false)
+  mobility        Int?
+  furcationGrade  Int?    @map("furcation_grade") // 0-3
+  isImplant       Boolean @default(false) @map("is_implant")
+  toothNote       String? @map("tooth_note")
+  keratinizedWidth Int?   @map("keratinized_width")
+
+  session PerioSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId, toothNumber])
+  @@map("perio_sites")
+}
+
+model PerioProtocol {
+  id         String              @id @default(uuid())
+  practiceId String              @map("practice_id")
+  patientId  String              @map("patient_id")
+  status     PerioProtocolStatus @default(ACTIVE)
+  steps      Json                @default("[]")
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
+
+  practice Practice       @relation(fields: [practiceId], references: [id])
+  patient  Patient        @relation(fields: [patientId], references: [id])
+  sessions PerioSession[]
+
+  @@map("perio_protocols")
+}
+
+model RecallSchedule {
+  id              String       @id @default(uuid())
+  practiceId      String       @map("practice_id")
+  patientId       String       @map("patient_id")
+  intervalMonths  Int          @map("interval_months")
+  nextDueDate     DateTime     @map("next_due_date")
+  status          RecallStatus @default(DUE)
+  lastCompletedAt DateTime?    @map("last_completed_at")
+  reminderSentAt  DateTime?    @map("reminder_sent_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  practice Practice @relation(fields: [practiceId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+
+  @@unique([practiceId, patientId])
+  @@map("recall_schedules")
 }
