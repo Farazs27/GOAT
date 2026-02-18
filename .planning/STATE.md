@@ -124,6 +124,10 @@ Recent decisions affecting current work:
 - [Phase 10]: Line graph uses segmented SVG polylines with null gaps for missing teeth
 - [Phase 10]: Historical comparison fetched via staff API using access_token
 
+### Roadmap Evolution
+
+- Phase 11 added: Hygienist Portal Rebuild — Recreate entire mondhygiëniste portal with standalone pages, dedicated periodontogram, own messaging UI, proper perio data persistence
+
 ### Pending Todos
 
 None yet.
@@ -136,5 +140,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 10-05-PLAN.md (Staff Team Chat)
-Resume file: None
+Stopped at: Phase 11 context gathered
+Resume file: .planning/phases/11-hygienist-portal-rebuild/11-CONTEXT.md
