@@ -20,6 +20,7 @@ Nexiom is 40% complete -- UI exists across most areas but functionality is incom
 - [ ] **Phase 8: Patient Portal Advanced** - Digital signatures, online booking, consent workflows
 - [ ] **Phase 9: Patient AI Assistant** - Patient-facing AI chatbot with booking and follow-up capabilities
 - [x] **Phase 10: Hygienist Portal & Periodontogram** - Dedicated hygienist view with improved periodontogram and shared clinical notes (completed 2026-02-18)
+- [ ] **Phase 11: Hygienist Portal Rebuild** - Full standalone hygienist portal with professional 2D periodontogram, relational perio data, messaging, billing, reports, and recall management
 
 ## Phase Details
 
@@ -193,10 +194,34 @@ Plans:
 - [ ] 10-05-PLAN.md — Staff team chat with 1-on-1 and group conversations
 - [ ] 10-06-PLAN.md — Hygienist dashboard + patient portal care notes + end-to-end verification
 
+### Phase 11: Hygienist Portal Rebuild
+**Goal**: Full standalone hygienist portal with 12+ dedicated pages, professional 2D periodontogram with sequential auto-advance entry, relational perio schema, patient messaging with handoff, full billing/declaratie for P-codes, reports, and recall management
+**Depends on**: Phase 10
+**Requirements**: HYG-01, HYG-02, HYG-03, HYG-04, HYG-05, CLIN-06, CLIN-07
+**Success Criteria** (what must be TRUE):
+  1. Hygienist has a complete standalone portal with 12+ pages (no re-exported dentist pages)
+  2. 2D periodontogram with sequential auto-advance entry, BOP per site, color-coded visualization
+  3. Relational PerioSession/PerioSite tables replace JSON chartData
+  4. Historical perio comparison with overlay and side-by-side views
+  5. Hygienist and dentist see shared clinical notes
+  6. Patient messaging with conversation handoff to dentist
+  7. Full billing/declaratie workflow for hygiene P-codes
+  8. Recall management with due/overdue tracking
+**Plans**: 7 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Schema (PerioSession, PerioSite, PerioProtocol, RecallSchedule) + expanded sidebar nav
+- [ ] 11-02-PLAN.md — Core 2D periodontogram: SVG chart + sequential entry + API persistence
+- [ ] 11-03-PLAN.md — Perio advanced: summary stats, EFP/AAP classification, history comparison, protocol tracking
+- [ ] 11-04-PLAN.md — Agenda, patient detail, clinical notes, billing pages (replace re-exports)
+- [ ] 11-05-PLAN.md — Messaging (dual-tab + patient comms + handoff), reports, recall management
+- [ ] 11-06-PLAN.md — Consent, referrals, documents, settings, dashboard rebuild
+- [ ] 11-07-PLAN.md — Login routing verification + end-to-end portal checkpoint
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11
 Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other tracks.
 
 | Phase | Plans Complete | Status | Completed |
@@ -211,3 +236,4 @@ Note: Phase 6 (Agenda) and Phase 10 (Hygienist) can be parallelized with other t
 | 8. Patient Portal Advanced | 0/0 | Not started | - |
 | 9. Patient AI Assistant | 0/0 | Not started | - |
 | 10. Hygienist Portal & Perio | 0/6 | Complete    | 2026-02-18 |
+| 11. Hygienist Portal Rebuild | 0/7 | Not started | - |
