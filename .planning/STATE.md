@@ -54,6 +54,7 @@ Progress: [██████████] 100%
 | Phase 09 P03 | 4min | 2 tasks | 4 files |
 | Phase 09 P04 | 3min | 2 tasks | 3 files |
 | Phase 09 P06 | 4min | 2 tasks | 4 files |
+| Phase 10 P02 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,8 @@ Recent decisions affecting current work:
 - [Phase 09]: AI handoff creates IN_APP Notification for most recent practitioner
 - [Phase 09]: Quick-action chips auto-send via autoSendText prop on chat panel mount
 - [Phase 09]: Booking state machine with 8 steps persisted in AiChatSession.metadata.bookingState
+- [Phase 10]: Extended PerioToothData with optional fields for backward compatibility
+- [Phase 10]: Voice input parses nl-NL with tooth/tand NN pattern for hands-free charting
 
 ### Pending Todos
 
