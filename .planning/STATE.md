@@ -17,7 +17,7 @@ Last activity: 2026-02-18 — Completed 11-05 Messaging, Reports & Recalls
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
+- Total plans completed: 24
 - Average duration: 3min
 - Total execution time: 0.50 hours
 
@@ -60,6 +60,7 @@ Last activity: 2026-02-18 — Completed 11-05 Messaging, Reports & Recalls
 | Phase 11 P03 | 5min | 2 tasks | 4 files |
 | Phase 11 P06 | 13min | 2 tasks | 5 files |
 | Phase 11 P02 | 14min | 2 tasks | 7 files |
+| Phase 11 P04 | 15min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Recent decisions affecting current work:
 - [Phase 11]: Dashboard rebuilt with 4 top cards + 3 bottom detail sections layout
 - [Phase 11]: useReducer with undo/redo stacks for perio charting state machine
 - [Phase 11]: Delete-and-recreate pattern for perio site upserts in PUT endpoint
+- [Phase 11]: Hygienist patient detail has 6 tabs with perio as first (no restoration editing)
+- [Phase 11]: Clinical notes shared between dentist and hygienist with filter tabs
+- [Phase 11]: Billing reuses existing CodeBrowserPanel and invoice API endpoints
 
 ### Roadmap Evolution
 
