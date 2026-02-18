@@ -73,6 +73,7 @@ model Practice {
   consentTemplates      ConsentTemplate[]
   aiChatSessions        AiChatSession[]
   patientNudges         PatientNudge[]
+  staffChats            StaffChat[]
 
   @@map("practices")
 }
@@ -119,6 +120,9 @@ model User {
   assignedTasks              DentistTask[]          @relation("AssignedTasks")
   conversations              Conversation[]         @relation("ConversationPractitioner")
   conversationMessages       ConversationMessage[]  @relation("ConversationMessageSender")
+  noteFlags                  NoteFlag[]             @relation("NoteFlagCreator")
+  staffChatMembers           StaffChatMember[]
+  staffChatMessages          StaffChatMessage[]
 
   @@map("users")
 }
@@ -399,8 +403,23 @@ model ClinicalNote {
   patient     Patient      @relation(fields: [patientId], references: [id])
   appointment Appointment? @relation(fields: [appointmentId], references: [id])
   author      User         @relation("Author", fields: [authorId], references: [id])
+  flags       NoteFlag[]
 
   @@map("clinical_notes")
+}
+
+model NoteFlag {
+  id          String       @id @default(uuid())
+  noteId      String       @map("note_id")
+  flagType    String       @map("flag_type") // 'Needs follow-up', 'Noted', 'Urgent', 'Discuss at next visit'
+  comment     String?
+  createdById String       @map("created_by_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  note      ClinicalNote @relation(fields: [noteId], references: [id])
+  createdBy User         @relation("NoteFlagCreator", fields: [createdById], references: [id])
+
+  @@map("note_flags")
 }
 
 enum NoteType {
@@ -408,6 +427,7 @@ enum NoteType {
   SOAP
   REFERRAL
   CONSENT
+  HYGIENE
 }
 
 // ============================================================
@@ -961,6 +981,7 @@ model PeriodontalChart {
   appointmentId String?  @map("appointment_id")
   authorId      String   @map("author_id")
   chartData     Json     @map("chart_data")
+  sessionNote   String?  @map("session_note")
   createdAt     DateTime @default(now()) @map("created_at")
 
   practice Practice @relation(fields: [practiceId], references: [id])
@@ -1538,4 +1559,51 @@ model PatientNudge {
 
   @@index([patientId, nudgeType, sentAt])
   @@map("patient_nudges")
+}
+
+// ============================================================
+// STAFF CHAT (Internal Team Messaging)
+// ============================================================
+
+model StaffChat {
+  id         String   @id @default(uuid())
+  practiceId String   @map("practice_id")
+  name       String?
+  isGroup    Boolean  @default(false) @map("is_group")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  practice Practice           @relation(fields: [practiceId], references: [id])
+  members  StaffChatMember[]
+  messages StaffChatMessage[]
+
+  @@map("staff_chats")
+}
+
+model StaffChatMember {
+  id       String   @id @default(uuid())
+  chatId   String   @map("chat_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  chat StaffChat @relation(fields: [chatId], references: [id])
+  user User      @relation(fields: [userId], references: [id])
+
+  @@unique([chatId, userId])
+  @@map("staff_chat_members")
+}
+
+model StaffChatMessage {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  senderId  String   @map("sender_id")
+  content   String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  chat   StaffChat @relation(fields: [chatId], references: [id])
+  sender User      @relation(fields: [senderId], references: [id])
+
+  @@index([chatId, createdAt])
+  @@map("staff_chat_messages")
 }

@@ -1,3 +1,9 @@
+-- Cleanup new models
+DELETE FROM staff_chat_messages;
+DELETE FROM staff_chat_members;
+DELETE FROM staff_chats;
+DELETE FROM note_flags;
+
 -- Seed NZa Codes 2026
 INSERT INTO nza_codes (id, code, category, description_nl, max_tariff, unit, requires_tooth, requires_surface, valid_from, valid_until, is_active) VALUES
 (gen_random_uuid(), 'C01', 'CONSULTATIE', 'Eerste consult mondzorg', 25.72, 'per_consult', false, false, '2026-01-01', '2026-12-31', true),
@@ -25,7 +31,7 @@ ON CONFLICT (slug) DO NOTHING;
 -- Create test users using explicit UUIDs
 WITH practice AS (SELECT id FROM practices WHERE slug = 'tandarts-praktijk-amsterdam')
 INSERT INTO users (id, practice_id, email, password_hash, first_name, last_name, role, is_active, created_at, updated_at)
-SELECT gen_random_uuid(), practice.id, 'admin@dentflow.nl', '$2b$10$YourHashedPasswordHere', 'Admin', 'User', 'PRACTICE_ADMIN', true, now(), now()
+SELECT gen_random_uuid(), practice.id, 'admin@nexiom.nl', '$2b$10$YourHashedPasswordHere', 'Admin', 'User', 'PRACTICE_ADMIN', true, now(), now()
 FROM practice
 ON CONFLICT (email) DO NOTHING;
 

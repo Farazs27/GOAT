@@ -333,12 +333,18 @@ async function main() {
   console.log('Cleaning existing data...\n');
 
   // Delete in FK-safe order
+  await prisma.staffChatMessage.deleteMany();
+  await prisma.staffChatMember.deleteMany();
+  await prisma.staffChat.deleteMany();
+  await prisma.noteFlag.deleteMany();
   await prisma.patientCategory.deleteMany();
   await prisma.message.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.credential.deleteMany();
   await prisma.anamnesis.deleteMany();
+  await prisma.dsdDesignVersion.deleteMany();
+  await prisma.dsdDesign.deleteMany();
   await prisma.patientImage.deleteMany();
   await prisma.periodontalChart.deleteMany();
   await prisma.document.deleteMany();
@@ -356,6 +362,18 @@ async function main() {
   await prisma.appointment.deleteMany();
   await prisma.toothSurface.deleteMany();
   await prisma.tooth.deleteMany();
+  await prisma.messageAttachment.deleteMany();
+  await prisma.conversationMessage.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.aiChatMessage.deleteMany();
+  await prisma.aiChatSession.deleteMany();
+  await prisma.patientNudge.deleteMany();
+  await prisma.dentistTask.deleteMany();
+  await prisma.whatsAppMessage.deleteMany();
+  await prisma.whatsAppConversation.deleteMany();
+  await prisma.emailMessage.deleteMany();
+  await prisma.emailThread.deleteMany();
+  await prisma.consentTemplate.deleteMany();
   await prisma.patient.deleteMany();
   await prisma.scheduleException.deleteMany();
   await prisma.practitionerSchedule.deleteMany();
@@ -420,11 +438,11 @@ async function main() {
   // ─── Users ───────────────────────────────────────────────
   console.log('Seeding users...');
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@dentflow.nl' },
+    where: { email: 'admin@nexiom.nl' },
     update: {},
     create: {
       practiceId: practice.id,
-      email: 'admin@dentflow.nl',
+      email: 'admin@nexiom.nl',
       passwordHash: '$2b$10$/GvRCLaaIuXqDOCE/GT4MeNbpFPUnuwgnVR0xPUJRDwHKGcWlM.RG', // Welcome123
       firstName: 'Admin',
       lastName: 'User',
