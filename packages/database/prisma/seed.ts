@@ -1,8 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { KNMT_PART1 } from '../../../apps/web/src/lib/knmt-codes-2026-part1';
 import { KNMT_PART2 } from '../../../apps/web/src/lib/knmt-codes-2026-part2';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 // Helper: date relative to now
 function daysAgo(n: number): Date {

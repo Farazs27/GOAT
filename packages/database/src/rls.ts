@@ -1,11 +1,15 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 /**
  * Creates a tenant-aware Prisma client extension that sets the current practice_id
  * for Row-Level Security (RLS) policies.
  */
 export function createTenantPrisma(practiceId: string) {
-  const prisma = new PrismaClient();
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error('DATABASE_URL is not set');
+  const adapter = new PrismaPg({ connectionString });
+  const prisma = new PrismaClient({ adapter });
   
   return prisma.$extends({
     query: {

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   transpilePackages: ['@nexiom/database', '@nexiom/shared-types', '@nexiom/crypto'],
-  serverExternalPackages: ['bcryptjs'],
+  serverExternalPackages: ['bcryptjs', '@prisma/client', '@prisma/adapter-pg'],
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.plugins = [...config.plugins, new PrismaPlugin()];
