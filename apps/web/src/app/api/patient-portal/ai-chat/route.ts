@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, requireRoles, handleError } from '@/lib/auth';
-import { UserRole } from '@dentflow/shared-types';
+import { UserRole } from '@nexiom/shared-types';
 import { fetchPatientContext } from '@/lib/ai/patient-data-fetcher';
 import { buildPatientSystemPrompt, PracticeAiConfig } from '@/lib/ai/patient-system-prompt';
 import { assertNoPII } from '@/lib/ai/pii-guard';
@@ -107,6 +107,51 @@ export async function POST(request: NextRequest) {
     const patientContext = await fetchPatientContext(patientId, currentPage);
     if (!patientContext) {
       return Response.json({ message: 'Patient niet gevonden' }, { status: 404 });
+    }
+
+    // Build rich cards from patient data for inline display
+    const richCards: Array<Record<string, unknown>> = [];
+    const msgLower = message.toLowerCase();
+    if (msgLower.includes('afspraak') || msgLower.includes('appointment')) {
+      for (const appt of (patientContext.appointments || []).slice(0, 3)) {
+        richCards.push({
+          type: 'appointment',
+          appointmentType: appt.type || 'CHECKUP',
+          practitionerName: appt.practitionerName || '',
+          date: appt.date || '',
+          startTime: appt.time || '',
+          endTime: '',
+          status: appt.status || 'CONFIRMED',
+        });
+      }
+    }
+    if (msgLower.includes('behandelplan') || msgLower.includes('treatment')) {
+      for (const plan of (patientContext.treatmentPlans || []).slice(0, 2)) {
+        const completed = plan.treatments.filter((t) => t.status === 'COMPLETED').length;
+        richCards.push({
+          type: 'treatment_plan',
+          name: plan.title || 'Behandelplan',
+          status: plan.status || 'ACTIVE',
+          treatments: plan.treatments.map((t) => ({
+            description: t.description,
+            toothNumber: t.toothNumber,
+            nzaCode: t.nzaCode,
+          })),
+          completedCount: completed,
+          totalCount: plan.treatments.length,
+        });
+      }
+    }
+    if (msgLower.includes('factuur') || msgLower.includes('invoice') || msgLower.includes('rekening')) {
+      for (const inv of (patientContext.invoices || []).slice(0, 3)) {
+        richCards.push({
+          type: 'invoice',
+          invoiceNumber: inv.invoiceNumber || '',
+          date: inv.date || '',
+          total: inv.total || 0,
+          status: inv.status || 'SENT',
+        });
+      }
     }
 
     const systemPrompt = buildPatientSystemPrompt(patientContext, aiConfig);
@@ -220,6 +265,7 @@ export async function POST(request: NextRequest) {
     let fullResponse = '';
     const finalSessionId = sessionId;
     const userMessage = message;
+    const finalRichCards = richCards;
 
     const reader = geminiResponse.body.getReader();
     const decoder = new TextDecoder();
@@ -249,7 +295,7 @@ export async function POST(request: NextRequest) {
             }
 
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ done: true, sessionId: finalSessionId })}\n\n`)
+              encoder.encode(`data: ${JSON.stringify({ done: true, sessionId: finalSessionId, richCards: finalRichCards.length > 0 ? finalRichCards : undefined })}\n\n`)
             );
             controller.close();
             return;

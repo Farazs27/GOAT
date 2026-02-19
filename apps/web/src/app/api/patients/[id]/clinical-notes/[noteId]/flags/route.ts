@@ -21,7 +21,7 @@ export async function GET(
     const flags = await prisma.noteFlag.findMany({
       where: { noteId },
       include: {
-        createdBy: { select: { id: true, name: true, role: true } },
+        createdBy: { select: { id: true, firstName: true, lastName: true, role: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -51,7 +51,7 @@ export async function POST(
     const note = await prisma.clinicalNote.findFirst({
       where: { id: noteId, patientId, practiceId: user.practiceId },
       include: {
-        author: { select: { name: true } },
+        author: { select: { firstName: true, lastName: true } },
         patient: { select: { firstName: true, lastName: true } },
       },
     });
@@ -65,7 +65,7 @@ export async function POST(
         createdById: user.id,
       },
       include: {
-        createdBy: { select: { id: true, name: true, role: true } },
+        createdBy: { select: { id: true, firstName: true, lastName: true, role: true } },
       },
     });
 
@@ -77,7 +77,7 @@ export async function POST(
     });
 
     const patientName = `${note.patient.firstName} ${note.patient.lastName}`;
-    const authorName = note.author.name || 'Onbekend';
+    const authorName = [note.author.firstName, note.author.lastName].filter(Boolean).join(' ') || 'Onbekend';
     const notificationContent = `${flagType} op notitie van ${authorName} voor ${patientName}`;
 
     // Create notifications for all target role users

@@ -30,7 +30,7 @@ export async function GET(
       orderBy: { createdAt: "asc" },
       take: limit,
       include: {
-        sender: { select: { id: true, name: true, role: true } },
+        sender: { select: { id: true, firstName: true, lastName: true, role: true } },
       },
     });
 
@@ -77,7 +77,7 @@ export async function POST(
         content: content.trim(),
       },
       include: {
-        sender: { select: { id: true, name: true, role: true } },
+        sender: { select: { id: true, firstName: true, lastName: true, role: true } },
       },
     });
 

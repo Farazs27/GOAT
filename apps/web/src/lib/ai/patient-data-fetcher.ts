@@ -1,4 +1,4 @@
-import { prisma } from "@dentflow/database";
+import { prisma } from "@nexiom/database";
 
 export interface PatientContext {
   gender: string | null;

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, requireRoles, handleError, ApiError } from '@/lib/auth';
 import { getClientIp } from '@/lib/audit';
-import { UserRole } from '@dentflow/shared-types';
+import { UserRole } from '@nexiom/shared-types';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

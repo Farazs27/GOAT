@@ -88,7 +88,7 @@ The patient portal uses Apple iOS-style glassmorphism. When adding new patient p
 
 ## Login Credentials (from seed)
 - Staff: `faraz@tandarts-amsterdam.nl` / `Sharifi1997` (DENTIST)
-- Staff: `admin@dentflow.nl` / `Welcome123` (PRACTICE_ADMIN)
+- Staff: `admin@nexiom.nl` / `Welcome123` (PRACTICE_ADMIN)
 - Patient: use patient email + last 4 digits of BSN
 
 ## UI Components

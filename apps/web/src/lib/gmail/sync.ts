@@ -1,5 +1,5 @@
 import { getGmailClient } from "./oauth";
-import { prisma } from "@dentflow/database";
+import { prisma } from "@nexiom/database";
 
 interface GmailMessagePart {
   mimeType?: string;

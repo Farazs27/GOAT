@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
           // Prepend patient name (not sent to Gemini)
           const fullMessage = `Beste ${patient.firstName}, ${generatedMessage}`;
 
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dentflow.nl';
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.nexiom.nl';
 
           // Create WhatsApp nudge record
           const whatsappNudge = await prisma.patientNudge.create({

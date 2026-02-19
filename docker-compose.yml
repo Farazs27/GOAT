@@ -3,11 +3,11 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: dentflow-postgres
+    container_name: nexiom-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: dentflow
+      POSTGRES_DB: nexiom
     ports:
       - "5433:5432"
     volumes:
@@ -19,11 +19,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dentflow-network
+      - nexiom-network
 
   redis:
     image: redis:7-alpine
-    container_name: dentflow-redis
+    container_name: nexiom-redis
     ports:
       - "6379:6379"
     volumes:
@@ -35,11 +35,11 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dentflow-network
+      - nexiom-network
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
-    container_name: dentflow-keycloak
+    container_name: nexiom-keycloak
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
@@ -57,12 +57,12 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - dentflow-network
+      - nexiom-network
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  dentflow-network:
+  nexiom-network:
     driver: bridge

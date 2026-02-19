@@ -5,7 +5,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@dentflow.nl";
+const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@nexiom.nl";
 
 export interface EmailData {
   to: string;

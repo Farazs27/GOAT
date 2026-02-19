@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@dentflow/database";
+import { prisma } from "@nexiom/database";
 import { withAuth } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {

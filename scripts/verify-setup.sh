@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🔍 DentFlow Setup Verification"
+echo "🔍 Nexiom Setup Verification"
 echo "================================"
 echo ""
 

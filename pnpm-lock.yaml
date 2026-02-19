@@ -23,15 +23,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@dentflow/crypto':
-        specifier: workspace:*
-        version: link:../../packages/crypto
-      '@dentflow/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@dentflow/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -50,6 +41,15 @@ importers:
       '@mollie/api-client':
         specifier: ^4.4.0
         version: 4.4.0
+      '@nexiom/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
+      '@nexiom/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@nexiom/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@radix-ui/react-accordion':
         specifier: ^1.2.0
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.13))(@types/react@19.2.13)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)

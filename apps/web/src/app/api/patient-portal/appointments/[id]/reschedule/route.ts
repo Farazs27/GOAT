@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, requireRoles, handleError, ApiError } from '@/lib/auth';
-import { UserRole } from '@dentflow/shared-types';
+import { UserRole } from '@nexiom/shared-types';
 
 function check24hRule(startTime: Date) {
   const hoursUntil = (startTime.getTime() - Date.now()) / (1000 * 60 * 60);

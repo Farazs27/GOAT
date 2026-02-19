@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, requireRoles, handleError } from "@/lib/auth";
-import { UserRole } from "@dentflow/shared-types";
+import { UserRole } from "@nexiom/shared-types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       where: {
         patientId: user.patientId,
         status: {
-          in: ["ACCEPTED", "IN_PROGRESS", "COMPLETED"],
+          in: ["PROPOSED", "ACCEPTED", "IN_PROGRESS", "COMPLETED"],
         },
       },
       orderBy: { createdAt: "desc" },
@@ -59,7 +59,22 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return Response.json(treatmentPlans);
+    // Include cost data per treatment and compute totalEstimate if missing
+    const plansWithCosts = treatmentPlans.map((plan) => ({
+      ...plan,
+      totalEstimate: plan.totalEstimate
+        ? Number(plan.totalEstimate)
+        : plan.treatments.reduce(
+            (sum, t) => sum + Number(t.totalPrice || t.unitPrice || 0),
+            0
+          ) || null,
+      treatments: plan.treatments.map((t) => ({
+        ...t,
+        estimatedCost: Number(t.totalPrice || t.unitPrice || 0) || null,
+      })),
+    }));
+
+    return Response.json(plansWithCosts);
   } catch (error) {
     return handleError(error);
   }

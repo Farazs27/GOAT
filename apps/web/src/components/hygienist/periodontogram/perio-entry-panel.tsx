@@ -105,6 +105,24 @@ function advanceToNext(state: EntryState): Partial<EntryState> {
   };
 }
 
+function goBackOne(state: EntryState): { phase: 'buccal' | 'lingual'; toothIndex: number; siteIndex: number } {
+  // Returns the position of the previously entered site
+  let siteIdx = state.currentSiteIndex - 1;
+  let toothIdx = state.currentToothIndex;
+  let phase = state.phase;
+
+  if (siteIdx < 0) {
+    siteIdx = 2;
+    toothIdx -= 1;
+    if (toothIdx < 0) {
+      // Wrapped back to previous phase — return first site of current phase as fallback
+      return { phase: state.phase, toothIndex: 0, siteIndex: 0 };
+    }
+  }
+
+  return { phase, toothIndex: toothIdx, siteIndex: siteIdx };
+}
+
 function entryReducer(state: EntryState, action: ReducerAction): EntryState {
   const order = state.phase === 'buccal' ? BUCCAL_ORDER : LINGUAL_ORDER;
   const presentInOrder = order.filter((t) => state.presentTeeth.includes(t));
@@ -115,7 +133,6 @@ function entryReducer(state: EntryState, action: ReducerAction): EntryState {
 
   switch (action.type) {
     case 'DIGIT': {
-      if (state.awaitingBOP) return state;
       const tooth = presentInOrder[state.currentToothIndex];
       if (!tooth) return state;
       const position = SITE_POSITIONS[state.currentSiteIndex];
@@ -140,33 +157,37 @@ function entryReducer(state: EntryState, action: ReducerAction): EntryState {
       };
 
       const undoAction: PerioAction = { type: 'SET_DEPTH', key, depth: action.digit, prevDepth };
+      const advanced = advanceToNext(state);
 
       return {
         ...state,
+        ...advanced,
         sites: { ...state.sites, [key]: newSite },
-        awaitingBOP: true,
+        awaitingBOP: false,
         undoStack: [...state.undoStack, undoAction],
         redoStack: [],
       };
     }
 
     case 'BOP': {
-      if (!state.awaitingBOP) return state;
-      const tooth = presentInOrder[state.currentToothIndex];
-      if (!tooth) return state;
-      const position = SITE_POSITIONS[state.currentSiteIndex];
-      const key = getSiteKey(tooth, state.phase, position);
+      // Toggle bleeding on the previous site (the one just entered)
+      // Go back one site to find the last entered site
+      const prevSiteState = goBackOne(state);
+      const prevOrder = prevSiteState.phase === 'buccal' ? BUCCAL_ORDER : LINGUAL_ORDER;
+      const prevPresent = prevOrder.filter((t) => state.presentTeeth.includes(t));
+      const prevTooth = prevPresent[prevSiteState.toothIndex];
+      if (!prevTooth) return state;
+      const prevPosition = SITE_POSITIONS[prevSiteState.siteIndex];
+      const key = getSiteKey(prevTooth, prevSiteState.phase, prevPosition);
       const existing = state.sites[key];
       if (!existing) return state;
       const prevBop = existing.bleeding;
 
       const newSite = { ...existing, bleeding: action.value };
       const undoAction: PerioAction = { type: 'SET_BOP', key, bop: action.value, prevBop };
-      const advanced = advanceToNext(state);
 
       return {
         ...state,
-        ...advanced,
         sites: { ...state.sites, [key]: newSite },
         undoStack: [...state.undoStack, undoAction],
         redoStack: [],
@@ -205,27 +226,6 @@ function entryReducer(state: EntryState, action: ReducerAction): EntryState {
         newSite.probingDepth = lastAction.prevDepth;
       } else if (lastAction.type === 'SET_BOP') {
         newSite.bleeding = lastAction.prevBop;
-        // Go back to awaiting BOP for this site
-        const parts = lastAction.key.split('-');
-        const tooth = parseInt(parts[0]);
-        const surface = parts[1] as 'buccal' | 'lingual';
-        const pos = parts[2];
-        const pOrder = surface === 'buccal' ? BUCCAL_ORDER : LINGUAL_ORDER;
-        const pPresent = pOrder.filter((t) => state.presentTeeth.includes(t));
-        const toothIdx = pPresent.indexOf(tooth);
-        const siteIdx = SITE_POSITIONS.indexOf(pos as typeof SITE_POSITIONS[number]);
-
-        return {
-          ...state,
-          sites: { ...state.sites, [lastAction.key]: newSite },
-          undoStack: newUndo,
-          redoStack: [...state.redoStack, lastAction],
-          phase: surface,
-          currentToothIndex: toothIdx >= 0 ? toothIdx : state.currentToothIndex,
-          currentSiteIndex: siteIdx >= 0 ? siteIdx : state.currentSiteIndex,
-          awaitingBOP: true,
-          completed: false,
-        };
       } else if (lastAction.type === 'SET_PLAQUE') {
         newSite.plaque = lastAction.prevPlaque;
       }
@@ -464,15 +464,6 @@ export default function PerioEntryPanel({ presentTeeth, sessionId, onSitesChange
             </div>
           </div>
 
-          {/* Awaiting BOP indicator */}
-          {state.awaitingBOP && (
-            <div className="text-center mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <span className="text-xs font-semibold text-red-300">
-                Bloeding? Druk B (ja) of Spatie (nee)
-              </span>
-            </div>
-          )}
-
           {/* Current tooth sites display */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             {SITE_LABELS.map((label, i) => {
@@ -505,7 +496,7 @@ export default function PerioEntryPanel({ presentTeeth, sessionId, onSitesChange
 
           {/* Keyboard shortcuts hint */}
           <div className="text-[10px] text-slate-600 text-center mb-2">
-            0-9 diepte | B bloeding | Spatie geen bloeding | Ctrl+Z ongedaan
+            0-9 diepte (auto-next) | B bloeding | Ctrl+Z ongedaan
           </div>
 
           {/* Keypad for touch devices */}

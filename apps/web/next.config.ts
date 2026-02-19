@@ -6,7 +6,7 @@ const { PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  transpilePackages: ['@dentflow/database', '@dentflow/shared-types', '@dentflow/crypto'],
+  transpilePackages: ['@nexiom/database', '@nexiom/shared-types', '@nexiom/crypto'],
   serverExternalPackages: ['bcryptjs'],
   webpack: (config, { isServer }) => {
     if (isServer) {

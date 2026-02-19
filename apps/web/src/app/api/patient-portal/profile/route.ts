@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, requireRoles, handleError, ApiError } from '@/lib/auth';
-import { UserRole } from '@dentflow/shared-types';
-import { maskBsn } from '@dentflow/crypto';
+import { UserRole } from '@nexiom/shared-types';
+import { maskBsn } from '@nexiom/crypto';
 
 export async function GET(request: NextRequest) {
   try {

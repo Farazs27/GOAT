@@ -19,6 +19,7 @@ interface DentalArch3DProps {
   teeth: Array<{ toothNumber: number; status: string; notes?: string | null }>;
   surfaces: Array<{ toothNumber: number; surface: string; condition: string; material?: string | null }>;
   selectedTooth: number | null;
+  selectedTeeth?: number[];
   onToothSelect: (toothNumber: number) => void;
   pendingRestoration?: PendingRestoration | null;
 }
@@ -474,7 +475,8 @@ function DebugToothModel({ fdi, xOffset }: { fdi: number; xOffset: number }) {
 // Production scene
 // ---------------------------------------------------------------------------
 
-function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingRestoration }: DentalArch3DProps) {
+function ArchScene({ teeth, surfaces, selectedTooth, selectedTeeth, onToothSelect, pendingRestoration }: DentalArch3DProps) {
+  const selectedSet = useMemo(() => new Set(selectedTeeth || []), [selectedTeeth]);
   function getStatus(fdi: number) {
     return teeth.find((t) => t.toothNumber === fdi)?.status ?? 'PRESENT';
   }
@@ -498,7 +500,7 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingResto
           x={getToothX(idx)}
           y={Y_GAP}
           status={getStatus(fdi)}
-          isSelected={selectedTooth === fdi}
+          isSelected={selectedTooth === fdi || selectedSet.has(fdi)}
           dominantCondition={getDominantCondition(fdi)}
           pendingStatus={pendingRestoration?.toothNumber === fdi ? pendingRestoration.statusChange : undefined}
           pendingRestorationType={pendingRestoration?.toothNumber === fdi ? pendingRestoration.restorationType : undefined}
@@ -514,7 +516,7 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingResto
           x={getToothX(idx)}
           y={-Y_GAP}
           status={getStatus(fdi)}
-          isSelected={selectedTooth === fdi}
+          isSelected={selectedTooth === fdi || selectedSet.has(fdi)}
           dominantCondition={getDominantCondition(fdi)}
           pendingStatus={pendingRestoration?.toothNumber === fdi ? pendingRestoration.statusChange : undefined}
           pendingRestorationType={pendingRestoration?.toothNumber === fdi ? pendingRestoration.restorationType : undefined}
@@ -525,14 +527,14 @@ function ArchScene({ teeth, surfaces, selectedTooth, onToothSelect, pendingResto
       {/* Tooth numbers — upper */}
       {MAXILLA.map((fdi, idx) => (
         <Html key={`nu-${fdi}`} position={[getToothX(idx), 0.15, 0]} center style={{ pointerEvents: 'none' }}>
-          <span className={`text-[10px] font-bold tabular-nums select-none ${selectedTooth === fdi ? 'text-blue-400' : 'text-gray-500'}`}>{fdi}</span>
+          <span className={`text-[10px] font-bold tabular-nums select-none ${(selectedTooth === fdi || selectedSet.has(fdi)) ? 'text-blue-400' : 'text-gray-500'}`}>{fdi}</span>
         </Html>
       ))}
 
       {/* Tooth numbers — lower */}
       {MANDIBLE.map((fdi, idx) => (
         <Html key={`nl-${fdi}`} position={[getToothX(idx), -0.15, 0]} center style={{ pointerEvents: 'none' }}>
-          <span className={`text-[10px] font-bold tabular-nums select-none ${selectedTooth === fdi ? 'text-blue-400' : 'text-gray-500'}`}>{fdi}</span>
+          <span className={`text-[10px] font-bold tabular-nums select-none ${(selectedTooth === fdi || selectedSet.has(fdi)) ? 'text-blue-400' : 'text-gray-500'}`}>{fdi}</span>
         </Html>
       ))}
 
@@ -572,7 +574,7 @@ function ArchLoading() {
 // Main
 // ---------------------------------------------------------------------------
 
-export default function DentalArch3D({ teeth, surfaces, selectedTooth, onToothSelect, pendingRestoration }: DentalArch3DProps) {
+export default function DentalArch3D({ teeth, surfaces, selectedTooth, selectedTeeth, onToothSelect, pendingRestoration }: DentalArch3DProps) {
   return (
     <div
       className="w-full rounded-xl border border-gray-700/50 overflow-hidden relative"
@@ -617,7 +619,7 @@ export default function DentalArch3D({ teeth, surfaces, selectedTooth, onToothSe
               <axesHelper args={[3]} />
             </>
           ) : (
-            <ArchScene teeth={teeth} surfaces={surfaces} selectedTooth={selectedTooth} onToothSelect={onToothSelect} pendingRestoration={pendingRestoration} />
+            <ArchScene teeth={teeth} surfaces={surfaces} selectedTooth={selectedTooth} selectedTeeth={selectedTeeth} onToothSelect={onToothSelect} pendingRestoration={pendingRestoration} />
           )}
         </Suspense>
 

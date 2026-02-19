@@ -159,3 +159,16 @@ Screenshot 2026-02-11 at 15.28.30.png
 odontogram example.pdf
 # Allow PNGs in public/images, ignore loose screenshots
 Screenshot*.png
+*.md
+*.md
+.planning/phases/07-patient-portal-core/07-03-PLAN.md
+.planning/phases/07-patient-portal-core/07-05-PLAN.md
+*.md
+.planning/phases/07-patient-portal-core/07-02-PLAN.md
+.planning/phases/07-patient-portal-core/07-03-PLAN.md
+.planning/phases/07-patient-portal-core/07-05-PLAN.md
+.planning/phases/10-hygienist-portal-periodontogram/10-01-PLAN.md
+.planning/phases/10-hygienist-portal-periodontogram/10-05-PLAN.md
+.planning/phases/10-hygienist-portal-periodontogram/10-06-PLAN.md
+*.md
+.planning/phases/11-hygienist-portal-rebuild/.gitkeep

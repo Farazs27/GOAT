@@ -28,10 +28,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const notes = await prisma.clinicalNote.findMany({
       where,
       include: {
-        author: { select: { id: true, name: true, role: true } },
+        author: { select: { id: true, firstName: true, lastName: true, role: true } },
         flags: {
           include: {
-            createdBy: { select: { id: true, name: true, role: true } },
+            createdBy: { select: { id: true, firstName: true, lastName: true, role: true } },
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         isConfidential: isConfidential || false,
       },
       include: {
-        author: { select: { id: true, name: true, role: true } },
+        author: { select: { id: true, firstName: true, lastName: true, role: true } },
         flags: true,
       },
     });

@@ -25,6 +25,9 @@ import {
   Trash2,
 } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
+import dynamic from 'next/dynamic';
+
+const TreatmentPlanBuilder = dynamic(() => import('@/components/treatments/treatment-plan-builder'), { ssr: false });
 
 interface Patient {
   id: string;
@@ -430,38 +433,10 @@ export default function HygienistPatientDetailPage() {
 
         {/* TREATMENT PLANS TAB */}
         {activeTab === 'treatment' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white/90 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-emerald-400" />
-              Behandelplannen
-            </h2>
-
-            {treatmentPlans.length === 0 ? (
-              <p className="text-sm text-white/30 py-4">Geen behandelplannen gevonden</p>
-            ) : (
-              <div className="space-y-3">
-                {treatmentPlans.map((plan) => (
-                  <div key={plan.id} className="bg-white/[0.04] rounded-xl p-4 border border-white/[0.08]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-white/80">{plan.title}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${planStatusColors[plan.status] || 'bg-white/5 text-white/40 border-white/10'}`}>
-                        {planStatusLabels[plan.status] || plan.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-white/40">
-                      <span>{formatDate(plan.createdAt)}</span>
-                      <span>{plan.treatments?.length || 0} behandelingen</span>
-                      {plan.totalEstimate && (
-                        <span>
-                          {new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(Number(plan.totalEstimate))}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <TreatmentPlanBuilder
+            patientId={patientId}
+            patientName={`${patient.firstName} ${patient.lastName}`}
+          />
         )}
 
         {/* ANAMNESIS TAB */}

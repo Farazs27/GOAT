@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, requireRoles } from '@/lib/auth';
+import { UserRole } from '@nexiom/shared-types';
 
 export async function GET(request: NextRequest) {
   try {
     const user = await withAuth(request);
-    requireRoles(user, ['HYGIENIST']);
+    requireRoles(user, [UserRole.HYGIENIST, UserRole.DENTIST, UserRole.PRACTICE_ADMIN, UserRole.SUPER_ADMIN]);
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       where: {
         practitionerId: user.id,
         practiceId: user.practiceId,
-        appointmentType: { in: ['HYGIENE', 'CLEANING'] },
+        appointmentType: 'HYGIENE',
         startTime: { gte: sevenDaysAgo, lt: todayEnd },
         status: { in: ['COMPLETED', 'IN_PROGRESS'] },
       },
@@ -72,14 +73,14 @@ export async function GET(request: NextRequest) {
       INNER JOIN appointments a ON a.patient_id = p.id
       WHERE a.practitioner_id = ${user.id}
         AND a.practice_id = ${user.practiceId}
-        AND a.appointment_type IN ('HYGIENE', 'CLEANING')
+        AND a.appointment_type = 'HYGIENE'
         AND a.status = 'COMPLETED'
         AND a.start_time < ${sixMonthsAgo}
         AND NOT EXISTS (
           SELECT 1 FROM appointments a2
           WHERE a2.patient_id = p.id
             AND a2.practitioner_id = ${user.id}
-            AND a2.appointment_type IN ('HYGIENE', 'CLEANING')
+            AND a2.appointment_type = 'HYGIENE'
             AND a2.status = 'COMPLETED'
             AND a2.start_time >= ${sixMonthsAgo}
         )

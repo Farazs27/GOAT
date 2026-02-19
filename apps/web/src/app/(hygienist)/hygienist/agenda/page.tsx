@@ -90,7 +90,7 @@ export default function HygienistAgendaPage() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [dentistAppointments, setDentistAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);

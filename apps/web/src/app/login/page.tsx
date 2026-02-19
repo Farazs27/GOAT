@@ -34,7 +34,7 @@ export default function LoginPage() {
       localStorage.setItem("refresh_token", data.refresh_token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      router.push("/dashboard");
+      router.push("/select-portal");
     } catch {
       setError("Er is een fout opgetreden. Probeer het opnieuw.");
     } finally {
@@ -206,7 +206,7 @@ export default function LoginPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
                   <span className="text-sm" style={{ color: 'rgba(234, 216, 192, 0.4)' }}>Admin:</span>
                   <span className="text-sm font-mono px-2 py-1 rounded break-all" style={{ color: 'rgba(245, 230, 211, 0.8)', background: 'rgba(255,255,255,0.04)' }}>
-                    admin@dentflow.nl
+                    admin@nexiom.nl
                   </span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { handleError, ApiError } from '@/lib/auth';
-import { validateBsn } from '@dentflow/crypto';
+import { validateBsn } from '@nexiom/crypto';
 
 export async function POST(request: NextRequest) {
   try {

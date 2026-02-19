@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { UserRole, RolePermissions, Permission } from '@dentflow/shared-types';
+import { UserRole, RolePermissions, Permission } from '@nexiom/shared-types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 

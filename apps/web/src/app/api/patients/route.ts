@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
-import { maskBsn } from '@dentflow/crypto';
+import { maskBsn } from '@nexiom/crypto';
 
 export async function GET(request: NextRequest) {
   try {

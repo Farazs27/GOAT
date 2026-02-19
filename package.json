@@ -1,5 +1,5 @@
 {
-  "name": "dentflow",
+  "name": "nexiom",
   "private": true,
   "scripts": {
     "build": "turbo run build",

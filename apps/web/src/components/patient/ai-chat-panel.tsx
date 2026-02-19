@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Sun, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Send, ThumbsUp, ThumbsDown } from "lucide-react";
+import Image from "next/image";
 import { VoiceInputButton, useTTS, TTSToggleButton } from "./ai-voice-controls";
+import { RichCards, RichCardData } from "./ai-rich-cards";
 
 interface ChatMessage {
   id?: string;
   role: "user" | "assistant";
   content: string;
-  richCards?: any;
+  richCards?: RichCardData[];
   feedback?: string | null;
   createdAt?: string;
 }
@@ -108,6 +110,17 @@ export default function AiChatPanel({
                   setSessionId(data.sessionId);
                   onSessionCreated?.(data.sessionId);
                 }
+                if (data.richCards) {
+                  const cards = data.richCards;
+                  setMessages((prev) => {
+                    const copy = [...prev];
+                    copy[copy.length - 1] = {
+                      ...copy[copy.length - 1],
+                      richCards: cards,
+                    };
+                    return copy;
+                  });
+                }
               } else if (data.text) {
                 fullText += data.text;
                 const captured = fullText;
@@ -193,8 +206,8 @@ export default function AiChatPanel({
           >
             <div className="flex gap-3 max-w-[85%]">
               {msg.role === "assistant" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-[#e8945a]/20 mt-1">
-                  <Sun className="w-4 h-4 text-[#e8945a]" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden mt-1">
+                  <Image src="/images/nexiom-logo-sm.png" alt="Nexiom" width={32} height={32} className="w-full h-full object-cover" />
                 </div>
               )}
               <div>
@@ -214,6 +227,10 @@ export default function AiChatPanel({
                       </span>
                     ) : null)}
                 </div>
+                {/* Rich cards */}
+                {msg.role === "assistant" && msg.richCards && msg.richCards.length > 0 && (
+                  <RichCards cards={msg.richCards} />
+                )}
                 {/* Feedback buttons */}
                 {msg.role === "assistant" && msg.content && msg.id && (
                   <div className="flex gap-1 mt-1 ml-1">

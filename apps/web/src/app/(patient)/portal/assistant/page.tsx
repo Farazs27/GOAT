@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Sun, Plus, Menu, X, MessageSquare } from "lucide-react";
+import { Plus, Menu, X, MessageSquare } from "lucide-react";
+import Image from "next/image";
 import AiChatPanel from "@/components/patient/ai-chat-panel";
 
 interface Session {
@@ -157,8 +158,8 @@ export default function AssistantPage() {
         {/* Sidebar header */}
         <div className="p-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#e8945a] to-[#d4864a] shadow-lg shadow-[#e8945a]/25">
-              <Sun className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-[#e8945a]/25">
+              <Image src="/images/nexiom-logo-sm.png" alt="Nexiom" width={36} height={36} className="w-full h-full object-cover" />
             </div>
             <div>
               <span className="font-bold text-white/90 tracking-tight">
@@ -236,8 +237,8 @@ export default function AssistantPage() {
         ) : (
           /* Welcome screen */
           <div className="flex-1 flex flex-col items-center justify-center px-6">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-[#e8945a] to-[#d4864a] shadow-xl shadow-[#e8945a]/30 mb-6">
-              <Sun className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-xl shadow-[#e8945a]/30 mb-6">
+              <Image src="/images/nexiom-logo-sm.png" alt="Nexiom" width={64} height={64} className="w-full h-full object-cover" />
             </div>
             <h1 className="text-2xl font-bold text-white/90 mb-2 tracking-tight">
               Hoe kan ik u helpen?

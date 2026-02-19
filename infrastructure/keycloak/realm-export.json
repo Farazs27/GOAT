@@ -1,7 +1,7 @@
 {
-  "id": "dentflow",
-  "realm": "dentflow",
-  "displayName": "DentFlow NL",
+  "id": "Nexiom",
+  "realm": "Nexiom",
+  "displayName": "Nexiom NL",
   "enabled": true,
   "sslRequired": "external",
   "registrationAllowed": false,
@@ -28,7 +28,7 @@
         "description": "System super administrator",
         "composite": false,
         "clientRole": false,
-        "containerId": "dentflow"
+        "containerId": "Nexiom"
       },
       {
         "id": "practice-admin",
@@ -36,7 +36,7 @@
         "description": "Practice administrator",
         "composite": false,
         "clientRole": false,
-        "containerId": "dentflow"
+        "containerId": "Nexiom"
       },
       {
         "id": "dentist",
@@ -44,7 +44,7 @@
         "description": "Dental practitioner",
         "composite": false,
         "clientRole": false,
-        "containerId": "dentflow"
+        "containerId": "Nexiom"
       },
       {
         "id": "hygienist",
@@ -52,7 +52,7 @@
         "description": "Dental hygienist",
         "composite": false,
         "clientRole": false,
-        "containerId": "dentflow"
+        "containerId": "Nexiom"
       },
       {
         "id": "receptionist",
@@ -60,7 +60,7 @@
         "description": "Front desk receptionist",
         "composite": false,
         "clientRole": false,
-        "containerId": "dentflow"
+        "containerId": "Nexiom"
       },
       {
         "id": "patient",
@@ -68,12 +68,12 @@
         "description": "Patient portal user",
         "composite": false,
         "clientRole": false,
-        "containerId": "dentflow"
+        "containerId": "Nexiom"
       }
     ],
     "client": {
-      "dentflow-web": [],
-      "dentflow-api": []
+      "Nexiom-web": [],
+      "Nexiom-api": []
     }
   },
   "groups": [],
@@ -81,7 +81,9 @@
     "id": "patient",
     "name": "PATIENT"
   },
-  "requiredCredentials": ["password"],
+  "requiredCredentials": [
+    "password"
+  ],
   "passwordPolicy": "length(8) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)",
   "otpPolicyType": "totp",
   "otpPolicyAlgorithm": "HmacSHA1",
@@ -91,10 +93,10 @@
   "otpPolicyPeriod": 30,
   "clients": [
     {
-      "id": "dentflow-web",
-      "clientId": "dentflow-web",
-      "name": "DentFlow Web Application",
-      "description": "Next.js web application for DentFlow",
+      "id": "Nexiom-web",
+      "clientId": "Nexiom-web",
+      "name": "Nexiom Web Application",
+      "description": "Next.js web application for Nexiom",
       "rootUrl": "http://localhost:3000",
       "adminUrl": "http://localhost:3000",
       "baseUrl": "http://localhost:3000",
@@ -107,7 +109,9 @@
         "http://localhost:3000/*",
         "http://localhost:3000/api/auth/callback/keycloak"
       ],
-      "webOrigins": ["http://localhost:3000"],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -158,9 +162,9 @@
       ]
     },
     {
-      "id": "dentflow-api",
-      "clientId": "dentflow-api",
-      "name": "DentFlow API",
+      "id": "Nexiom-api",
+      "clientId": "Nexiom-api",
+      "name": "Nexiom API",
       "description": "NestJS API backend",
       "rootUrl": "http://localhost:3001",
       "adminUrl": "",

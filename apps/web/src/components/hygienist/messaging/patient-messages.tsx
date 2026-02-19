@@ -10,8 +10,18 @@ import {
   Plus,
   Search,
   MessageSquare,
+  X as XIcon,
+  Loader2,
+  User,
 } from "lucide-react";
 import { MessageTemplates } from "./message-templates";
+
+interface Patient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  patientNumber: string;
+}
 
 interface Conversation {
   id: string;
@@ -62,6 +72,15 @@ export function PatientMessages() {
   const [dentists, setDentists] = useState<Practitioner[]>([]);
   const [handingOff, setHandingOff] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // New conversation state
+  const [showNewConv, setShowNewConv] = useState(false);
+  const [newPatientSearch, setNewPatientSearch] = useState("");
+  const [patientResults, setPatientResults] = useState<Patient[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [newSubject, setNewSubject] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [creatingConv, setCreatingConv] = useState(false);
 
   const fetchConversations = useCallback(async () => {
     const res = await authFetch("/api/hygienist/conversations");
@@ -140,6 +159,45 @@ export function PatientMessages() {
     setHandingOff(false);
   };
 
+  const searchPatients = async (q: string) => {
+    if (q.length < 2) { setPatientResults([]); return; }
+    try {
+      const res = await authFetch(`/api/patients?search=${encodeURIComponent(q)}&limit=5`);
+      const data = await res.json();
+      setPatientResults(data.data || []);
+    } catch { setPatientResults([]); }
+  };
+
+  const createConversation = async () => {
+    if (!selectedPatient || !newMessage.trim() || creatingConv) return;
+    setCreatingConv(true);
+    try {
+      const res = await authFetch("/api/hygienist/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId: selectedPatient.id,
+          initialMessage: newMessage.trim(),
+          subject: newSubject.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShowNewConv(false);
+        setSelectedPatient(null);
+        setNewPatientSearch("");
+        setNewSubject("");
+        setNewMessage("");
+        fetchConversations();
+        if (data.id) setSelectedId(data.id);
+      }
+    } catch (e) {
+      console.error("Failed to create conversation", e);
+    } finally {
+      setCreatingConv(false);
+    }
+  };
+
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     const now = new Date();
@@ -169,17 +227,26 @@ export function PatientMessages() {
     <div className="flex h-full gap-4">
       {/* Left Panel - Conversation List */}
       <div className="w-80 flex-shrink-0 flex flex-col glass-card rounded-2xl overflow-hidden">
-        {/* Search */}
-        <div className="p-3 border-b border-white/[0.06]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Zoek patient..."
-              className="w-full glass-input rounded-xl pl-9 pr-3 py-2 text-sm outline-none"
-            />
+        {/* Search + New */}
+        <div className="p-3 border-b border-white/[0.06] space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Zoek patient..."
+                className="w-full glass-input rounded-xl pl-9 pr-3 py-2 text-sm outline-none"
+              />
+            </div>
+            <button
+              onClick={() => setShowNewConv(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all flex-shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nieuw
+            </button>
           </div>
         </div>
 
@@ -365,6 +432,95 @@ export function PatientMessages() {
           </>
         )}
       </div>
+      {/* New Conversation Modal */}
+      {showNewConv && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a1a2e]/95 backdrop-blur-2xl rounded-2xl border border-white/[0.12] shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-white/[0.08]">
+              <h2 className="text-lg font-semibold text-white/90">Nieuw bericht aan patiënt</h2>
+              <button onClick={() => { setShowNewConv(false); setSelectedPatient(null); setNewPatientSearch(""); setNewSubject(""); setNewMessage(""); }} className="p-1.5 rounded-lg text-white/40 hover:text-white/60 hover:bg-white/[0.06] transition-all">
+                <XIcon className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Patient search */}
+              <div>
+                <label className="text-xs font-medium text-white/50 mb-1.5 block">Patiënt</label>
+                {selectedPatient ? (
+                  <div className="flex items-center justify-between bg-white/[0.06] rounded-xl px-3 py-2.5 border border-white/[0.12]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <User className="w-4 h-4 text-emerald-300" />
+                      </div>
+                      <span className="text-sm text-white/80">{selectedPatient.firstName} {selectedPatient.lastName}</span>
+                    </div>
+                    <button onClick={() => { setSelectedPatient(null); setNewPatientSearch(""); }} className="text-white/30 hover:text-white/50">
+                      <XIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <input
+                      value={newPatientSearch}
+                      onChange={(e) => { setNewPatientSearch(e.target.value); searchPatients(e.target.value); }}
+                      placeholder="Zoek patiënt..."
+                      className="w-full pl-9 pr-3 py-2.5 bg-white/[0.05] border border-white/[0.12] rounded-xl text-sm text-white/80 placeholder-white/30 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                    />
+                    {patientResults.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a2e] border border-white/[0.12] rounded-xl overflow-hidden z-10 shadow-xl">
+                        {patientResults.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => { setSelectedPatient(p); setPatientResults([]); }}
+                            className="w-full px-3 py-2.5 text-left text-sm text-white/70 hover:bg-white/[0.06] transition-colors flex items-center gap-2"
+                          >
+                            <User className="w-4 h-4 text-white/30" />
+                            {p.firstName} {p.lastName} <span className="text-white/30">#{p.patientNumber}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="text-xs font-medium text-white/50 mb-1.5 block">Onderwerp (optioneel)</label>
+                <input
+                  value={newSubject}
+                  onChange={(e) => setNewSubject(e.target.value)}
+                  placeholder="Bijv. Afspraak herinnering..."
+                  className="w-full px-3 py-2.5 bg-white/[0.05] border border-white/[0.12] rounded-xl text-sm text-white/80 placeholder-white/30 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                />
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="text-xs font-medium text-white/50 mb-1.5 block">Bericht</label>
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  rows={3}
+                  placeholder="Typ uw bericht..."
+                  className="w-full px-3 py-2.5 bg-white/[0.05] border border-white/[0.12] rounded-xl text-sm text-white/80 placeholder-white/30 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all resize-none"
+                />
+              </div>
+
+              <button
+                onClick={createConversation}
+                disabled={!selectedPatient || !newMessage.trim() || creatingConv}
+                className="w-full py-3 rounded-xl text-sm font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              >
+                {creatingConv && <Loader2 className="w-4 h-4 animate-spin" />}
+                <Send className="w-4 h-4" />
+                Bericht versturen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

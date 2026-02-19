@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, requireRoles, handleError, ApiError } from '@/lib/auth';
-import { UserRole } from '@dentflow/shared-types';
+import { UserRole } from '@nexiom/shared-types';
 import { createEvent, EventAttributes } from 'ics';
 
 const typeLabels: Record<string, string> = {

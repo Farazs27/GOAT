@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signAccessToken, signRefreshToken, handleError } from '@/lib/auth';
-import { UserRole, RolePermissions } from '@dentflow/shared-types';
+import { UserRole, RolePermissions } from '@nexiom/shared-types';
 
 export async function POST(request: NextRequest) {
   try {

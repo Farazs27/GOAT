@@ -1,4 +1,4 @@
-import { Appointment, Patient, Practice, User } from "@dentflow/database";
+import { Appointment, Patient, Practice, User } from "@nexiom/database";
 
 interface AppointmentReminderData {
   patient: Patient;

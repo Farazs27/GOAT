@@ -1,5 +1,5 @@
 import twilio from "twilio";
-import { prisma } from "@dentflow/database";
+import { prisma } from "@nexiom/database";
 
 interface TwilioCredentials {
   accountSid: string;

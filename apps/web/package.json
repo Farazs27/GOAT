@@ -1,5 +1,5 @@
 {
-  "name": "@dentflow/web",
+  "name": "@nexiom/web",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -10,9 +10,9 @@
     "clean": "rm -rf .next node_modules .turbo"
   },
   "dependencies": {
-    "@dentflow/crypto": "workspace:*",
-    "@dentflow/database": "workspace:*",
-    "@dentflow/shared-types": "workspace:*",
+    "@nexiom/crypto": "workspace:*",
+    "@nexiom/database": "workspace:*",
+    "@nexiom/shared-types": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

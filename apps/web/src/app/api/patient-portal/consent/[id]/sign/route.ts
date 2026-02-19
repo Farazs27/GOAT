@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, requireRoles, handleError, ApiError } from '@/lib/auth';
-import { UserRole } from '@dentflow/shared-types';
+import { UserRole } from '@nexiom/shared-types';
 import { put } from '@vercel/blob';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

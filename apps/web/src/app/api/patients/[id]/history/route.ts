@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@dentflow/database';
+import { prisma } from '@nexiom/database';
 import { withAuth, handleError, ApiError } from '@/lib/auth';
 
 export async function GET(

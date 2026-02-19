@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, requireRoles, handleError, ApiError } from "@/lib/auth";
-import { UserRole, AppointmentType } from "@dentflow/shared-types";
+import { UserRole, AppointmentType } from "@nexiom/shared-types";
 
 const DURATION_MINUTES: Record<string, number> = {
   CHECKUP: 30,

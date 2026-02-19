@@ -19,6 +19,10 @@ import {
   EyeOff,
   RotateCcw,
   Maximize2,
+  Upload,
+  Loader2,
+  X,
+  Clock,
 } from "lucide-react";
 import { XRayLightbox } from "@/components/patient-portal/xray-lightbox";
 
@@ -118,6 +122,7 @@ interface Document {
   fileSize?: number;
   mimeType?: string;
   s3Key?: string;
+  approvalStatus?: string | null;
   type: string;
 }
 
@@ -145,6 +150,13 @@ export default function DocumentsPage() {
   const [selectedForCompare, setSelectedForCompare] = useState<string | null>(
     null,
   );
+
+  // Upload state
+  const [showUpload, setShowUpload] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadCategory, setUploadCategory] = useState("OTHER");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   // Document filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -188,6 +200,42 @@ export default function DocumentsPage() {
     fetchData();
     fetchImages();
   }, []);
+
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+    const token = localStorage.getItem("patient_token");
+    if (!token) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      formData.append("category", uploadCategory);
+      formData.append("title", uploadFile.name);
+
+      const response = await fetch("/api/patient-portal/documents/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (response.ok) {
+        setShowUpload(false);
+        setUploadFile(null);
+        setUploadCategory("OTHER");
+        fetchData();
+      } else {
+        const err = await response.json();
+        setUploadError(err.message || "Upload mislukt");
+      }
+    } catch (error) {
+      setUploadError("Er is een fout opgetreden");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleDownloadInvoice = async (
     invoiceId: string,
@@ -357,6 +405,115 @@ export default function DocumentsPage() {
           );
         })}
       </div>
+
+      {/* Upload Button */}
+      {tab === "documents" && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowUpload(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#e8945a] hover:bg-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all text-sm"
+          >
+            <Upload className="w-4 h-4" />
+            Document uploaden
+          </button>
+        </div>
+      )}
+
+      {/* Upload Modal */}
+      {showUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#1a1a2e] border border-white/[0.12] rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white/90">Document uploaden</h3>
+              <button
+                onClick={() => { setShowUpload(false); setUploadFile(null); setUploadError(""); }}
+                className="p-1.5 rounded-xl text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {uploadError && (
+              <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                {uploadError}
+              </div>
+            )}
+
+            {/* File picker */}
+            <div>
+              <label className="block text-xs text-white/40 mb-1.5 uppercase tracking-wider">Bestand</label>
+              {uploadFile ? (
+                <div className="flex items-center justify-between p-3 bg-white/[0.05] border border-white/[0.12] rounded-2xl">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <FileText className="w-5 h-5 text-[#e8945a] flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm text-white/80 truncate">{uploadFile.name}</p>
+                      <p className="text-xs text-white/40">{formatFileSize(uploadFile.size)}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setUploadFile(null)} className="p-1 text-white/40 hover:text-white/70">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/[0.12] rounded-2xl cursor-pointer hover:border-[#e8945a]/40 hover:bg-white/[0.02] transition-all">
+                  <Upload className="w-8 h-8 text-white/20 mb-2" />
+                  <span className="text-sm text-white/50">Klik om een bestand te selecteren</span>
+                  <span className="text-xs text-white/30 mt-1">Max 10MB - Afbeeldingen, PDF, Word</span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) setUploadFile(f);
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-xs text-white/40 mb-1.5 uppercase tracking-wider">Categorie</label>
+              <select
+                value={uploadCategory}
+                onChange={(e) => setUploadCategory(e.target.value)}
+                className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.12] backdrop-blur-xl rounded-2xl text-white/90 text-sm focus:border-[#e8945a]/50 focus:ring-2 focus:ring-[#e8945a]/20 outline-none transition-all appearance-none"
+              >
+                <option value="OTHER" className="bg-[#1a1a2e]">Overig</option>
+                <option value="INSURANCE" className="bg-[#1a1a2e]">Verzekering</option>
+                <option value="REFERRAL" className="bg-[#1a1a2e]">Verwijzing</option>
+                <option value="LAB_RESULT" className="bg-[#1a1a2e]">Labresultaat</option>
+                <option value="PHOTO" className="bg-[#1a1a2e]">Foto</option>
+              </select>
+            </div>
+
+            {/* Upload button */}
+            <button
+              onClick={handleUpload}
+              disabled={!uploadFile || uploading}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#e8945a] hover:bg-[#d4864a] text-white font-medium shadow-lg shadow-[#e8945a]/25 hover:shadow-[#e8945a]/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Uploaden...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Uploaden
+                </>
+              )}
+            </button>
+
+            <p className="text-xs text-white/30 text-center">
+              Ge-uploade documenten worden beoordeeld door de praktijk
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {tab === "invoices" && (
@@ -858,6 +1015,31 @@ function DocumentsTab({
                               }`}
                             >
                               {statusLabels[doc.subType] || doc.subType}
+                            </span>
+                          </>
+                        )}
+                        {doc.approvalStatus === "PENDING_REVIEW" && (
+                          <>
+                            <span className="text-white/20">•</span>
+                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              <Clock className="w-3 h-3" />
+                              In behandeling
+                            </span>
+                          </>
+                        )}
+                        {doc.approvalStatus === "APPROVED" && (
+                          <>
+                            <span className="text-white/20">•</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Goedgekeurd
+                            </span>
+                          </>
+                        )}
+                        {doc.approvalStatus === "REJECTED" && (
+                          <>
+                            <span className="text-white/20">•</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                              Afgewezen
                             </span>
                           </>
                         )}

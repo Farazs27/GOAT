@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
 import type { PerioToothData } from '@/../../packages/shared-types/src/odontogram';
 import IndicatorRows from '../perio/indicator-rows';
 import ProbingPanel from '../perio/probing-panel';
@@ -9,7 +8,96 @@ import VoiceInputButton from '../perio/voice-input';
 import PerioLineGraph from '../perio/line-graph';
 import { getPerioSummary } from '../perio/perio-classification';
 
-const Tooth3D = dynamic(() => import('../three/tooth-3d'), { ssr: false });
+// SVG tooth silhouette for perio mode (avoids WebGL context limit with 32 teeth)
+function ToothSilhouette({ fdi, isSelected, width = 38, height = 60 }: { fdi: number; isSelected: boolean; width?: number; height?: number }) {
+  const quadrant = Math.floor(fdi / 10);
+  const isUpper = quadrant === 1 || quadrant === 2;
+  const digit = fdi % 10;
+  const isMolar = digit >= 6;
+  const isPremolar = digit === 4 || digit === 5;
+  const isCanine = digit === 3;
+
+  const fill = isSelected ? '#3b82f6' : '#475569';
+  const opacity = isSelected ? 0.6 : 0.35;
+
+  // Molar: wider crown, 2-3 roots
+  if (isMolar) {
+    return (
+      <svg width={width} height={height} viewBox="0 0 38 60">
+        {isUpper ? (
+          <>
+            <rect x={6} y={2} width={26} height={20} rx={5} fill={fill} opacity={opacity} />
+            <path d="M12 22 L10 52 Q10 56 13 56 L13 56" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+            <path d="M19 22 L19 54 Q19 57 19 54" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+            <path d="M26 22 L28 52 Q28 56 25 56" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+          </>
+        ) : (
+          <>
+            <path d="M12 4 L10 32" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+            <path d="M26 4 L28 32" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+            <rect x={6} y={34} width={26} height={20} rx={5} fill={fill} opacity={opacity} />
+          </>
+        )}
+      </svg>
+    );
+  }
+
+  // Premolar: medium crown, 1-2 roots
+  if (isPremolar) {
+    return (
+      <svg width={width} height={height} viewBox="0 0 38 60">
+        {isUpper ? (
+          <>
+            <rect x={8} y={2} width={22} height={18} rx={5} fill={fill} opacity={opacity} />
+            <path d="M15 20 L13 52 Q13 56 16 56" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+            <path d="M23 20 L25 52 Q25 56 22 56" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+          </>
+        ) : (
+          <>
+            <path d="M19 4 L19 34" stroke={fill} strokeWidth={2.5} fill="none" opacity={opacity} />
+            <rect x={8} y={36} width={22} height={18} rx={5} fill={fill} opacity={opacity} />
+          </>
+        )}
+      </svg>
+    );
+  }
+
+  // Canine: pointed crown, single root
+  if (isCanine) {
+    return (
+      <svg width={width} height={height} viewBox="0 0 38 60">
+        {isUpper ? (
+          <>
+            <path d="M10 20 Q10 2 19 2 Q28 2 28 20 Z" fill={fill} opacity={opacity} />
+            <path d="M19 20 L19 56" stroke={fill} strokeWidth={2.5} fill="none" opacity={opacity} />
+          </>
+        ) : (
+          <>
+            <path d="M19 4 L19 36" stroke={fill} strokeWidth={2.5} fill="none" opacity={opacity} />
+            <path d="M10 36 Q10 58 19 58 Q28 58 28 36 Z" fill={fill} opacity={opacity} />
+          </>
+        )}
+      </svg>
+    );
+  }
+
+  // Incisor: narrow crown, single root
+  return (
+    <svg width={width} height={height} viewBox="0 0 38 60">
+      {isUpper ? (
+        <>
+          <rect x={11} y={2} width={16} height={18} rx={4} fill={fill} opacity={opacity} />
+          <path d="M19 20 L19 56" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+        </>
+      ) : (
+        <>
+          <path d="M19 4 L19 36" stroke={fill} strokeWidth={2} fill="none" opacity={opacity} />
+          <rect x={11} y={38} width={16} height={18} rx={4} fill={fill} opacity={opacity} />
+        </>
+      )}
+    </svg>
+  );
+}
 
 interface PerioModeProps {
   teeth: Array<{ toothNumber: number; status: string }>;
@@ -212,15 +300,7 @@ function TeethRow({
               style={{ width: 42 }}
               onClick={() => onToothSelect(fdi)}
             >
-              <Tooth3D
-                fdi={fdi}
-                view="side"
-                status={statusMap[fdi] || 'PRESENT'}
-                isSelected={isSelected}
-                onClick={() => onToothSelect(fdi)}
-                width={38}
-                height={60}
-              />
+              <ToothSilhouette fdi={fdi} isSelected={isSelected} width={38} height={60} />
             </div>
           );
         })}

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth, requireRoles, handleError } from "@/lib/auth";
-import { UserRole } from "@dentflow/shared-types";
+import { UserRole } from "@nexiom/shared-types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -96,10 +96,13 @@ export async function GET(request: NextRequest) {
       createdAt: doc.createdAt,
       uploadedBy: doc.uploader
         ? `${doc.uploader.firstName} ${doc.uploader.lastName}`
-        : "Praktijk",
+        : doc.uploadedByPatientId
+          ? "U"
+          : "Praktijk",
       fileSize: doc.fileSize,
       mimeType: doc.mimeType,
       s3Key: doc.s3Key,
+      approvalStatus: doc.approvalStatus,
       type: "document",
     }));
 

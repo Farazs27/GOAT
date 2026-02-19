@@ -13,12 +13,12 @@ export async function GET(request: Request) {
       },
       include: {
         members: {
-          include: { user: { select: { id: true, name: true, role: true } } },
+          include: { user: { select: { id: true, firstName: true, lastName: true, role: true } } },
         },
         messages: {
           orderBy: { createdAt: "desc" },
           take: 1,
-          include: { sender: { select: { id: true, name: true } } },
+          include: { sender: { select: { id: true, firstName: true, lastName: true } } },
         },
       },
       orderBy: { updatedAt: "desc" },
@@ -38,8 +38,8 @@ export async function GET(request: Request) {
         const displayName =
           chat.name ||
           (otherMembers.length === 1
-            ? otherMembers[0].user.name
-            : otherMembers.map((m) => m.user.name).join(", "));
+            ? [otherMembers[0].user.firstName, otherMembers[0].user.lastName].filter(Boolean).join(' ')
+            : otherMembers.map((m) => [m.user.firstName, m.user.lastName].filter(Boolean).join(' ')).join(", "));
 
         const lastMessage = chat.messages[0] || null;
 
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
           lastMessage: lastMessage
             ? {
                 content: lastMessage.content,
-                senderName: lastMessage.sender.name,
+                senderName: [lastMessage.sender.firstName, lastMessage.sender.lastName].filter(Boolean).join(' '),
                 createdAt: lastMessage.createdAt,
               }
             : null,
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
         include: {
           members: {
             include: {
-              user: { select: { id: true, name: true, role: true } },
+              user: { select: { id: true, firstName: true, lastName: true, role: true } },
             },
           },
         },
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       include: {
         members: {
           include: {
-            user: { select: { id: true, name: true, role: true } },
+            user: { select: { id: true, firstName: true, lastName: true, role: true } },
           },
         },
       },

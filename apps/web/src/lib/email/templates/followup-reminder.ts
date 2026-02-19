@@ -1,4 +1,4 @@
-import { Patient, Practice } from "@dentflow/database";
+import { Patient, Practice } from "@nexiom/database";
 
 interface FollowupReminderData {
   patient: Patient;

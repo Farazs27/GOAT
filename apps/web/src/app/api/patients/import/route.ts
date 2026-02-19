@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@dentflow/database";
+import { prisma } from "@nexiom/database";
 import { withAuth, handleError, ApiError } from "@/lib/auth";
 
 // Dynamic import for pdf-parse to handle serverless environment
